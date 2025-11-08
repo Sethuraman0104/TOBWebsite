@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - News Management</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Kufi+Arabic&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Sidebar (Optional for future expansion) -->
+  <aside class="sidebar">
+    <div class="logo">
+      <img src="uploads/logo.png" alt="Logo">
+      <h2>News Times Admin</h2>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <!-- Top Cards -->
+    <section class="top-cards">
+      <div class="card">
+        <h3>📰 Pending News</h3>
+        <p id="pendingNewsCount">0</p>
+      </div>
+      <div class="card">
+        <h3>💬 Pending Comments</h3>
+        <p id="pendingCommentsCount">0</p>
+      </div>
+      <div class="card">
+        <h3>👍 Total Likes</h3>
+        <p id="totalLikesCount">0</p>
+      </div>
+    </section>
+
+    <!-- Post News Form -->
+    <section class="card form-card">
+      <h2>Post News</h2>
+      <form id="postNewsForm" enctype="multipart/form-data">
+        <label>Title (English)</label>
+        <input type="text" name="Title" placeholder="Enter English Title" required>
+        <label>Title (Arabic)</label>
+        <input type="text" name="Title_Ar" placeholder="أدخل العنوان بالعربية">
+        <label>Content (English)</label>
+        <textarea name="Content" placeholder="Enter English Content" required></textarea>
+        <label>Content (Arabic)</label>
+        <textarea name="Content_Ar" placeholder="أدخل المحتوى بالعربية"></textarea>
+        <label>Category ID</label>
+        <input type="number" name="CategoryID" value="1" required>
+        <label>Image</label>
+        <input type="file" name="image">
+        <button type="submit">Post News</button>
+      </form>
+      <div id="postNewsMsg" class="message"></div>
+    </section>
+
+    <!-- Pending News Approval -->
+    <section class="card">
+      <h2>Pending News</h2>
+      <div id="pendingNewsContainer"></div>
+    </section>
+
+    <!-- Pending Comments Approval -->
+    <section class="card">
+      <h2>Pending Comments</h2>
+      <div id="pendingCommentsContainer"></div>
+    </section>
+
+    <!-- All News Engagement -->
+    <section class="card">
+      <h2>All News Engagement</h2>
+      <div id="allNewsEngagement"></div>
+    </section>
+  </main>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>
