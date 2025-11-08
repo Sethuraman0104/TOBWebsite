@@ -1,23 +1,33 @@
 const express = require('express');
 const path = require('path');
-const sql = require('mssql');
 const dotenv = require('dotenv');
-const sqlConfig = require('./sqlconfig');
 const mainRoutes = require('./routes/mainRoutes');
 
 dotenv.config();
 const app = express();
 
-// Middleware
+// Middleware for parsing JSON and form data
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.urlencoded({ extended: true }));
 
-// Routes
+// -------------------------
+// API routes first
+// -------------------------
 app.use('/api', mainRoutes);
 
-// Default route
+// -------------------------
+// Serve static files after API routes
+// -------------------------
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Default route (admin panel)
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Catch-all for undefined routes (optional)
+app.use((req, res) => {
+  res.status(404).send('Route not found');
 });
 
 // Start server

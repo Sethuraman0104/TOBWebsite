@@ -6,36 +6,32 @@
   <title>Admin Panel - News Management</title>
   <link rel="stylesheet" href="css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Kufi+Arabic&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 </head>
 <body>
-  <!-- Sidebar (Optional for future expansion) -->
-  <aside class="sidebar">
-    <div class="logo">
-      <img src="uploads/logo.png" alt="Logo">
-      <h2>News Times Admin</h2>
-    </div>
-  </aside>
 
-  <main class="main-content">
-    <!-- Top Cards -->
-    <section class="top-cards">
-      <div class="card">
-        <h3>📰 Pending News</h3>
-        <p id="pendingNewsCount">0</p>
-      </div>
-      <div class="card">
-        <h3>💬 Pending Comments</h3>
-        <p id="pendingCommentsCount">0</p>
-      </div>
-      <div class="card">
-        <h3>👍 Total Likes</h3>
-        <p id="totalLikesCount">0</p>
-      </div>
-    </section>
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="logo">
+    <img src="uploads/logo.png" alt="Logo">
+    <h2>News Admin</h2>
+  </div>
+  <nav class="menu">
+    <ul>
+      <li class="active" data-section="publish"><i class="fa-solid fa-pen-to-square"></i> Publish News</li>
+      <li data-section="pending"><i class="fa-solid fa-hourglass-half"></i> Pending News</li>
+      <li data-section="allnews"><i class="fa-solid fa-newspaper"></i> All Published News</li>
+      <li data-section="comments"><i class="fa-solid fa-comments"></i> Comments</li>
+    </ul>
+  </nav>
+</aside>
 
-    <!-- Post News Form -->
-    <section class="card form-card">
-      <h2>Post News</h2>
+<main class="main-content">
+
+  <!-- Publish News -->
+  <section id="publish" class="section active">
+    <div class="floating-title">📝 Publish News</div>
+    <div class="card form-card">
       <form id="postNewsForm" enctype="multipart/form-data">
         <label>Title (English)</label>
         <input type="text" name="Title" placeholder="Enter English Title" required>
@@ -52,27 +48,57 @@
         <button type="submit">Post News</button>
       </form>
       <div id="postNewsMsg" class="message"></div>
-    </section>
+    </div>
+  </section>
 
-    <!-- Pending News Approval -->
-    <section class="card">
-      <h2>Pending News</h2>
-      <div id="pendingNewsContainer"></div>
-    </section>
+  <!-- Pending News -->
+  <section id="pending" class="section">
+    <div class="floating-title">⏳ Pending News to Publish</div>
+    <div id="pendingNewsContainer"></div>
+  </section>
 
-    <!-- Pending Comments Approval -->
-    <section class="card">
-      <h2>Pending Comments</h2>
-      <div id="pendingCommentsContainer"></div>
-    </section>
+  <!-- All Published News -->
+  <section id="allnews" class="section">
+    <div class="floating-title">📄 All Published News</div>
+    <div class="filter-card">
+      <label>From: <input type="month" id="filterMonth"></label>
+      <button id="applyFilter">Apply</button>
+    </div>
+    <div id="allNewsEngagement"></div>
+  </section>
 
-    <!-- All News Engagement -->
-    <section class="card">
-      <h2>All News Engagement</h2>
-      <div id="allNewsEngagement"></div>
-    </section>
-  </main>
+  <!-- Comments -->
+  <section id="comments" class="section">
+    <div class="floating-title">💬 Comments to Approve</div>
+    <div id="pendingCommentsContainer"></div>
+  </section>
 
-  <script src="js/admin.js"></script>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.0/moment.min.js"></script>
+<script src="js/admin.js"></script>
+<script>
+// Sidebar navigation
+const menuItems = document.querySelectorAll('.sidebar .menu li');
+const sections = document.querySelectorAll('.section');
+
+menuItems.forEach(item => {
+  item.addEventListener('click', () => {
+    menuItems.forEach(i => i.classList.remove('active'));
+    sections.forEach(s => s.classList.remove('active'));
+
+    item.classList.add('active');
+    document.getElementById(item.dataset.section).classList.add('active');
+  });
+});
+
+// Default filter: current month
+const filterMonth = document.getElementById('filterMonth');
+filterMonth.value = moment().format('YYYY-MM');
+document.getElementById('applyFilter').addEventListener('click', () => {
+  loadAllNewsEngagement(filterMonth.value);
+});
+</script>
+
 </body>
 </html>
