@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   <style>
     * { box-sizing: border-box; margin:0; padding:0; font-family: 'Roboto', sans-serif; }
+
     body {
       height: 100vh;
       background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
@@ -15,46 +16,104 @@
       justify-content: center;
       align-items: center;
     }
+
     .login-container {
       background: #fff;
-      width: 400px;
-      border-radius: 15px;
-      padding: 40px 30px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      width: 420px;
+      border-radius: 20px;
+      padding: 50px 35px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.25);
       text-align: center;
+      position: relative;
+      overflow: hidden;
     }
-    .login-container h1 { margin-bottom: 25px; color: #333; }
+
+    /* Animated stripes overlay */
+    .login-container::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 200%; height: 200%;
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(106,17,203,0.05),
+        rgba(106,17,203,0.05) 10px,
+        rgba(37,117,252,0.05) 10px,
+        rgba(37,117,252,0.05) 20px
+      );
+      animation: moveStripes 12s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes moveStripes {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    /* Keep content above stripes */
+    .login-container > * { position: relative; z-index: 1; }
+
+    .login-logo {
+      width: 100px;
+      margin-bottom: 20px;
+    }
+
+    .login-container h1 {
+      margin-bottom: 25px;
+      color: #333;
+    }
+
     .login-container input[type="email"],
     .login-container input[type="password"] {
       width: 100%;
-      padding: 12px 15px;
+      padding: 14px 15px;
       margin: 10px 0 20px 0;
       border-radius: 8px;
       border: 1px solid #ccc;
       font-size: 16px;
     }
+
     .login-container input[type="checkbox"] { margin-right: 10px; }
     .login-container label { font-size: 14px; color: #555; }
     .login-container button {
       width: 100%;
-      padding: 12px;
+      padding: 14px;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
       color: white;
       font-size: 16px;
       cursor: pointer;
       transition: 0.3s;
+      font-weight: bold;
     }
-    .login-container button:hover { background: linear-gradient(135deg, #2575fc 0%, #6a11cb 100%); }
-    .message { margin-top: 15px; font-size: 14px; color: red; }
-    .remember-container { text-align: left; margin-bottom: 20px; }
-    .login-footer { margin-top: 20px; font-size: 12px; color: #777; }
+    .login-container button:hover {
+      background: linear-gradient(135deg, #2575fc 0%, #6a11cb 100%);
+    }
+
+    .message {
+      margin-top: 15px;
+      font-size: 14px;
+      color: red;
+    }
+
+    .remember-container {
+      text-align: left;
+      margin-bottom: 20px;
+    }
+
+    .login-footer {
+      margin-top: 25px;
+      font-size: 12px;
+      color: #777;
+    }
   </style>
 </head>
 <body>
 
 <div class="login-container">
+  <img src="images/TOBTransparent.png" alt="Logo" class="login-logo">
   <h1>Admin Login</h1>
   <form id="loginForm">
     <input type="email" name="Email" placeholder="Email" id="emailInput" required>
@@ -74,7 +133,7 @@
   const emailInput = document.getElementById('emailInput');
   const rememberMe = document.getElementById('rememberMe');
 
-  // Load saved email
+  // Load saved email if Remember Me was checked
   if(localStorage.getItem('rememberEmail')) {
     emailInput.value = localStorage.getItem('rememberEmail');
     rememberMe.checked = true;
@@ -99,7 +158,6 @@
       const data = await res.json();
 
       if(data.success){
-        // Save email if Remember Me is checked
         if(rememberMe.checked) localStorage.setItem('rememberEmail', payload.Email);
         else localStorage.removeItem('rememberEmail');
 

@@ -10,6 +10,15 @@ const closeModal = editModal.querySelector('.close');
 const inactiveNewsContainer = document.getElementById('inactiveNewsContainer');
 const newsSearchInput = document.getElementById('newsSearch');
 const logoutBtn = document.getElementById('logoutBtn');
+const profileForm = document.getElementById('profileForm');
+const profileMsg = document.getElementById('profileMsg');
+const openChangePasswordBtn = document.getElementById('openChangePasswordBtn');
+const changePasswordModal = document.getElementById('changePasswordModal');
+const closePasswordModal = document.getElementById('closePasswordModal');
+const changePasswordForm = document.getElementById('changePasswordForm');
+const changePasswordMsg = document.getElementById('changePasswordMsg');
+
+
 
 newsSearchInput.addEventListener('input', () => {
   const query = newsSearchInput.value.trim().toLowerCase();
@@ -68,33 +77,181 @@ function filterNews(query) {
   });
 }
 
+document.addEventListener('DOMContentLoaded', async () => {
+  const welcomeElement = document.getElementById('welcomeUser');
+  const lastLoginElement = document.getElementById('lastLoginDisplay');
+  const dateTimeDiv = document.getElementById('currentDateTime');
+
+  try {
+    const response = await fetch('/api/auth/currentUser', {
+      method: 'GET',
+      credentials: 'include' // Important for keeping session cookies
+    });
+
+    if (!response.ok) {
+      // Not logged in
+      window.location.href = '/login';
+      return;
+    }
+
+    // Your backend returns the user object directly, not wrapped in { success: true, user: {...} }
+    const user = await response.json();
+
+    // ✅ Truncate name if long
+    const displayName =
+      user.FullName?.length > 14
+        ? user.FullName.substring(0, 14) + '...'
+        : user.FullName || 'User';
+
+    if (welcomeElement) {
+      welcomeElement.textContent = `Welcome, ${displayName}`;
+    }
+
+    // ✅ Format last login date/time
+    if (lastLoginElement) {
+      if (user.LastLogin) {
+        const formatted = moment(user.LastLogin, 'YYYY-MM-DD HH:mm:ss.SSS')
+  .format('DD MMM YYYY hh:mm:ss A');
+        lastLoginElement.textContent = `Last logged in: ${formatted}`;
+      } else {
+        lastLoginElement.textContent = 'Last logged in: –';
+      }
+    }
+
+  } catch (err) {
+    console.warn('⚠️ Unable to fetch current user info:', err.message);
+    if (welcomeElement) welcomeElement.textContent = 'Welcome, Guest';
+  }
+
+  // ✅ Real-time clock
+  if (dateTimeDiv) {
+    setInterval(() => {
+      const now = moment().format('DD MMM YYYY hh:mm:ss A');
+      dateTimeDiv.textContent = now;
+    }, 1000);
+  }
+});
+
 // --------------------
-// Sidebar nav
+// Sidebar Navigation
 // --------------------
 const menuItems = document.querySelectorAll('.sidebar .menu li');
 const sections = document.querySelectorAll('.section');
 menuItems.forEach(item => {
   item.addEventListener('click', () => {
-    // Remove active classes from menu items and sections
+    const sectionId = item.dataset.section;
     menuItems.forEach(i => i.classList.remove('active'));
     sections.forEach(s => s.classList.remove('active'));
-
-    // Set clicked item as active
     item.classList.add('active');
-    document.getElementById(item.dataset.section).classList.add('active');
+    document.getElementById(sectionId).classList.add('active');
 
-    // Clear search input
     newsSearchInput.value = '';
     filterNews('');
+    newsSearchInput.style.display = ['pending','allnews','inactive'].includes(sectionId) ? 'inline-block' : 'none';
 
-    // Show search only for Unpublished, Published, and Deactivated News
-    if (['pending', 'allnews', 'inactive'].includes(item.dataset.section)) {
-      newsSearchInput.style.display = 'inline-block';
-    } else {
-      newsSearchInput.style.display = 'none';
-    }
+    if (sectionId === 'profile') loadProfile();
   });
 });
+
+// --------------------
+// Load Profile
+// --------------------
+async function loadProfile() {
+  try {
+    const res = await fetch('/api/auth/currentUser', { credentials: 'include' });
+    if (!res.ok) return alert('Failed to load profile');
+
+    const user = await res.json();
+    document.getElementById('profileFullName').value = user.FullName || '';
+    document.getElementById('profileEmail').value = user.Email || '';
+    profileMsg.textContent = '';
+  } catch (err) {
+    console.error(err);
+    profileMsg.textContent = 'Error loading profile.';
+  }
+}
+
+profileForm.onsubmit = async (e) => {
+  e.preventDefault();
+
+  const fullName = document.getElementById('profileFullName').value.trim();
+  const email = document.getElementById('profileEmail').value.trim();
+
+  // ✅ Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    profileMsg.textContent = 'Invalid email format!';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/auth/updateProfile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ FullName: fullName, Email: email })
+    });
+
+    const data = await res.json();
+    profileMsg.textContent = data.message || 'Profile updated successfully!';
+    if (data.success) {
+      document.getElementById('welcomeUser').textContent = `Welcome, ${fullName}`;
+    }
+  } catch (err) {
+    console.error(err);
+    profileMsg.textContent = 'Error: ' + err.message;
+  }
+};
+
+// --------------------
+// Change Password Modal
+// --------------------
+// Open/close modal
+openChangePasswordBtn.onclick = () => changePasswordModal.style.display = 'block';
+closePasswordModal.onclick = () => changePasswordModal.style.display = 'none';
+window.onclick = (e) => { if (e.target === changePasswordModal) changePasswordModal.style.display = 'none'; };
+
+// Change Password Form Submit
+changePasswordForm.onsubmit = async (e) => {
+  e.preventDefault();
+
+  const oldPassword = document.getElementById('CurrentPassword').value.trim();
+  const newPassword = document.getElementById('NewPassword').value.trim();
+  const confirmPassword = document.getElementById('ConfirmPassword').value.trim();
+
+  if (newPassword !== confirmPassword) {
+    changePasswordMsg.textContent = 'Passwords do not match!';
+    changePasswordMsg.style.color = 'red';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/auth/changePassword', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ oldPassword, newPassword })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      changePasswordMsg.textContent = data.message;
+      changePasswordMsg.style.color = 'green';
+      changePasswordForm.reset();
+      setTimeout(() => changePasswordModal.style.display = 'none', 1500);
+    } else {
+      changePasswordMsg.textContent = data.message || 'Error updating password';
+      changePasswordMsg.style.color = 'red';
+    }
+
+  } catch (err) {
+    console.error('Change Password Error:', err);
+    changePasswordMsg.textContent = 'Server error. Try again.';
+    changePasswordMsg.style.color = 'red';
+  }
+};
+
 
 // --------------------
 // Post News

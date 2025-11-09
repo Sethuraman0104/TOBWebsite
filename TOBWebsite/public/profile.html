@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profile - Admin Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #f4f7fb;
+      margin: 0;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      display: flex;
+      gap: 30px;
+      max-width: 900px;
+      width: 100%;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      flex: 1;
+    }
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: 500;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-top: 15px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .msg {
+      margin-top: 10px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Profile Info -->
+    <div class="card">
+      <h2>👤 My Profile</h2>
+      <form id="profileForm">
+        <label>Full Name</label>
+        <input type="text" id="FullName" required />
+
+        <label>Email</label>
+        <input type="email" id="Email" required />
+
+        <button type="submit">Update Profile</button>
+        <div id="profileMsg" class="msg"></div>
+      </form>
+    </div>
+
+    <!-- Change Password -->
+    <div class="card">
+      <h2>🔒 Change Password</h2>
+      <form id="passwordForm">
+        <label>Old Password</label>
+        <input type="password" id="oldPassword" required />
+
+        <label>New Password</label>
+        <input type="password" id="newPassword" required minlength="6" />
+
+        <label>Confirm Password</label>
+        <input type="password" id="confirmPassword" required minlength="6" />
+
+        <button type="submit">Change Password</button>
+        <div id="passwordMsg" class="msg"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    async function loadProfile() {
+      const res = await fetch('/api/auth/profile');
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('FullName').value = data.data.FullName;
+        document.getElementById('Email').value = data.data.Email;
+      } else {
+        alert('Session expired. Please login again.');
+        window.location.href = '/login';
+      }
+    }
+
+    // Update Profile
+    document.getElementById('profileForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const body = {
+        FullName: document.getElementById('FullName').value,
+        Email: document.getElementById('Email').value
+      };
+      const res = await fetch('/api/auth/updateProfile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      document.getElementById('profileMsg').textContent = data.message;
+      document.getElementById('profileMsg').style.color = data.success ? 'green' : 'red';
+    });
+
+    // Change Password
+    document.getElementById('passwordForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const oldPassword = document.getElementById('oldPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (newPassword !== confirmPassword) {
+        document.getElementById('passwordMsg').textContent = 'Passwords do not match!';
+        document.getElementById('passwordMsg').style.color = 'red';
+        return;
+      }
+
+      const res = await fetch('/api/auth/changePassword', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ oldPassword, newPassword })
+      });
+      const data = await res.json();
+      document.getElementById('passwordMsg').textContent = data.message;
+      document.getElementById('passwordMsg').style.color = data.success ? 'green' : 'red';
+      if (data.success) document.getElementById('passwordForm').reset();
+    });
+
+    loadProfile();
+  </script>
+</body>
+</html>

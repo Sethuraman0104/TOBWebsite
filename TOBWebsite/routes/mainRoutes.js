@@ -124,13 +124,35 @@ router.post('/news/update/:id', isAdmin, upload.single('image'), async (req, res
 // -------------------------
 // 4️⃣ Delete News
 // -------------------------
+const fs = require('fs');
 router.delete('/news/:id', isAdmin, async (req, res) => {
   const ArticleID = parseInt(req.params.id);
+
   try {
     await sql.connect(sqlConfig);
+
+    // 1️⃣ First, get the ImageURL of this article
+    const result = await new sql.Request()
+      .input('ArticleID', sql.Int, ArticleID)
+      .query('SELECT ImageURL FROM NewsArticles WHERE ArticleID = @ArticleID');
+
+    if (result.recordset.length) {
+      const imageURL = result.recordset[0].ImageURL;
+
+      // 2️⃣ If image exists, delete from uploads folder
+      if (imageURL) {
+        const imagePath = path.join(__dirname, '..', 'public', imageURL.replace(/^\/+/, ''));
+        fs.unlink(imagePath, (err) => {
+          if (err) console.warn('Could not delete image:', err.message);
+        });
+      }
+    }
+
+    // 3️⃣ Delete the article from DB
     await new sql.Request()
       .input('ArticleID', sql.Int, ArticleID)
-      .query(`DELETE FROM NewsArticles WHERE ArticleID=@ArticleID`);
+      .query('DELETE FROM NewsArticles WHERE ArticleID=@ArticleID');
+
     res.json({ success: true, message: 'News deleted successfully.' });
   } catch (err) {
     console.error('DELETE NEWS ERROR:', err);

@@ -29,11 +29,8 @@ app.use('/api', mainRoutes);
 // Serve static files AFTER routes to avoid interference
 // -------------------------
 // app.use('/public', express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, 'public')));
 
-// -------------------------
 // Default route -> login page
-// -------------------------
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
@@ -42,10 +39,19 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
+// Serve static files after routes
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Protect admin page
 app.get('/admin.html', (req, res) => {
   if (!req.session.user) return res.redirect('/login');
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// Protect profile page
+app.get('/profile.html', (req, res) => {
+  if (!req.session.user) return res.redirect('/login');
+  res.sendFile(path.join(__dirname, 'public', 'profile.html'));
 });
 
 // Catch-all
