@@ -4,6 +4,7 @@ const sql = require('mssql');
 const sqlConfig = require('../sqlconfig');
 const multer = require('multer');
 const path = require('path');
+const bcrypt = require('bcrypt');
 
 // Multer setup
 const storage = multer.diskStorage({
@@ -35,7 +36,8 @@ router.get('/news', async (req, res) => {
                CategoryID,
                CreatedOn,
                PublishedOn,
-               IsApproved
+               IsApproved,
+               IsActive
         FROM NewsArticles
         ORDER BY PublishedOn DESC
       `);
@@ -67,8 +69,8 @@ router.post('/news/create', isAdmin, upload.single('image'), async (req, res) =>
       .input('AuthorID', sql.Int, req.user.UserID)
       .input('ImageURL', sql.NVarChar(255), ImageURL)
       .query(`
-        INSERT INTO NewsArticles (Title, Content, Title_Ar, Content_Ar, CategoryID, AuthorID, ImageURL, IsApproved, CreatedOn)
-        VALUES (@Title, @Content, @Title_Ar, @Content_Ar, @CategoryID, @AuthorID, @ImageURL, 0, GETDATE())
+        INSERT INTO NewsArticles (Title, Content, Title_Ar, Content_Ar, CategoryID, AuthorID, ImageURL, IsApproved, IsActive, CreatedOn)
+        VALUES (@Title, @Content, @Title_Ar, @Content_Ar, @CategoryID, @AuthorID, @ImageURL, 0, 1, GETDATE())
       `);
 
     res.json({ success: true, message: 'News created successfully and awaiting approval.' });
@@ -161,7 +163,8 @@ router.get('/news/admin', isAdmin, async (req, res) => {
     await sql.connect(sqlConfig);
     const result = await sql.query(`
       SELECT n.ArticleID, n.Title, n.Title_Ar, n.Content, n.Content_Ar,
-             n.ImageURL, n.IsApproved, n.CreatedOn, n.PublishedOn, n.CategoryID,
+             n.ImageURL, n.IsApproved, n.IsActive, n.CreatedOn, n.PublishedOn, n.CategoryID,
+             n.UpdatedOn,
              (SELECT COUNT(*) FROM Likes l WHERE l.ArticleID = n.ArticleID) AS LikesCount,
              (SELECT COUNT(*) FROM Comments c WHERE c.ArticleID = n.ArticleID) AS CommentsCount
       FROM NewsArticles n
@@ -173,6 +176,117 @@ router.get('/news/admin', isAdmin, async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
+// -------------------------
+// 7️⃣ Deactivate News
+// -------------------------
+router.post('/news/deactivate/:id', isAdmin, async (req, res) => {
+  const ArticleID = parseInt(req.params.id);
+  try {
+    await sql.connect(sqlConfig);
+    await new sql.Request()
+      .input('ArticleID', sql.Int, ArticleID)
+      .query(`UPDATE NewsArticles SET IsActive=0 WHERE ArticleID=@ArticleID`);
+    res.json({ success: true, message: 'News deactivated successfully.' });
+  } catch (err) {
+    console.error('DEACTIVATE NEWS ERROR:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// -------------------------
+// 8️⃣ Reactivate News
+// -------------------------
+router.post('/news/reactivate/:id', isAdmin, async (req, res) => {
+  const ArticleID = parseInt(req.params.id);
+  try {
+    await sql.connect(sqlConfig);
+    await new sql.Request()
+      .input('ArticleID', sql.Int, ArticleID)
+      .query(`UPDATE NewsArticles SET IsActive=1 WHERE ArticleID=@ArticleID`);
+    res.json({ success: true, message: 'News reactivated successfully.' });
+  } catch (err) {
+    console.error('REACTIVATE NEWS ERROR:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// -------------------------
+// 9️⃣ Get All Active News Categories
+// -------------------------
+router.get('/news/categories', async (req, res) => {
+  try {
+    await sql.connect(sqlConfig);
+    const result = await new sql.Request()
+      .query(`
+        SELECT CategoryID, 
+               CategoryName, 
+               CategoryName_Ar
+        FROM NewsCategories
+        WHERE IsActive = 1
+        ORDER BY CategoryName
+      `);
+
+    res.json(result.recordset);
+  } catch (err) {
+    console.error('GET NEWS CATEGORIES ERROR:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// -------------------------
+// Login
+// -------------------------
+router.post('/login', async (req, res) => {
+  const { Email, Password } = req.body;
+  if (!Email || !Password) return res.status(400).json({ success: false, message: 'Email & password required' });
+
+  try {
+    await sql.connect(sqlConfig);
+    const result = await new sql.Request()
+      .input('Email', sql.NVarChar, Email)
+      .query('SELECT * FROM Users WHERE Email=@Email AND IsActive=1');
+
+    const user = result.recordset[0];
+    if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+
+    const match = await bcrypt.compare(Password, user.PasswordHash);
+    if (!match) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+
+    // Save user info in session
+    req.session.user = { 
+      UserID: user.UserID, 
+      Email: user.Email, 
+      Role: user.Role, 
+      FullName: user.FullName 
+    };
+    res.json({ success: true, message: 'Login successful', user: req.session.user });
+  } catch (err) {
+    console.error('LOGIN ERROR:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// -------------------------
+// Logout
+// -------------------------
+router.post('/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) return res.status(500).json({ success: false, message: 'Logout failed' });
+    res.json({ success: true, message: 'Logged out successfully' });
+  });
+});
+
+// -------------------------
+// Middleware to protect routes
+// -------------------------
+function requireLogin(req, res, next) {
+  if (req.session.user) return next();
+  res.status(401).json({ success: false, message: 'Login required' });
+}
+module.exports.requireLogin = requireLogin;
+
+
 
 // -------------------------
 // 404 fallback for API

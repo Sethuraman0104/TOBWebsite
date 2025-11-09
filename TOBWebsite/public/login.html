@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Times of Bahrain Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    * { box-sizing: border-box; margin:0; padding:0; font-family: 'Roboto', sans-serif; }
+    body {
+      height: 100vh;
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .login-container {
+      background: #fff;
+      width: 400px;
+      border-radius: 15px;
+      padding: 40px 30px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    .login-container h1 { margin-bottom: 25px; color: #333; }
+    .login-container input[type="email"],
+    .login-container input[type="password"] {
+      width: 100%;
+      padding: 12px 15px;
+      margin: 10px 0 20px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    .login-container input[type="checkbox"] { margin-right: 10px; }
+    .login-container label { font-size: 14px; color: #555; }
+    .login-container button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .login-container button:hover { background: linear-gradient(135deg, #2575fc 0%, #6a11cb 100%); }
+    .message { margin-top: 15px; font-size: 14px; color: red; }
+    .remember-container { text-align: left; margin-bottom: 20px; }
+    .login-footer { margin-top: 20px; font-size: 12px; color: #777; }
+  </style>
+</head>
+<body>
+
+<div class="login-container">
+  <h1>Admin Login</h1>
+  <form id="loginForm">
+    <input type="email" name="Email" placeholder="Email" id="emailInput" required>
+    <input type="password" name="Password" placeholder="Password" required>
+    <div class="remember-container">
+      <label><input type="checkbox" id="rememberMe"> Remember Me</label>
+    </div>
+    <button type="submit">Login</button>
+    <div id="loginMsg" class="message"></div>
+  </form>
+  <div class="login-footer">© Times of Bahrain | HR Info</div>
+</div>
+
+<script>
+  const loginForm = document.getElementById('loginForm');
+  const loginMsg = document.getElementById('loginMsg');
+  const emailInput = document.getElementById('emailInput');
+  const rememberMe = document.getElementById('rememberMe');
+
+  // Load saved email
+  if(localStorage.getItem('rememberEmail')) {
+    emailInput.value = localStorage.getItem('rememberEmail');
+    rememberMe.checked = true;
+  }
+
+  loginForm.onsubmit = async (e) => {
+    e.preventDefault();
+    loginMsg.textContent = '';
+
+    const payload = {
+      Email: emailInput.value.trim(),
+      Password: loginForm.Password.value.trim(),
+      RememberMe: rememberMe.checked
+    };
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if(data.success){
+        // Save email if Remember Me is checked
+        if(rememberMe.checked) localStorage.setItem('rememberEmail', payload.Email);
+        else localStorage.removeItem('rememberEmail');
+
+        window.location.href = '/admin.html';
+      } else {
+        loginMsg.textContent = data.message || 'Invalid credentials';
+      }
+
+    } catch (err) {
+      loginMsg.textContent = 'Error: ' + err.message;
+    }
+  };
+</script>
+
+</body>
+</html>

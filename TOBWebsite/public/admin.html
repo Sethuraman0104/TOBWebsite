@@ -3,34 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel - News Management</title>
+  <title id="pageTitle">News Times of Bahrain</title>
   <link rel="stylesheet" href="css/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Kufi+Arabic&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 </head>
 <body>
 
+<!-- Top Bar -->
+<header class="topbar">
+  <div class="topbar-left">
+    <img src="images/TOBTransparent.png" alt="Logo" class="topbar-logo">
+    <h1>Times of Bahrain - Admin Console</h1>
+  </div>
+  <div class="topbar-right">
+    <span id="welcomeUser">Welcome, Admin</span>
+    <input type="text" id="newsSearch" placeholder="Search news..." style="padding:5px 10px; margin-left:10px; margin-right:10px; border-radius:4px; border:1px solid #ccc; width:200px; display:none;">
+    <button id="logoutBtn">Logout</button>
+  </div>
+</header>
+
 <!-- Sidebar -->
 <aside class="sidebar">
-  <div class="logo">
-    <img src="uploads/logo.png" alt="Logo">
-    <h2>News Admin</h2>
+  <div class="sidebar-logo">
+    <img src="images/TOBTransparent.png" alt="Logo">
   </div>
+  <hr class="logo-divider">
   <nav class="menu">
     <ul>
-      <li class="active" data-section="publish"><i class="fa-solid fa-pen-to-square"></i> Publish News</li>
-      <li data-section="pending"><i class="fa-solid fa-hourglass-half"></i> Pending News</li>
-      <li data-section="allnews"><i class="fa-solid fa-newspaper"></i> All Published News</li>
+      <li class="active" data-section="publish"><i class="fa-solid fa-pen-to-square"></i> Create News</li>
+      <li data-section="pending"><i class="fa-solid fa-hourglass-half"></i> Unpublished News</li>
+      <li data-section="allnews"><i class="fa-solid fa-newspaper"></i> Published News</li>
+      <li data-section="inactive"><i class="fa-solid fa-ban"></i> Deactivated News</li>
       <li data-section="comments"><i class="fa-solid fa-comments"></i> Comments</li>
     </ul>
   </nav>
+  <div class="sidebar-footer">
+    <div id="currentDateTime"></div>
+    <div>© Times of Bahrain | Created by HR Info</div>
+  </div>
 </aside>
 
 <main class="main-content">
 
   <!-- Publish News -->
   <section id="publish" class="section active">
-    <div class="floating-title">📝 Publish News</div>
+    <div class="floating-title">📝 Create News</div>
     <div class="card form-card">
       <form id="postNewsForm" enctype="multipart/form-data">
         <label>Title (English)</label>
@@ -41,8 +59,13 @@
         <textarea name="Content" placeholder="Enter English Content" required></textarea>
         <label>Content (Arabic)</label>
         <textarea name="Content_Ar" placeholder="أدخل المحتوى بالعربية"></textarea>
-        <label>Category ID</label>
-        <input type="number" name="CategoryID" value="1" required>
+        <!-- <label>Category ID</label>
+        <input type="number" name="CategoryID" value="1" required> -->
+        <label>Category</label>
+<select name="CategoryID" id="createCategorySelect" class="custom-dropdown" required>
+  <option value="">-- Select Category --</option>
+</select>
+
         <label>Image</label>
         <input type="file" name="image">
         <button type="submit">Post News</button>
@@ -53,19 +76,24 @@
 
   <!-- Pending News -->
   <section id="pending" class="section">
-    <div class="floating-title">⏳ Pending News to Publish</div>
+    <div class="floating-title">⏳ Unpublished News</div>
     <div id="pendingNewsContainer"></div>
   </section>
 
   <!-- All Published News -->
   <section id="allnews" class="section">
-    <div class="floating-title">📄 All Published News</div>
+    <div class="floating-title">📄 Published News</div>
     <div class="filter-card">
-      <label>From: <input type="month" id="filterMonth"></label>
+      <label>Month: <input type="month" id="filterMonth"></label>
       <button id="applyFilter">Apply</button>
     </div>
     <div id="allNewsEngagement"></div>
   </section>
+
+  <section id="inactive" class="section">
+  <div class="floating-title">🚫 Deactivated News</div>
+  <div id="inactiveNewsContainer"></div>
+</section>
 
   <!-- Comments -->
   <section id="comments" class="section">
@@ -75,30 +103,37 @@
 
 </main>
 
+<!-- Edit Modal -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Edit News</h2>
+    <form id="editNewsForm" enctype="multipart/form-data">
+      <input type="hidden" name="ArticleID" id="editArticleID">
+      <label>Title (English)</label>
+      <input type="text" name="Title" id="editTitle" required>
+      <label>Title (Arabic)</label>
+      <input type="text" name="Title_Ar" id="editTitle_Ar">
+      <label>Content (English)</label>
+      <textarea name="Content" id="editContent" required></textarea>
+      <label>Content (Arabic)</label>
+      <textarea name="Content_Ar" id="editContent_Ar"></textarea>
+      <!-- <label>Category ID</label>
+      <input type="number" name="CategoryID" id="editCategoryID" required> -->
+      <label>Category</label>
+<select name="CategoryID" id="editCategorySelect" class="custom-dropdown" required>
+  <option value="">-- Select Category --</option>
+</select>
+
+      <label>Image</label>
+      <input type="file" name="image" id="editImage">
+      <div id="currentImagePreview" style="margin:10px 0;"></div>
+      <button type="submit">Save Changes</button>
+    </form>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.0/moment.min.js"></script>
 <script src="js/admin.js"></script>
-<script>
-// Sidebar navigation
-const menuItems = document.querySelectorAll('.sidebar .menu li');
-const sections = document.querySelectorAll('.section');
-
-menuItems.forEach(item => {
-  item.addEventListener('click', () => {
-    menuItems.forEach(i => i.classList.remove('active'));
-    sections.forEach(s => s.classList.remove('active'));
-
-    item.classList.add('active');
-    document.getElementById(item.dataset.section).classList.add('active');
-  });
-});
-
-// Default filter: current month
-const filterMonth = document.getElementById('filterMonth');
-filterMonth.value = moment().format('YYYY-MM');
-document.getElementById('applyFilter').addEventListener('click', () => {
-  loadAllNewsEngagement(filterMonth.value);
-});
-</script>
-
 </body>
 </html>
