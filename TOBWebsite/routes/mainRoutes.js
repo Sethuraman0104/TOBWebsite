@@ -327,6 +327,73 @@ router.post('/logout', (req, res) => {
   });
 });
 
+// Get article by ID
+router.get('/news/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const pool = await sql.connect(sqlConfig);
+
+    // Increment view count
+    await pool.request()
+      .input('id', sql.Int, id)
+      .query(`UPDATE NewsArticles SET ViewCount = ISNULL(ViewCount,0) + 1 WHERE ArticleID = @id`);
+
+    // Get article with author name
+    const result = await pool.request()
+      .input('id', sql.Int, id)
+      .query(`
+        SELECT n.*, u.FullName AS AuthorName
+        FROM NewsArticles n
+        LEFT JOIN Users u ON n.AuthorID = u.UserID
+        WHERE n.ArticleID = @id
+      `);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ success: false, message: 'Article not found' });
+    }
+
+    res.json({ success: true, data: result.recordset[0] });
+
+  } catch (err) {
+    console.error('GET ARTICLE ERROR:', err);
+    res.status(500).json({ success: false, message: 'Error fetching article' });
+  }
+});
+
+// -------------------------
+// Get comments for a news article (public)
+// -------------------------
+router.get('/news/:id/comments', async (req, res) => {
+  try {
+    const articleId = parseInt(req.params.id);
+    if (!articleId) return res.status(400).json({ success: false, message: 'Invalid article ID' });
+
+    await sql.connect(sqlConfig);
+    const result = await new sql.Request()
+      .input('ArticleID', sql.Int, articleId)
+      .query(`
+        SELECT 
+          CommentID,
+          ArticleID,
+          UserID,
+          CommentText AS Text,
+          IsApproved,
+          CreatedOn,
+          u.FullName AS Name
+        FROM Comments c
+        LEFT JOIN Users u ON c.UserID = u.UserID
+        WHERE ArticleID=@ArticleID AND IsApproved=1
+        ORDER BY CreatedOn DESC
+      `);
+
+    res.json({ success: true, data: result.recordset });
+  } catch (err) {
+    console.error('GET COMMENTS ERROR:', err);
+    res.status(500).json({ success: false, message: 'Error fetching comments' });
+  }
+});
+
+
 // -------------------------
 // Middleware to protect routes
 // -------------------------
