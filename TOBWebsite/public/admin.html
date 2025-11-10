@@ -37,6 +37,7 @@
         <li data-section="pending"><i class="fa-solid fa-hourglass-half"></i> Unpublished News</li>
         <li data-section="allnews"><i class="fa-solid fa-newspaper"></i> Published News</li>
         <li data-section="inactive"><i class="fa-solid fa-ban"></i> Deactivated News</li>
+        <li data-section="trending"><i class="fa-solid fa-fire"></i> Manage Trending</li>
         <li data-section="comments"><i class="fa-solid fa-comments"></i> Comments</li>
         <li data-section="profile"><i class="fa-solid fa-user"></i> Profile</li>
       </ul>
@@ -48,9 +49,7 @@
     </div>
   </aside>
 
-
   <main class="main-content">
-
     <!-- Publish News -->
     <section id="publish" class="section active">
       <div class="floating-title">📝 Create News</div>
@@ -100,6 +99,33 @@
       <div id="inactiveNewsContainer"></div>
     </section>
 
+    <!-- Trending Section -->
+<section id="trending" class="section">
+  <div class="floating-title">🔥 Manage Trending Cards</div>
+
+  <div class="top-actions" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+    <div class="filter-card" style="display: flex; gap: 10px; align-items: center;">
+      <label>Month:</label>
+      <input type="month" id="filterTrendMonth">
+      <label>Status:</label>
+      <select id="filterTrendStatus">
+        <option value="all">All</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+      <button id="applyTrendFilter" class="btn btn-secondary"><i class="fa fa-filter"></i> Apply</button>
+    </div>
+
+    <button id="addTrendBtn" class="btn btn-primary" style="padding: 8px 16px;">
+      <i class="fa-solid fa-plus"></i> Add New Trend
+    </button>
+  </div>
+
+  <div id="trendsContainer" class="trends-grid"></div>
+</section>
+
+
+
     <!-- Comments -->
     <section id="comments" class="section">
       <div class="floating-title">💬 Comments to Approve</div>
@@ -131,6 +157,44 @@
     </form>
   </div>
 </section>
+
+<!-- Add/Edit Trend Modal -->
+<div id="trendModal" class="modal">
+  <div class="modal-content">
+    <span id="closeTrendModal" class="close">&times;</span>
+    <h2 id="trendModalTitle">Add Trend</h2>
+    <form id="trendForm" enctype="multipart/form-data">
+      <input type="hidden" id="TrendID" name="TrendID">
+
+      <label>Title (English)</label>
+      <input type="text" name="TrendTitle_EN" id="TrendTitle_EN" required>
+
+      <label>Title (Arabic)</label>
+      <input type="text" name="TrendTitle_AR" id="TrendTitle_AR">
+
+      <label>Description (English)</label>
+      <textarea name="TrendDescription_EN" id="TrendDescription_EN"></textarea>
+
+      <label>Description (Arabic)</label>
+      <textarea name="TrendDescription_AR" id="TrendDescription_AR"></textarea>
+
+      <label>Image</label>
+      <input type="file" name="Image" id="TrendImage">
+
+      <label>From Date</label>
+      <input type="date" name="FromDate" id="FromDate" required>
+
+      <label>To Date</label>
+      <input type="date" name="ToDate" id="ToDate">
+
+      <label><input type="checkbox" name="IsActive" id="IsActive" checked> Active</label>
+
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
 
   <!-- Change Password Modal -->
 <div id="changePasswordModal" class="modal">

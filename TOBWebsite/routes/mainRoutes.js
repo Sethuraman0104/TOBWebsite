@@ -19,6 +19,34 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const pool = await sql.connect(sqlConfig);
+
+    // Increment view count
+    await pool.request()
+      .input('id', sql.Int, id)
+      .query(`UPDATE NewsArticles SET ViewCount = ISNULL(ViewCount,0) + 1 WHERE ArticleID = @id`);
+
+    // Get the article
+    const result = await pool.request()
+      .input('id', sql.Int, id)
+      .query(`SELECT * FROM NewsArticles WHERE ArticleID = @id`);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ success: false, message: 'Article not found' });
+    }
+
+    res.json({ success: true, data: result.recordset[0] });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Error fetching article' });
+  }
+});
+
+
 // -------------------------
 // 1️⃣ Get all news (with optional lang)
 // -------------------------

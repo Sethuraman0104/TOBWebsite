@@ -17,8 +17,177 @@ const changePasswordModal = document.getElementById('changePasswordModal');
 const closePasswordModal = document.getElementById('closePasswordModal');
 const changePasswordForm = document.getElementById('changePasswordForm');
 const changePasswordMsg = document.getElementById('changePasswordMsg');
+// --------------------
+// Trending Cards Management
+// --------------------
+const trendModal = document.getElementById('trendModal');
+const closeTrendModal = document.getElementById('closeTrendModal');
+const addTrendBtn = document.getElementById('addTrendBtn');
+const trendForm = document.getElementById('trendForm');
+const trendsContainer = document.getElementById('trendsContainer');
+const trendModalTitle = document.getElementById('trendModalTitle');
+const filterTrendStatus = document.getElementById('filterTrendStatus');
+const applyTrendFilter = document.getElementById('applyTrendFilter');
+const filterTrendMonth = document.getElementById('filterTrendMonth');
 
+// --------------------
+// Modal Open/Close
+// --------------------
+addTrendBtn.onclick = () => openTrendModal();
+closeTrendModal.onclick = () => trendModal.style.display = 'none';
+window.onclick = (e) => { if (e.target === trendModal) trendModal.style.display = 'none'; };
 
+// --------------------
+// Load trends with optional filters (month/year/status)
+// --------------------
+async function loadTrends(status = 'all', month = '', year = '') {
+  try {
+    const query = new URLSearchParams({ status, month, year }).toString();
+    const res = await fetch(`/api/trends?${query}`, { cache: 'no-store' });
+    const data = await res.json();
+
+    const trends = data.success ? data.data : [];
+
+    if (!trends.length) {
+      trendsContainer.innerHTML = '<p class="text-muted">No trends found.</p>';
+      return;
+    }
+
+    trendsContainer.innerHTML = `
+      <div class="news-grid">
+        ${trends.map(t => `
+          <div class="news-card ${t.IsActive ? '' : 'inactive'}">
+            ${t.ImageURL
+              ? `<img src="${t.ImageURL}" alt="${t.TrendTitle_EN}" class="news-img"/>`
+              : `<div class="news-img placeholder"></div>`}
+            <div class="news-body">
+              <h3>${t.TrendTitle_EN}</h3>
+              <p>${t.TrendDescription_EN?.substring(0, 220) || ''}...</p>
+              <div class="info">
+                <span>📅 ${formatDateTime(t.FromDate)} → ${t.ToDate ? formatDateTime(t.ToDate) : '∞'}</span>
+              </div>
+              <div class="news-actions">
+                <button class="btn action-btn edit-btn" onclick="openTrendModal(${t.TrendID})">
+                  <i class="fa-solid fa-pen-to-square"></i> Edit
+                </button>
+                ${t.IsActive
+                  ? `<button class="btn action-btn deactivate-btn" onclick="toggleTrendStatus(${t.TrendID}, false)">
+                       <i class="fa-solid fa-ban"></i> Deactivate
+                     </button>`
+                  : `<button class="btn action-btn reactivate-btn" onclick="toggleTrendStatus(${t.TrendID}, true)">
+                       <i class="fa-solid fa-toggle-on"></i> Activate
+                     </button>`}
+                <button class="btn action-btn delete-btn" onclick="deleteTrend(${t.TrendID})">
+                  <i class="fa-solid fa-trash"></i> Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } catch (err) {
+    console.error('Error loading trends:', err);
+    trendsContainer.textContent = 'Error loading trends: ' + err.message;
+  }
+}
+
+// --------------------
+// Apply filters
+// --------------------
+applyTrendFilter.onclick = () => {
+  const filter = filterTrendMonth.value; // expected format: YYYY-MM
+  let month = '', year = '';
+  if (filter) [year, month] = filter.split('-'); // correct order: year = '2025', month = '11'
+
+  const status = filterTrendStatus.value || 'all'; // default to 'all'
+  loadTrends(status, month, year);
+};
+
+// --------------------
+// Open modal for add/edit
+// --------------------
+async function openTrendModal(trendID = null) {
+  trendForm.reset();
+  document.getElementById('TrendID').value = '';
+  trendModalTitle.textContent = trendID ? 'Edit Trend' : 'Add Trend';
+
+  if (trendID) {
+    try {
+      const res = await fetch(`/api/trends/${trendID}`);
+      const t = await res.json();
+
+      document.getElementById('TrendID').value = t.TrendID;
+      document.getElementById('TrendTitle_EN').value = t.TrendTitle_EN;
+      document.getElementById('TrendTitle_AR').value = t.TrendTitle_AR || '';
+      document.getElementById('TrendDescription_EN').value = t.TrendDescription_EN || '';
+      document.getElementById('TrendDescription_AR').value = t.TrendDescription_AR || '';
+      document.getElementById('FromDate').value = t.FromDate.split('T')[0];
+      if (t.ToDate) document.getElementById('ToDate').value = t.ToDate.split('T')[0];
+      document.getElementById('IsActive').checked = t.IsActive;
+    } catch (err) {
+      alert('Error loading trend: ' + err.message);
+      return;
+    }
+  }
+
+  trendModal.style.display = 'block';
+}
+
+// --------------------
+// Submit trend form
+// --------------------
+trendForm.onsubmit = async (e) => {
+  e.preventDefault();
+  const formData = new FormData(trendForm);
+
+  const url = formData.get('TrendID') ? '/api/trends/update' : '/api/trends/create';
+  try {
+    const res = await fetch(url, { method: 'POST', body: formData });
+    const data = await res.json();
+
+    alert(data.message);
+    trendModal.style.display = 'none';
+    applyTrendFilter.click();
+  } catch (err) {
+    alert('Error saving trend: ' + err.message);
+  }
+};
+
+// --------------------
+// Activate/Deactivate trend
+// --------------------
+async function toggleTrendStatus(id, activate) {
+  try {
+    const res = await fetch(`/api/trends/${activate ? 'activate' : 'deactivate'}/${id}`, { method: 'POST' });
+    const data = await res.json();
+    alert(data.message);
+    applyTrendFilter.click();
+  } catch (err) {
+    alert('Error updating trend status: ' + err.message);
+  }
+}
+
+// --------------------
+// Delete trend
+// --------------------
+async function deleteTrend(id) {
+  if (!confirm('Are you sure you want to delete this trend?')) return;
+
+  try {
+    const res = await fetch(`/api/trends/delete/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+
+    if (data.success) {
+      alert('Trend deleted successfully');
+      applyTrendFilter.click();
+    } else {
+      alert('Error deleting trend: ' + data.message);
+    }
+  } catch (err) {
+    alert('Error deleting trend: ' + err.message);
+  }
+}
 
 newsSearchInput.addEventListener('input', () => {
   const query = newsSearchInput.value.trim().toLowerCase();
@@ -78,6 +247,10 @@ function filterNews(query) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  filterTrendStatus.value = 'all';
+  filterTrendMonth.value = '';
+  loadTrends(); // load all trends by default
+
   const welcomeElement = document.getElementById('welcomeUser');
   const lastLoginElement = document.getElementById('lastLoginDisplay');
   const dateTimeDiv = document.getElementById('currentDateTime');
@@ -207,9 +380,17 @@ profileForm.onsubmit = async (e) => {
 // Change Password Modal
 // --------------------
 // Open/close modal
-openChangePasswordBtn.onclick = () => changePasswordModal.style.display = 'block';
+openChangePasswordBtn.onclick = () => {
+  changePasswordForm.reset(); // ✅ Clear all textboxes
+  changePasswordMsg.textContent = ''; // ✅ Clear any previous message
+  changePasswordModal.style.display = 'block';
+};
+// Close modal
 closePasswordModal.onclick = () => changePasswordModal.style.display = 'none';
-window.onclick = (e) => { if (e.target === changePasswordModal) changePasswordModal.style.display = 'none'; };
+// Close when clicking outside
+window.onclick = (e) => {
+  if (e.target === changePasswordModal) changePasswordModal.style.display = 'none';
+};
 
 // Change Password Form Submit
 changePasswordForm.onsubmit = async (e) => {

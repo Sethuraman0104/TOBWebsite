@@ -6,11 +6,15 @@ const cookieParser = require('cookie-parser');
 
 const mainRoutes = require('./routes/mainRoutes');
 const authRoutes = require('./routes/authRoutes');
+const trendsRoutes = require('./routes/trendsRoutes');
+const listEndpoints = require('express-list-endpoints');
 
 dotenv.config();
 const app = express();
 
+// -------------------------
 // Middleware
+// -------------------------
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -21,43 +25,72 @@ app.use(session({
   cookie: { maxAge: 2 * 60 * 60 * 1000 }, // 2 hours
 }));
 
+// -------------------------
 // API Routes
+// -------------------------
 app.use('/api/auth', authRoutes);
+app.use('/api/trends', trendsRoutes);
 app.use('/api', mainRoutes);
 
-// -------------------------
-// Serve static files AFTER routes to avoid interference
-// -------------------------
-// app.use('/public', express.static(path.join(__dirname, 'public')));
+console.log(listEndpoints(app));
 
-// Default route -> login page
+// -------------------------
+// Serve static files
+// -------------------------
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
+
+// -------------------------
+// Public Homepage -> TOBHome.html
+// -------------------------
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+  res.sendFile(path.join(__dirname, 'public', 'TOBHome.html'));
 });
 
+app.get('/TOBHome.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'TOBHome.html'));
+});
+
+// -------------------------
+// Login Page
+// -------------------------
 app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// Serve static files after routes
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Protect admin page
+// -------------------------
+// Protect Admin Page
+// -------------------------
 app.get('/admin.html', (req, res) => {
   if (!req.session.user) return res.redirect('/login');
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// Protect profile page
+// -------------------------
+// Protect Profile Page
+// -------------------------
 app.get('/profile.html', (req, res) => {
   if (!req.session.user) return res.redirect('/login');
   res.sendFile(path.join(__dirname, 'public', 'profile.html'));
 });
 
-// Catch-all
+// -------------------------
+// Catch-all 404
+// -------------------------
 app.use((req, res) => {
   res.status(404).send('Route not found');
 });
 
+// -------------------------
+// Debug logger
+// -------------------------
+app.use((req, res, next) => {
+  console.log(`[${req.method}] ${req.originalUrl}`);
+  next();
+});
+
+// -------------------------
+// Start Server
+// -------------------------
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
