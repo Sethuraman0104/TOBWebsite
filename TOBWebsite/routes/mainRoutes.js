@@ -216,7 +216,7 @@ router.get('/news/admin', isAdmin, async (req, res) => {
     const result = await sql.query(`
       SELECT n.ArticleID, n.Title, n.Title_Ar, n.Content, n.Content_Ar,
              n.ImageURL, n.IsApproved, n.IsActive, n.CreatedOn, n.PublishedOn, n.CategoryID,
-             n.UpdatedOn,n.IsTopStory,n.IsFeatured,n.HighlightOrder,
+             n.UpdatedOn,n.IsTopStory,n.IsFeatured,n.HighlightOrder, n.ViewCount,
              (SELECT COUNT(*) FROM Likes l WHERE l.ArticleID = n.ArticleID) AS LikesCount,
              (SELECT COUNT(*) FROM Comments c WHERE c.ArticleID = n.ArticleID) AS CommentsCount
       FROM NewsArticles n

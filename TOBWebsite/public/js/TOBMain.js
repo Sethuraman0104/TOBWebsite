@@ -410,21 +410,22 @@ async function loadHighlightsFeatured() {
       const delay = 150 * index; // animation delay
 
       const card = `
-        <div class="col-lg-4 col-md-6 d-flex" data-aos="zoom-in" data-aos-delay="${delay}">
-          <div class="featured-card flex-fill">
-            <div class="featured-tag">FEATURED</div>
-            <img src="${img}" alt="${n.Title}" onerror="this.src='/images/default-news.jpg'">
-            <div class="card-overlay"></div>
-            <div class="featured-body">
-              <div class="featured-title">${n.Title}</div>
-              <div class="featured-content">${n.Content || n.Content || ''}</div>
-              <div class="featured-footer">
-                <span>📅 ${date}</span>
-                <button class="featured-read-btn" onclick="openArticle(${n.ArticleID})">Read More</button>
-              </div>
-            </div>
-          </div>
-        </div>`;
+  <div class="featured-item" data-aos="zoom-in" data-aos-delay="${delay}">
+    <div class="featured-card flex-fill">
+      <div class="featured-tag">FEATURED</div>
+      <img src="${img}" alt="${n.Title}" onerror="this.src='/images/default-news.jpg'">
+      <div class="card-overlay"></div>
+      <div class="featured-body">
+        <div class="featured-title">${n.Title}</div>
+        <div class="featured-content">${n.Content || ''}</div>
+        <div class="featured-footer">
+          <span>📅 ${date}</span>
+          <button class="featured-read-btn" onclick="openArticle(${n.ArticleID})">Read More</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
       container.insertAdjacentHTML('beforeend', card);
     });
 
@@ -469,69 +470,169 @@ document.getElementById('newsletterForm').addEventListener('submit', async (e) =
 });
 
 async function loadNewsArticles() {
-    const container = document.getElementById('newsCategoriesSection');
-    container.innerHTML = '<p>Loading news...</p>';
+  const container = document.getElementById('newsCategoriesSection');
+  container.innerHTML = '<p>Loading news...</p>';
 
-    try {
-        const res = await fetch('/api/news/categories/admin', { cache: 'no-store' });
-        const categories = await res.json();
+  try {
+    const res = await fetch('/api/news/categories/admin', { cache: 'no-store' });
+    const categories = await res.json();
 
-        if (!categories.length) {
-            container.innerHTML = '<p>No news available</p>';
-            return;
-        }
-
-        container.innerHTML = '';
-
-        categories.forEach(cat => {
-            if (!cat.Articles || cat.Articles.length === 0) return;
-
-            // Category Header
-            const catDiv = document.createElement('div');
-            catDiv.className = 'mb-5';
-            catDiv.innerHTML = `
-                <h3 class="category-header mb-3">${cat.CategoryName}</h3>
-                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
-                </div>
-            `;
-
-            const rowDiv = catDiv.querySelector('.row');
-
-            // Article Cards
-            cat.Articles.forEach(article => {
-                const cardDiv = document.createElement('div');
-                cardDiv.className = 'col';
-                cardDiv.innerHTML = `
-                    <div class="card news-card h-100 shadow-sm border-0">
-                        <div class="card-img-container">
-                            <img src="${article.ImageURL}" class="card-img-top" alt="${article.Title}" onerror="this.src='/images/default-news.jpg';">
-                        </div>
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title fw-bold mb-2">${article.Title}</h5>
-                            <p class="card-text text-truncate mb-3">${article.Content}</p>
-                            <div class="mt-auto d-flex justify-content-between align-items-center">
-                                <small class="text-muted">${formatDateTime(article.PublishedOn)}</small>
-                                <div>
-                                    <i class="fa-solid fa-heart text-danger me-1"></i> ${article.LikesCount}
-                                    <i class="fa-solid fa-comment text-secondary ms-3 me-1"></i> ${article.CommentsCount}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                rowDiv.appendChild(cardDiv);
-            });
-
-            container.appendChild(catDiv);
-        });
-
-    } catch (err) {
-        container.innerHTML = '<p>Error loading news</p>';
-        console.error(err);
+    if (!categories.length) {
+      container.innerHTML = '<p>No news available</p>';
+      return;
     }
+
+    container.innerHTML = '';
+
+    categories.forEach(cat => {
+      if (!cat.Articles || cat.Articles.length === 0) return;
+
+      // Category Section Wrapper
+      const safeId = encodeURIComponent(cat.CategoryName);
+      const catDiv = document.createElement('div');
+      catDiv.className = 'mb-5';
+      catDiv.innerHTML = `
+  <h3 class="category-header mb-3" id="${safeId}">${cat.CategoryName}</h3>
+  <div class="news-grid"></div>
+`;
+
+      const gridDiv = catDiv.querySelector('.news-grid');
+
+      // Article Cards
+      cat.Articles.forEach(article => {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'news-item';
+        cardDiv.innerHTML = `
+          <div class="card news-card h-100 shadow-sm border-0" data-aos="fade-up">
+            <div class="card-img-container">
+              <img src="${article.ImageURL}" class="card-img-top" alt="${article.Title}" onerror="this.src='/images/default-news.jpg';">
+            </div>
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title fw-bold mb-2">${article.Title}</h5>
+              <p class="card-text text-truncate mb-3">${article.Content}</p>
+              <div class="mt-auto d-flex justify-content-between align-items-center">
+                <small class="text-muted">${formatDateTime(article.PublishedOn)}</small>
+                <div>
+                  <i class="fa-solid fa-heart text-danger me-1"></i> ${article.LikesCount}
+                  <i class="fa-solid fa-comment text-secondary ms-3 me-1"></i> ${article.CommentsCount}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        gridDiv.appendChild(cardDiv);
+      });
+
+      container.appendChild(catDiv);
+    });
+
+  } catch (err) {
+    container.innerHTML = '<p>Error loading news</p>';
+    console.error(err);
+  }
 }
 
 loadNewsArticles();
+
+async function loadFooterCategories() {
+  const container = document.getElementById('footerCategories');
+  container.innerHTML = '<li>Loading categories...</li>';
+  try {
+    const res = await fetch('/api/news/categories/admin', { cache: 'no-store' });
+    const categories = await res.json();
+    if (!categories.length) {
+      container.innerHTML = '<li>No categories</li>';
+      return;
+    }
+    container.innerHTML = '';
+    categories.forEach(cat => {
+      const safeId = encodeURIComponent(cat.CategoryName);
+      const li = document.createElement('li');
+      li.className = "footer-category-link";
+      li.innerHTML = `
+    <a href="#${safeId}" class="footer-category-link-item">
+      <i class="fa-solid fa-angle-right me-1"></i>${cat.CategoryName}
+    </a>`;
+      container.appendChild(li);
+    });
+
+  } catch {
+    container.innerHTML = '<li>Error loading</li>';
+  }
+}
+
+function subscribeNewsletter() {
+  const email = document.getElementById('newsletterEmail').value.trim();
+  const msg = document.getElementById('newsletterMsg');
+  if (!email) return;
+  msg.textContent = `✅ Thanks for subscribing, ${email}!`;
+  document.getElementById('newsletterEmail').value = '';
+}
+
+document.getElementById('year').textContent = new Date().getFullYear();
+loadFooterCategories();
+
+async function loadMostReadNews() {
+  try {
+    const res = await fetch('/api/news/admin', { cache: 'no-store' });
+    const news = await res.json();
+
+    const validNews = (Array.isArray(news) ? news : []).filter(
+      n => n.IsActive && n.IsApproved
+    );
+
+    const mostRead = validNews
+      .sort((a, b) => (b.ViewCount || 0) - (a.ViewCount || 0))
+      .slice(0, 6);
+
+    const container = document.getElementById('mostReadList');
+    container.innerHTML = '';
+
+    if (!mostRead.length) {
+      container.innerHTML = `
+        <div class="text-center text-muted py-5">
+          <i class="fa-regular fa-eye-slash fs-2"></i>
+          <p class="mt-2">No Most Read News available right now.</p>
+        </div>`;
+      return;
+    }
+
+    mostRead.forEach((n, i) => {
+      const img = n.ImageURL || '/images/default-news.jpg';
+      const date = formatDateTime(n.PublishedOn);
+      const delay = 100 * i;
+
+      const snippet = (n.Content || '').length > 160
+        ? n.Content.substring(0, 160) + '...'
+        : n.Content || '';
+
+      const card = `
+        <div class="most-read-item" data-aos="fade-right" data-aos-delay="${delay}">
+          <div class="timeline-dot"></div>
+          <img src="${img}" alt="${n.Title}" class="most-read-img" onerror="this.src='/images/default-news.jpg'">
+          <div class="most-read-content">
+            <div>
+              <div class="most-read-title">${n.Title}</div>
+              <div class="most-read-snippet">${snippet}</div>
+            </div>
+            <div class="most-read-footer">
+              <span><i class="fa-solid fa-eye"></i> ${n.ViewCount || 0} views</span>
+              <span><i class="fa-regular fa-calendar"></i> ${date}</span>
+              <button class="most-read-btn" onclick="openArticle(${n.ArticleID})">Read More</button>
+            </div>
+          </div>
+        </div>`;
+      container.insertAdjacentHTML('beforeend', card);
+    });
+  } catch (err) {
+    console.error('loadMostReadNews error:', err);
+  }
+}
+
+loadMostReadNews();
+
+
+
 
 // ---------- LOAD NEWS ----------
 async function loadNews() {
