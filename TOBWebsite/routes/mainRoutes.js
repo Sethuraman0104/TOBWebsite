@@ -65,7 +65,7 @@ router.get('/news', async (req, res) => {
                CreatedOn,
                PublishedOn,
                IsApproved,
-               IsActive
+               IsActive,IsTopStory,IsFeatured,HighlightOrder
         FROM NewsArticles
         ORDER BY PublishedOn DESC
       `);
@@ -77,11 +77,11 @@ router.get('/news', async (req, res) => {
 });
 
 // -------------------------
-// 2️⃣ Create News
+// Create News
 // -------------------------
 router.post('/news/create', isAdmin, upload.single('image'), async (req, res) => {
   try {
-    const { Title, Content, Title_Ar, Content_Ar, CategoryID } = req.body;
+    const { Title, Content, Title_Ar, Content_Ar, CategoryID, IsTopStory, IsFeatured } = req.body;
     if (!Title || !Content || !CategoryID)
       return res.status(400).json({ success: false, message: 'Title, Content, and CategoryID required' });
 
@@ -96,9 +96,11 @@ router.post('/news/create', isAdmin, upload.single('image'), async (req, res) =>
       .input('CategoryID', sql.Int, parseInt(CategoryID))
       .input('AuthorID', sql.Int, req.user.UserID)
       .input('ImageURL', sql.NVarChar(255), ImageURL)
+      .input('IsTopStory', sql.Bit, IsTopStory === 'true' ? 1 : 0)
+      .input('IsFeatured', sql.Bit, IsFeatured === 'true' ? 1 : 0)
       .query(`
-        INSERT INTO NewsArticles (Title, Content, Title_Ar, Content_Ar, CategoryID, AuthorID, ImageURL, IsApproved, IsActive, CreatedOn)
-        VALUES (@Title, @Content, @Title_Ar, @Content_Ar, @CategoryID, @AuthorID, @ImageURL, 0, 1, GETDATE())
+        INSERT INTO NewsArticles (Title, Content, Title_Ar, Content_Ar, CategoryID, AuthorID, ImageURL, IsApproved, IsActive, CreatedOn, IsTopStory, IsFeatured)
+        VALUES (@Title, @Content, @Title_Ar, @Content_Ar, @CategoryID, @AuthorID, @ImageURL, 0, 1, GETDATE(), @IsTopStory, @IsFeatured)
       `);
 
     res.json({ success: true, message: 'News created successfully and awaiting approval.' });
@@ -108,15 +110,10 @@ router.post('/news/create', isAdmin, upload.single('image'), async (req, res) =>
   }
 });
 
-// -------------------------
-// 3️⃣ Update News
-// -------------------------
 router.post('/news/update/:id', isAdmin, upload.single('image'), async (req, res) => {
   const ArticleID = parseInt(req.params.id);
   try {
-    const { Title, Content, Title_Ar, Content_Ar, CategoryID } = req.body;
-    if (!Title || !Content || !CategoryID)
-      return res.status(400).json({ success: false, message: 'Title, Content, and CategoryID required' });
+    const { Title, Content, Title_Ar, Content_Ar, CategoryID, IsTopStory, IsFeatured } = req.body;
 
     const ImageURL = req.file ? `/uploads/${req.file.filename}` : null;
 
@@ -127,7 +124,10 @@ router.post('/news/update/:id', isAdmin, upload.single('image'), async (req, res
            .input('Content', sql.NText, Content)
            .input('Title_Ar', sql.NVarChar(255), Title_Ar || null)
            .input('Content_Ar', sql.NText, Content_Ar || null)
-           .input('CategoryID', sql.Int, parseInt(CategoryID));
+           .input('CategoryID', sql.Int, parseInt(CategoryID))
+           .input('IsTopStory', sql.Bit, IsTopStory === 'true' ? 1 : 0)
+           .input('IsFeatured', sql.Bit, IsFeatured === 'true' ? 1 : 0);
+
     if (ImageURL) request.input('ImageURL', sql.NVarChar(255), ImageURL);
 
     await request.query(`
@@ -136,7 +136,9 @@ router.post('/news/update/:id', isAdmin, upload.single('image'), async (req, res
           Content=@Content,
           Title_Ar=@Title_Ar,
           Content_Ar=@Content_Ar,
-          CategoryID=@CategoryID
+          CategoryID=@CategoryID,
+          IsTopStory=@IsTopStory,
+          IsFeatured=@IsFeatured
           ${ImageURL ? ', ImageURL=@ImageURL' : ''},
           UpdatedOn=GETDATE()
       WHERE ArticleID=@ArticleID
@@ -214,13 +216,86 @@ router.get('/news/admin', isAdmin, async (req, res) => {
     const result = await sql.query(`
       SELECT n.ArticleID, n.Title, n.Title_Ar, n.Content, n.Content_Ar,
              n.ImageURL, n.IsApproved, n.IsActive, n.CreatedOn, n.PublishedOn, n.CategoryID,
-             n.UpdatedOn,
+             n.UpdatedOn,n.IsTopStory,n.IsFeatured,n.HighlightOrder,
              (SELECT COUNT(*) FROM Likes l WHERE l.ArticleID = n.ArticleID) AS LikesCount,
              (SELECT COUNT(*) FROM Comments c WHERE c.ArticleID = n.ArticleID) AS CommentsCount
       FROM NewsArticles n
       ORDER BY n.CreatedOn DESC
     `);
     res.json(result.recordset);
+  } catch (err) {
+    console.error('ADMIN NEWS ERROR:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// -------------------------
+// 6️⃣ Admin: Get active & approved news grouped by category
+// -------------------------
+router.get('/news/categories/admin', isAdmin, async (req, res) => {
+  try {
+    await sql.connect(sqlConfig);
+
+    const result = await sql.query(`
+      SELECT 
+          c.CategoryID, 
+          c.CategoryName, 
+          c.CategoryName_Ar,
+          n.ArticleID, 
+          n.Title, 
+          n.Title_Ar, 
+          n.Content, 
+          n.Content_Ar,
+          n.ImageURL, 
+          n.CreatedOn, 
+          n.PublishedOn, 
+          n.IsTopStory,
+          n.IsFeatured,
+          n.HighlightOrder,
+          (SELECT COUNT(*) FROM Likes l WHERE l.ArticleID = n.ArticleID) AS LikesCount,
+          (SELECT COUNT(*) FROM Comments c WHERE c.ArticleID = n.ArticleID) AS CommentsCount
+      FROM NewsCategories c
+      LEFT JOIN NewsArticles n 
+          ON n.CategoryID = c.CategoryID
+          AND n.IsActive = 1
+          AND n.IsApproved = 1
+      WHERE c.IsActive = 1
+      ORDER BY c.CategoryName, n.HighlightOrder ASC, n.PublishedOn DESC
+    `);
+
+    // Optional: group articles by category for easier front-end consumption
+    const categories = {};
+    result.recordset.forEach(row => {
+      const catId = row.CategoryID;
+      if (!categories[catId]) {
+        categories[catId] = {
+          CategoryID: catId,
+          CategoryName: row.CategoryName,
+          CategoryName_Ar: row.CategoryName_Ar,
+          Articles: []
+        };
+      }
+      if (row.ArticleID) {
+        categories[catId].Articles.push({
+          ArticleID: row.ArticleID,
+          Title: row.Title,
+          Title_Ar: row.Title_Ar,
+          Content: row.Content,
+          Content_Ar: row.Content_Ar,
+          ImageURL: row.ImageURL || '/images/default-news.jpg',
+          CreatedOn: row.CreatedOn,
+          PublishedOn: row.PublishedOn,
+          IsTopStory: row.IsTopStory,
+          IsFeatured: row.IsFeatured,
+          HighlightOrder: row.HighlightOrder,
+          LikesCount: row.LikesCount,
+          CommentsCount: row.CommentsCount
+        });
+      }
+    });
+
+    res.json(Object.values(categories));
+
   } catch (err) {
     console.error('ADMIN NEWS ERROR:', err);
     res.status(500).json({ success: false, message: err.message });

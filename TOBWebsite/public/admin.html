@@ -11,7 +11,6 @@
 </head>
 
 <body>
-
   <!-- Top Bar -->
   <header class="topbar">
     <div class="topbar-left">
@@ -24,7 +23,6 @@
       <button id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
     </div>
   </header>
-
 
   <aside class="sidebar">
     <div class="sidebar-logo">
@@ -72,6 +70,8 @@
 
           <label>Image</label>
           <input type="file" name="image">
+          <label><input type="checkbox" name="IsTopStory" value="true"> Mark as Top Story</label>
+          <label><input type="checkbox" name="IsFeatured" value="true"> Mark as Featured</label>
           <button type="submit">Post News</button>
         </form>
         <div id="postNewsMsg" class="message"></div>
@@ -100,31 +100,30 @@
     </section>
 
     <!-- Trending Section -->
-<section id="trending" class="section">
-  <div class="floating-title">🔥 Manage Trending Cards</div>
+    <section id="trending" class="section">
+      <div class="floating-title">🔥 Manage Trending Cards</div>
 
-  <div class="top-actions" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
-    <div class="filter-card" style="display: flex; gap: 10px; align-items: center;">
-      <label>Month:</label>
-      <input type="month" id="filterTrendMonth">
-      <label>Status:</label>
-      <select id="filterTrendStatus">
-        <option value="all">All</option>
-        <option value="active">Active</option>
-        <option value="inactive">Inactive</option>
-      </select>
-      <button id="applyTrendFilter" class="btn btn-secondary"><i class="fa fa-filter"></i> Apply</button>
-    </div>
+      <div class="top-actions"
+        style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+        <div class="filter-card" style="display: flex; gap: 10px; align-items: center;">
+          <label>Month:</label>
+          <input type="month" id="filterTrendMonth">
+          <label>Status:</label>
+          <select id="filterTrendStatus">
+            <option value="all">All</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          <button id="applyTrendFilter" class="btn btn-secondary"><i class="fa fa-filter"></i> Apply</button>
+        </div>
 
-    <button id="addTrendBtn" class="btn btn-primary" style="padding: 8px 16px;">
-      <i class="fa-solid fa-plus"></i> Add New Trend
-    </button>
-  </div>
+        <button id="addTrendBtn" class="btn btn-primary" style="padding: 8px 16px;">
+          <i class="fa-solid fa-plus"></i> Add New Trend
+        </button>
+      </div>
 
-  <div id="trendsContainer" class="trends-grid"></div>
-</section>
-
-
+      <div id="trendsContainer" class="trends-grid"></div>
+    </section>
 
     <!-- Comments -->
     <section id="comments" class="section">
@@ -133,122 +132,124 @@
     </section>
 
     <section id="profile" class="section">
-  <div class="profile-card">
-    <div class="profile-header">
-      <h2>👤 Profile</h2>
-      <button type="button" id="openChangePasswordBtn" class="btn btn-secondary">Change Password</button>
+      <div class="profile-card">
+        <div class="profile-header">
+          <h2>👤 Profile</h2>
+          <button type="button" id="openChangePasswordBtn" class="btn btn-secondary">Change Password</button>
+        </div>
+
+        <form id="profileForm" class="profile-form">
+          <div class="form-group">
+            <label for="profileFullName">Full Name</label>
+            <input type="text" id="profileFullName" name="FullName" required>
+          </div>
+
+          <div class="form-group">
+            <label for="profileEmail">Email</label>
+            <input type="email" id="profileEmail" name="Email" required>
+          </div>
+
+          <div class="form-footer">
+            <span id="profileMsg" class="text-success"></span>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Add/Edit Trend Modal -->
+    <div id="trendModal" class="modal">
+      <div class="modal-content">
+        <span id="closeTrendModal" class="close">&times;</span>
+        <h2 id="trendModalTitle">Add Trend</h2>
+        <form id="trendForm" enctype="multipart/form-data">
+          <input type="hidden" id="TrendID" name="TrendID">
+
+          <label>Title (English)</label>
+          <input type="text" name="TrendTitle_EN" id="TrendTitle_EN" required>
+
+          <label>Title (Arabic)</label>
+          <input type="text" name="TrendTitle_AR" id="TrendTitle_AR">
+
+          <label>Description (English)</label>
+          <textarea name="TrendDescription_EN" id="TrendDescription_EN"></textarea>
+
+          <label>Description (Arabic)</label>
+          <textarea name="TrendDescription_AR" id="TrendDescription_AR"></textarea>
+
+          <label>Image</label>
+          <input type="file" name="Image" id="TrendImage">
+
+          <label>From Date</label>
+          <input type="date" name="FromDate" id="FromDate" required>
+
+          <label>To Date</label>
+          <input type="date" name="ToDate" id="ToDate">
+
+          <label><input type="checkbox" name="IsActive" id="IsActive" checked> Active</label>
+
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
+      </div>
     </div>
 
-    <form id="profileForm" class="profile-form">
-      <div class="form-group">
-        <label for="profileFullName">Full Name</label>
-        <input type="text" id="profileFullName" name="FullName" required>
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal" class="modal">
+      <div class="modal-content">
+        <span id="closePasswordModal" class="close">&times;</span>
+        <h2>Change Password</h2>
+        <form id="changePasswordForm">
+          <label for="CurrentPassword">Current Password</label>
+          <input type="password" id="CurrentPassword" name="CurrentPassword" required>
+
+          <label for="NewPassword">New Password</label>
+          <input type="password" id="NewPassword" name="NewPassword" required>
+
+          <label for="ConfirmPassword">Confirm New Password</label>
+          <input type="password" id="ConfirmPassword" name="ConfirmPassword" required>
+
+          <button type="submit">Change Password</button>
+          <p id="changePasswordMsg" class="msg"></p>
+        </form>
       </div>
+    </div>
 
-      <div class="form-group">
-        <label for="profileEmail">Email</label>
-        <input type="email" id="profileEmail" name="Email" required>
-      </div>
-
-      <div class="form-footer">
-        <span id="profileMsg" class="text-success"></span>
-        <button type="submit" class="btn btn-primary">Save</button>
-      </div>
-    </form>
-  </div>
-</section>
-
-<!-- Add/Edit Trend Modal -->
-<div id="trendModal" class="modal">
-  <div class="modal-content">
-    <span id="closeTrendModal" class="close">&times;</span>
-    <h2 id="trendModalTitle">Add Trend</h2>
-    <form id="trendForm" enctype="multipart/form-data">
-      <input type="hidden" id="TrendID" name="TrendID">
-
-      <label>Title (English)</label>
-      <input type="text" name="TrendTitle_EN" id="TrendTitle_EN" required>
-
-      <label>Title (Arabic)</label>
-      <input type="text" name="TrendTitle_AR" id="TrendTitle_AR">
-
-      <label>Description (English)</label>
-      <textarea name="TrendDescription_EN" id="TrendDescription_EN"></textarea>
-
-      <label>Description (Arabic)</label>
-      <textarea name="TrendDescription_AR" id="TrendDescription_AR"></textarea>
-
-      <label>Image</label>
-      <input type="file" name="Image" id="TrendImage">
-
-      <label>From Date</label>
-      <input type="date" name="FromDate" id="FromDate" required>
-
-      <label>To Date</label>
-      <input type="date" name="ToDate" id="ToDate">
-
-      <label><input type="checkbox" name="IsActive" id="IsActive" checked> Active</label>
-
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Save</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-  <!-- Change Password Modal -->
-<div id="changePasswordModal" class="modal">
-  <div class="modal-content">
-    <span id="closePasswordModal" class="close">&times;</span>
-    <h2>Change Password</h2>
-    <form id="changePasswordForm">
-      <label for="CurrentPassword">Current Password</label>
-      <input type="password" id="CurrentPassword" name="CurrentPassword" required>
-
-      <label for="NewPassword">New Password</label>
-      <input type="password" id="NewPassword" name="NewPassword" required>
-
-      <label for="ConfirmPassword">Confirm New Password</label>
-      <input type="password" id="ConfirmPassword" name="ConfirmPassword" required>
-
-      <button type="submit">Change Password</button>
-      <p id="changePasswordMsg" class="msg"></p>
-    </form>
-  </div>
-</div>
-
-  <!-- Edit Modal -->
-  <div id="editModal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2>Edit News</h2>
-      <form id="editNewsForm" enctype="multipart/form-data">
-        <input type="hidden" name="ArticleID" id="editArticleID">
-        <label>Title (English)</label>
-        <input type="text" name="Title" id="editTitle" required>
-        <label>Title (Arabic)</label>
-        <input type="text" name="Title_Ar" id="editTitle_Ar">
-        <label>Content (English)</label>
-        <textarea name="Content" id="editContent" required></textarea>
-        <label>Content (Arabic)</label>
-        <textarea name="Content_Ar" id="editContent_Ar"></textarea>
-        <!-- <label>Category ID</label>
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Edit News</h2>
+        <form id="editNewsForm" enctype="multipart/form-data">
+          <input type="hidden" name="ArticleID" id="editArticleID">
+          <label>Title (English)</label>
+          <input type="text" name="Title" id="editTitle" required>
+          <label>Title (Arabic)</label>
+          <input type="text" name="Title_Ar" id="editTitle_Ar">
+          <label>Content (English)</label>
+          <textarea name="Content" id="editContent" required></textarea>
+          <label>Content (Arabic)</label>
+          <textarea name="Content_Ar" id="editContent_Ar"></textarea>
+          <!-- <label>Category ID</label>
       <input type="number" name="CategoryID" id="editCategoryID" required> -->
-        <label>Category</label>
-        <select name="CategoryID" id="editCategorySelect" class="custom-dropdown" required>
-          <option value="">-- Select Category --</option>
-        </select>
+          <label>Category</label>
+          <select name="CategoryID" id="editCategorySelect" class="custom-dropdown" required>
+            <option value="">-- Select Category --</option>
+          </select>
 
-        <label>Image</label>
-        <input type="file" name="image" id="editImage">
-        <div id="currentImagePreview" style="margin:10px 0;"></div>
-        <button type="submit">Save Changes</button>
-      </form>
+          <label>Image</label>
+          <input type="file" name="image" id="editImage">
+          <div id="currentImagePreview" style="margin:10px 0;"></div>
+          <label><input type="checkbox" id="editIsTopStory" name="IsTopStory" value="true"> Mark as Top Story</label>
+          <label><input type="checkbox" id="editIsFeatured" name="IsFeatured" value="true"> Mark as Featured</label>
+          <button type="submit">Save Changes</button>
+        </form>
+      </div>
     </div>
-  </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.0/moment.min.js"></script>
-  <script src="js/admin.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.0/moment.min.js"></script>
+    <script src="js/admin.js"></script>
 </body>
 
 </html>

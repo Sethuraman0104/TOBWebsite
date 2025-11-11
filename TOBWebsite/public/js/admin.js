@@ -726,9 +726,6 @@ async function approveNews(articleID) {
   await loadInactiveNews();
 }
 
-// --------------------
-// Edit Modal
-// --------------------
 window.openEditModal = async (articleID) => {
   const res = await fetch('/api/news/admin');
   const news = await res.json();
@@ -740,8 +737,11 @@ window.openEditModal = async (articleID) => {
   document.getElementById('editTitle_Ar').value = article.Title_Ar || '';
   document.getElementById('editContent').value = article.Content;
   document.getElementById('editContent_Ar').value = article.Content_Ar || '';
-  // document.getElementById('editCategoryID').value = article.CategoryID || 1;
   document.getElementById('editCategorySelect').value = article.CategoryID || '';
+  
+  document.getElementById('editIsTopStory').checked = article.IsTopStory;
+  document.getElementById('editIsFeatured').checked = article.IsFeatured;
+
   editModal.style.display = 'block';
 };
 

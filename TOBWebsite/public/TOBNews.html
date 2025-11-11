@@ -20,46 +20,84 @@
 </head>
 <body>
 
-  <!-- Topbar -->
-  <div class="topbar">
-    <div class="container d-flex align-items-center justify-content-between">
-      <div class="d-flex align-items-center gap-3">
-        <img src="images/TOBTransparent.png" class="logo" alt="TOB Logo" id="siteLogo">
-        <div>
-          <div id="brandTitle">TOB News</div>
-          <div class="muted-small">Reliable local & global news</div>
+  <!-- 🌤️ Topbar -->
+<div class="topbar py-2 shadow-sm">
+  <div class="container d-flex align-items-center justify-content-between flex-wrap gap-3">
+
+    <!-- 🔹 Logo & Branding -->
+    <div class="d-flex align-items-center gap-2 brand-box">
+      <img src="images/TOBTransparent.png" class="logo" alt="TOB Logo" id="siteLogo">
+      <div>
+        <div id="brandTitle">TOB News</div>
+        <div class="muted-small">Reliable local & global news</div>
+      </div>
+    </div>
+
+    <!-- 🔹 Live Info Section -->
+    <div class="d-flex align-items-center gap-4 info-area">
+
+      <!-- 🌍 Location Info -->
+      <div class="location-box d-flex align-items-center gap-2">
+        <i class="fa-solid fa-location-dot text-danger fs-5"></i>
+        <div id="userLocation" class="fw-semibold small text-muted">Detecting...</div>
+      </div>
+
+      <!-- 🌤️ Weather Info -->
+      <div class="climate-box d-flex align-items-center gap-2 px-3 py-1 rounded-4 bg-white bg-opacity-75 shadow-sm">
+        <i class="fa-solid fa-cloud-sun text-warning fs-5"></i>
+        <div class="text-end small">
+          <div id="weatherText" class="text-secondary">Loading...</div>
+          <div id="weatherTemp" class="fw-bold text-dark">--°C</div>
         </div>
       </div>
-      <div class="d-flex gap-3 align-items-center">
-        <div class="climate-box text-end">
-          <div id="weatherText" class="muted-small"></div>
-          <div id="weatherTemp" style="font-weight:700"></div>
-        </div>
-        <div class="datetime text-end">
-          <div id="currentDateTime" style="font-weight:700"></div>
-          <div id="currentTimeSmall" class="muted-small"></div>
-        </div>
+
+      <!-- 🕒 Date & Time -->
+      <div class="datetime text-end px-3 py-1 rounded-4 bg-white bg-opacity-75 shadow-sm">
+        <div><i class="fa-regular fa-calendar-days me-1 text-danger"></i> <span id="currentDateTime" class="fw-bold"></span></div>
+        <div><i class="fa-regular fa-clock me-1 text-danger"></i> <span id="currentTimeSmall" class="fw-semibold"></span></div>
+      </div>
+
+      <!-- 🌐 Language Switch -->
+      <div class="lang-switch">
+        <button id="langToggle" class="btn btn-sm lang-btn px-3 py-1">
+          <i class="fa-solid fa-globe"></i> <span id="langLabel">العربية</span>
+        </button>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-light site-navbar sticky-top shadow-sm">
-    <div class="container">
-      <a class="navbar-brand" href="#"> <strong>TOB</strong> <small class="text-muted">News</small></a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="mainNav">
-        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-          <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="#newsSection">Top News</a></li>
-          <li class="nav-item"><a class="nav-link" href="#trendsSection">Trending</a></li>
-          <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
-        </ul>
-      </div>
+ <!-- 🌐 Second Top Bar (Navbar + Centered Trends) -->
+<nav class="navbar site-navbar shadow-sm py-2">
+  <div class="container d-flex align-items-center justify-content-between">
+
+    <!-- 🔹 Left: Brand -->
+    <div class="navbar-left d-flex align-items-center gap-2 flex-shrink-0">
+      <i class="fa-solid fa-newspaper text-danger fs-4"></i>
+      <strong class="fs-5">TOB News</strong>
     </div>
-  </nav>
+
+    <!-- 🔹 Center: Scrolling Trends -->
+    <div class="navbar-center flex-grow-1 px-3">
+      <div class="trends-strip-container rounded-pill px-3">
+  <div class="trends-strip" id="trendsStrip">
+    <!-- JS will fill this -->
+    <div class="trends-strip-inner" id="trendsStripInner">
+      <div class="muted-small text-center w-100">Loading trends...</div>
+    </div>
+  </div>
+</div>
+    </div>
+
+    <!-- 🔹 Right: Menu Links -->
+    <div class="navbar-right d-flex align-items-center gap-3 flex-shrink-0">
+      <a class="nav-link" href="#"><i class="fa-solid fa-house"></i> Home</a>
+      <a class="nav-link" href="#newsSection"><i class="fa-solid fa-fire-flame-curved"></i> Top News</a>
+      <a class="nav-link" href="#trendsSection"><i class="fa-solid fa-chart-line"></i> Trending</a>
+      <a class="nav-link" href="#contact"><i class="fa-solid fa-envelope"></i> Contact</a>
+    </div>
+  </div>
+</nav>
 
   <!-- Hero Section -->
   <div class="container mt-4" style="max-width:var(--max-width)">
