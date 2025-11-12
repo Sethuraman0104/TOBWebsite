@@ -128,8 +128,31 @@
 
     <!-- Comments -->
     <section id="comments" class="section">
-      <div class="floating-title">💬 Comments to Approve</div>
-      <div id="pendingCommentsContainer"></div>
+      <div class="floating-title">💬 Comments Management</div>
+      <div id="articlesWithComments" class="articles-grid"></div>
+
+      <!-- Comments Modal -->
+      <div class="modal fade" id="commentsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content p-3">
+            <div class="modal-header">
+              <h5 class="modal-title">Comments for <span id="modalArticleTitle"></span></h5>
+              <button type="button" class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <h6 class="fw-bold text-warning mt-3">🕓 Pending Comments</h6>
+              <div id="pendingComments" class="mb-3"></div>
+
+              <h6 class="fw-bold text-success">✅ Approved Comments</h6>
+              <div id="approvedComments" class="mb-3"></div>
+
+              <h6 class="fw-bold text-danger mt-3">🚫 Rejected Comments</h6>
+              <div id="rejectedComments"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </section>
 
     <!-- Manage Categories -->

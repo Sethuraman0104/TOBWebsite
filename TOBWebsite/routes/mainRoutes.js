@@ -216,8 +216,8 @@ router.get('/news/admin', isAdmin, async (req, res) => {
       SELECT n.ArticleID, n.Title, n.Title_Ar, n.Content, n.Content_Ar,
              n.ImageURL, n.IsApproved, n.IsActive, n.CreatedOn, n.PublishedOn, n.CategoryID,
              n.UpdatedOn,n.IsTopStory,n.IsFeatured,n.HighlightOrder, n.ViewCount,
-             (SELECT COUNT(*) FROM Likes l WHERE l.ArticleID = n.ArticleID) AS LikesCount,
-             (SELECT COUNT(*) FROM Comments c WHERE c.ArticleID = n.ArticleID) AS CommentsCount
+             (SELECT COUNT(*) FROM NewsLikes l WHERE l.ArticleID = n.ArticleID) AS LikesCount,
+             (SELECT COUNT(*) FROM NewsComments c WHERE c.ArticleID = n.ArticleID and c.IsApproved=1) AS CommentsCount
       FROM NewsArticles n
       ORDER BY n.CreatedOn DESC
     `);
@@ -251,8 +251,8 @@ router.get('/news/categories/admin', isAdmin, async (req, res) => {
           n.IsTopStory,
           n.IsFeatured,
           n.HighlightOrder,
-          (SELECT COUNT(*) FROM Likes l WHERE l.ArticleID = n.ArticleID) AS LikesCount,
-          (SELECT COUNT(*) FROM Comments c WHERE c.ArticleID = n.ArticleID) AS CommentsCount
+          (SELECT COUNT(*) FROM NewsLikes l WHERE l.ArticleID = n.ArticleID) AS LikesCount,
+          (SELECT COUNT(*) FROM NewsComments c WHERE c.ArticleID = n.ArticleID and c.IsApproved=1) AS CommentsCount
       FROM NewsCategories c
       LEFT JOIN NewsArticles n 
           ON n.CategoryID = c.CategoryID
@@ -688,6 +688,93 @@ router.get('/likes/:articleId', async (req, res) => {
   } catch (err) {
     console.error('❌ GET /likes error:', err);
     res.status(500).json({ LikeCount: 0 });
+  }
+});
+
+// -----------------------------
+// GET articles with comment stats
+// -----------------------------
+router.get('/articles/with-comments', async (req, res) => {
+  try {
+    const pool = await sql.connect(sqlConfig);
+
+    const result = await pool.request().query(`
+      SELECT 
+        a.ArticleID,
+        a.Title,
+        a.ImageURL,
+        a.CreatedOn,
+        COUNT(CASE WHEN c.IsApproved = 1 THEN 1 END) AS ApprovedCount,
+        COUNT(CASE WHEN c.IsApproved = 0 THEN 1 END) AS PendingCount
+      FROM NewsArticles a
+      INNER JOIN NewsComments c ON a.ArticleID = c.ArticleID
+      WHERE a.IsApproved = 1 AND a.IsActive = 1
+      GROUP BY a.ArticleID, a.Title, a.ImageURL, a.CreatedOn
+      ORDER BY a.CreatedOn DESC
+    `);
+
+    res.json({ success: true, data: result.recordset });
+  } catch (err) {
+    console.error('❌ Error fetching articles with comments:', err);
+    res.status(500).json({ success: false });
+  }
+});
+
+
+// ----------------------------------------------
+// GET comments for specific article
+// ----------------------------------------------
+router.get('/admincomments/:articleId', async (req, res) => {
+  try {
+    const articleId = parseInt(req.params.articleId);
+    if (isNaN(articleId)) return res.status(400).json({ success: false });
+
+    const pool = await sql.connect(sqlConfig);
+    const result = await pool.request()
+      .input('articleId', sql.Int, articleId)
+      .query(`
+        SELECT CommentID, ArticleID, Name, Email, Content, CreatedOn, IsActive, IsApproved
+        FROM NewsComments
+        WHERE ArticleID = @articleId
+        ORDER BY CreatedOn DESC
+      `);
+
+    const approved = result.recordset.filter(c => c.IsApproved === true && c.IsActive === true);
+    const pending = result.recordset.filter(c => c.IsApproved === false && c.IsActive === true);
+    const rejected = result.recordset.filter(c => c.IsActive === false);
+
+    res.json({ success: true, approved, pending, rejected });
+  } catch (err) {
+    console.error('❌ GET /comments/:articleId error:', err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// ----------------------------------------------
+// PUT comment approve/reject
+// ----------------------------------------------
+router.put('/comments/:commentId/status', async (req, res) => {
+  try {
+    const { status } = req.body; // "approve" | "reject"
+    const commentId = parseInt(req.params.commentId);
+    if (isNaN(commentId) || !['approve', 'reject'].includes(status))
+      return res.status(400).json({ success: false });
+
+    const pool = await sql.connect(sqlConfig);
+    if (status === 'approve') {
+      await pool.request()
+        .input('commentId', sql.Int, commentId)
+        .query(`UPDATE NewsComments SET IsApproved = 1, IsActive = 1 WHERE CommentID = @commentId`);
+    } else {
+      await pool.request()
+        .input('commentId', sql.Int, commentId)
+        .query(`UPDATE NewsComments SET IsApproved = 0, IsActive = 0 WHERE CommentID = @commentId`);
+    }
+
+    res.json({ success: true, message: 'Comment status updated' });
+  } catch (err) {
+    console.error('❌ PUT /comments/:commentId/status error:', err);
+    res.status(500).json({ success: false });
   }
 });
 

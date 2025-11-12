@@ -111,22 +111,20 @@ body {
 }
 
 
-/* ------------------- Sidebar Redesigned ------------------- */
+/* ------------------- Sidebar (Compact Version) ------------------- */
 .sidebar {
-  width: 260px;
+  width: 300px; /* reduced from 260px */
   background: linear-gradient(180deg, #EE6983, #FFC4C4);
   color: white;
-  height: calc(100vh - 60px - 40px);
-  /* 60px topbar + 40px bottom padding */
+  height: calc(100vh - 60px); /* full height below topbar */
   position: fixed;
   top: 60px;
-  /* below topbar */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 20px 15px;
-  box-shadow: 3px 0 15px rgba(0, 0, 0, 0.2);
-  border-radius: 0 25px 25px 0;
+  padding: 15px 10px; /* tighter padding */
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+  border-radius: 0 20px 20px 0;
   z-index: 99;
 }
 
@@ -134,19 +132,18 @@ body {
 .sidebar-logo {
   display: flex;
   justify-content: center;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
   flex-shrink: 0;
-  /* prevent shrinking */
 }
 
 .sidebar-logo img {
-  width: 160px;
-  height: 160px;
-  border-radius: 20px;
+  width: 150px; /* reduced from 160px */
+  height: 150px;
+  border-radius: 15px;
   background-color: #F9F8F6;
-  border: 3px solid #850E35;
-  padding: 10px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
+  border: 2px solid #850E35;
+  padding: 6px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
   object-fit: contain;
   transition: transform 0.3s;
 }
@@ -156,100 +153,85 @@ body {
 }
 
 .logo-divider {
-  height: 2px;
+  height: 1.5px;
   background-color: rgba(255, 255, 255, 0.3);
   border: none;
-  margin: 15px 10px;
+  margin: 10px 6px;
 }
 
 /* Sidebar menu scrollable vertically only */
 .sidebar .menu {
   flex: 1;
   overflow-y: auto;
-  /* enable vertical scroll */
   overflow-x: hidden;
-  /* hide horizontal scroll */
-  padding-bottom: 10px;
+  padding-bottom: 8px;
 }
 
-/* Thin modern vertical scrollbar for Chrome, Edge, Safari */
+/* Scrollbar */
 .sidebar .menu::-webkit-scrollbar {
-  width: 6px;
-  /* thin vertical scrollbar */
+  width: 5px;
 }
-
-.sidebar .menu::-webkit-scrollbar-track {
-  background: transparent;
-  /* invisible track */
-}
-
 .sidebar .menu::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.3);
-  /* subtle thumb */
   border-radius: 10px;
 }
 
-/* For Firefox */
-.sidebar .menu {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
-}
-
+/* Menu items */
 .sidebar .menu ul {
   list-style: none;
-  padding: 0;
+  padding: 5px;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 10px; /* smaller gaps */
 }
 
 .sidebar .menu li {
   background: rgba(255, 255, 255, 0.1);
-  padding: 14px 10px;
-  border-radius: 20px;
+  padding: 10px 8px; /* tighter padding */
+  border-radius: 15px;
   text-align: left;
-  font-size: 16px;
+  font-size: 14px; /* smaller font */
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
-  gap: 15px;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+  gap: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .sidebar .menu li i {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .sidebar .menu li:hover {
   background: #FCF5EE;
   color: #003366;
-  transform: translateX(5px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+  transform: translateX(4px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
 
 .sidebar .menu li.active {
   background: #FCF5EE;
   color: #003366;
   font-weight: bold;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 /* Sidebar footer */
 .sidebar-footer {
   text-align: center;
-  font-size: 12px;
-  padding: 10px 5px;
+  font-size: 11px; /* smaller footer text */
+  padding: 8px 5px;
   color: #000000;
   line-height: 1.4;
   flex-shrink: 0;
-  /* prevent shrinking */
   background: rgba(0, 0, 0, 0.05);
-  border-radius: 12px;
-  margin-top: 10px;
+  border-radius: 10px;
+  margin-top: 8px;
 }
+
 
 /* ------------------- Main Content ------------------- */
 .main-content {
@@ -839,4 +821,68 @@ body {
 /* Modal textarea resize */
 #categoryForm textarea {
   resize: vertical;
+}
+
+.articles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 15px;
+}
+
+.article-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.article-card img {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.comment-card {
+  background: #fafafa;
+}
+
+/* Responsive modal size and scrollable content */
+#commentsModal .modal-dialog {
+  max-width: 90vw; /* takes up to 90% of screen width */
+}
+
+#commentsModal .modal-content {
+  max-height: 85vh; /* takes up to 85% of screen height */
+  display: flex;
+  flex-direction: column;
+}
+
+#commentsModal .modal-body {
+  overflow-y: auto; /* scroll only inside comment body */
+  flex-grow: 1;
+  padding: 15px;
+}
+
+/* Optional: smoother scrollbar styling */
+#commentsModal .modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+#commentsModal .modal-body::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+}
+.comment-stats p {
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.comment-stats .fa-hourglass-half {
+  color: #ffb100;
+}
+.comment-stats .fa-check-circle {
+  color: #28a745;
 }

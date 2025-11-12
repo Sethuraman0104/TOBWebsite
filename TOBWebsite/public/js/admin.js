@@ -930,6 +930,123 @@ async function deleteCategory(e) {
 // Initialize
 document.addEventListener('DOMContentLoaded', loadCategoriesList);
 
+// ---------------------------
+// Load Articles with Comments
+// ---------------------------
+async function loadArticlesWithComments() {
+  try {
+    const res = await fetch('/api/articles/with-comments');
+    const data = await res.json();
+    if (!data.success) throw new Error();
+
+    const container = document.getElementById('articlesWithComments');
+    container.innerHTML = '';
+
+    if (data.data.length === 0) {
+      container.innerHTML = '<p>No articles with comments found.</p>';
+      return;
+    }
+
+    data.data.forEach(article => {
+      const card = document.createElement('div');
+      card.className = 'article-card';
+      card.innerHTML = `
+        <img src="${article.ImageURL || 'images/default.jpg'}" alt="${article.Title}">
+        <h5>${article.Title}</h5>
+        <p class="text-muted mb-1">Created: ${moment(article.CreatedOn).format('LL')}</p>
+
+        <div class="comment-stats text-start mt-2">
+          <p class="mb-0 text-warning"><i class="fa-solid fa-hourglass-half"></i> Pending: ${article.PendingCount}</p>
+          <p class="mb-0 text-success"><i class="fa-solid fa-check-circle"></i> Approved: ${article.ApprovedCount}</p>
+        </div>
+
+        <button class="btn btn-primary btn-sm mt-3" 
+          onclick="viewComments(${article.ArticleID}, '${article.Title.replace(/'/g, "\\'")}')">
+          View Comments
+        </button>
+      `;
+      container.appendChild(card);
+    });
+  } catch (err) {
+    console.error('❌ Error loading articles:', err);
+  }
+}
+
+// ---------------------------
+// View Comments Modal
+// ---------------------------
+async function viewComments(articleId, articleTitle) {
+  try {
+    const res = await fetch(`/api/admincomments/${articleId}`);
+    const data = await res.json();
+    if (!data.success) throw new Error();
+
+    document.getElementById('modalArticleTitle').textContent = articleTitle;
+
+    const renderComments = (list, target, showActions = false, type = '') => {
+      const container = document.getElementById(target);
+      container.innerHTML = '';
+
+      if (list.length === 0) {
+        container.innerHTML = '<p class="text-muted">No comments.</p>';
+        return;
+      }
+
+      list.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'comment-card p-2 mb-2 border rounded';
+        div.innerHTML = `
+          <p><strong>${c.Name}</strong> (${c.Email})</p>
+          <p>${c.Content}</p>
+          <small class="text-muted">${moment(c.CreatedOn).fromNow()}</small>
+          ${showActions ? `
+            <div class="mt-2">
+              ${type === 'pending' ? `
+                <button class="btn btn-success btn-sm me-2" onclick="updateCommentStatus(${c.CommentID}, 'approve', ${articleId}, '${articleTitle}')">Approve</button>
+                <button class="btn btn-danger btn-sm" onclick="updateCommentStatus(${c.CommentID}, 'reject', ${articleId}, '${articleTitle}')">Reject</button>
+              ` : type === 'approved' ? `
+                <button class="btn btn-danger btn-sm" onclick="updateCommentStatus(${c.CommentID}, 'reject', ${articleId}, '${articleTitle}')">Reject</button>
+              ` : ''}
+            </div>
+          ` : ''}
+        `;
+        container.appendChild(div);
+      });
+    };
+
+    renderComments(data.approved, 'approvedComments', true, 'approved');
+    renderComments(data.pending, 'pendingComments', true, 'pending');
+    renderComments(data.rejected, 'rejectedComments', false);
+
+    const modal = new bootstrap.Modal(document.getElementById('commentsModal'));
+    modal.show();
+  } catch (err) {
+    console.error('❌ Error loading comments:', err);
+  }
+}
+
+// ---------------------------
+// Update Comment Status
+// ---------------------------
+async function updateCommentStatus(commentId, status, articleId, articleTitle) {
+  try {
+    const res = await fetch(`/api/comments/${commentId}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      await viewComments(articleId, articleTitle); // refresh modal
+    }
+  } catch (err) {
+    console.error('❌ Error updating comment status:', err);
+  }
+}
+
+// Init on load
+document.addEventListener('DOMContentLoaded', loadArticlesWithComments);
 
 
 // --------------------
