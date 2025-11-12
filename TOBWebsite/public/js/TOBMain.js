@@ -531,7 +531,6 @@ async function loadNewsArticles() {
     console.error(err);
   }
 }
-
 loadNewsArticles();
 
 async function loadFooterCategories() {
@@ -628,105 +627,11 @@ async function loadMostReadNews() {
     console.error('loadMostReadNews error:', err);
   }
 }
-
 loadMostReadNews();
 
-
-
-
-// ---------- LOAD NEWS ----------
-async function loadNews() {
-  const container = document.getElementById('newsContainer');
-  const featured = document.getElementById('featuredCarousel');
-  container.innerHTML = '<div class="muted-small">Loading news...</div>';
-
-  try {
-    const res = await fetch('/api/news/admin', { cache: 'no-store' });
-    const news = await res.json();
-
-    const filteredNews = (Array.isArray(news) ? news : []).filter(n => n.IsActive && n.IsApproved);
-    const featuredNews = filteredNews.filter(n => n.IsFeatured); // ✅ only featured
-
-    // --- Handle no news case ---
-    if (!filteredNews.length) {
-      container.innerHTML = '<div class="muted-small">No published news found</div>';
-      featured.innerHTML = '';
-      return;
-    }
-
-    // --- Regular News (2x2 Grid) ---
-    container.innerHTML = `
-      <div class="news-grid-2x2">
-        ${filteredNews.slice(0, 4).map(n => `
-          <div class="news-card-2x2">
-            <div class="news-img-wrapper">
-              <img src="${n.ImageURL || '/images/default-news.jpg'}" alt="${n.Title}"
-                   onerror="this.src='/images/default-news.jpg';" />
-            </div>
-            <div class="news-body">
-              <h3>${n.Title || "Article"}</h3>
-              <p>${(n.Content || '').substring(0, 120)}...</p>
-              <div class="info">
-                <span>📅 ${formatDateTime(n.PublishedOn)}</span>
-                <span>👍 ${n.LikesCount || 0}</span>
-                <span>💬 ${n.CommentsCount || 0}</span>
-              </div>
-              <div class="news-actions">
-                <button class="btn action-btn read-btn" onclick="openArticle(${n.ArticleID})">
-                  <i class="fa-solid fa-book-open"></i> Read
-                </button>
-              </div>
-            </div>
-          </div>
-        `).join('')}
-      </div>`;
-
-    // --- Featured Carousel (only IsFeatured = true) ---
-    featured.innerHTML = '';
-
-    if (!featuredNews.length) {
-      featured.innerHTML = '<div class="muted-small">No featured articles available.</div>';
-    } else {
-      featuredNews.slice(0, 6).forEach(n => {
-        const img = n.ImageURL || '/images/default-news.jpg';
-        const item = document.createElement('div');
-        item.className = 'featured-slide';
-        item.innerHTML = `
-          <div class="featured-card">
-            <img src="${img}" alt="${n.Title}" onerror="this.src='/images/default-news.jpg';" />
-            <div class="featured-overlay">
-              <div class="featured-info">
-                <h3>${n.Title}</h3>
-                <p class="featured-meta">📅 ${formatDateTime(n.PublishedOn || n.CreatedOn)}</p>
-                <button class="btn btn-gradient" onclick="openArticle(${n.ArticleID})">
-                  <i class="fa-solid fa-book-open"></i> Read More
-                </button>
-              </div>
-            </div>
-          </div>`;
-        featured.appendChild(item);
-      });
-
-      // --- Initialize Carousel ---
-      try { $('.latest-news-carousel').owlCarousel('destroy'); } catch (e) { }
-
-      $('.latest-news-carousel').owlCarousel({
-        autoplay: true,
-        loop: true,
-        nav: false,       // ✅ disable next/prev buttons
-        dots: true,       // ✅ keep only dots below
-        items: 1,
-        autoplayTimeout: 5000,
-        smartSpeed: 1000,
-        animateOut: 'fadeOut',
-        animateIn: 'fadeIn'
-      });
-    }
-
-  } catch (err) {
-    container.innerHTML = '<div class="text-danger">Error loading news</div>';
-    console.error('loadNews error:', err);
-  }
+function openArticle(articleId) {
+  // Redirect to article.html with the articleId as a query parameter
+  window.location.href = `article_en.html?id=${articleId}`;
 }
 
 function formatDateTime(dateStr) {
@@ -734,41 +639,6 @@ function formatDateTime(dateStr) {
   const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true };
   return d.toLocaleString('en-US', options);
 }
-
-async function openArticle(articleID) {
-  try {
-    // 1️⃣ Get all admin news
-    const res = await fetch('/api/news/admin');
-    const news = await res.json();
-
-    // 2️⃣ Filter by ArticleID
-    const article = news.find(n => n.ArticleID === articleID);
-    if (!article) return alert('Article not found');
-
-    const a = article;
-    const title = SITE.lang === 'ar' ? (a.Title_Ar || a.Title) : (a.Title || a.Title_Ar);
-    const content = SITE.lang === 'ar' ? (a.Content_Ar || a.Content) : (a.Content || a.Content_Ar);
-    const image = a.ImageURL || 'images/default-news.jpg';
-    const author = a.AuthorName || 'Admin';
-    const published = a.PublishedOn || a.CreatedOn
-      ? new Date(a.PublishedOn || a.CreatedOn).toLocaleString()
-      : '—';
-
-    document.getElementById('articleTitle').innerText = title;
-    document.getElementById('articleImage').src = image;
-    document.getElementById('articleMeta').innerText = `By ${author} • ${published}`;
-    document.getElementById('articleContent').innerHTML = content;
-
-    loadComments(articleID);
-
-    new bootstrap.Modal(document.getElementById('articleModal')).show();
-
-  } catch (err) {
-    console.error('openArticle error:', err);
-    alert('Failed to open article');
-  }
-}
-
 
 async function loadComments(articleId) {
   const listEl = document.getElementById('commentsList');
@@ -793,9 +663,7 @@ async function loadComments(articleId) {
   }
 }
 
-
 // ---------- INIT ----------
-
 document.getElementById('siteLogo').addEventListener('error', () => { document.getElementById('siteLogo').src = SITE.logoPath; });
 
 

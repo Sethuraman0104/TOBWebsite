@@ -46,7 +46,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-
 // -------------------------
 // 1️⃣ Get all news (with optional lang)
 // -------------------------
@@ -120,13 +119,13 @@ router.post('/news/update/:id', isAdmin, upload.single('image'), async (req, res
     const pool = await sql.connect(sqlConfig);
     const request = pool.request();
     request.input('ArticleID', sql.Int, ArticleID)
-           .input('Title', sql.NVarChar(255), Title)
-           .input('Content', sql.NText, Content)
-           .input('Title_Ar', sql.NVarChar(255), Title_Ar || null)
-           .input('Content_Ar', sql.NText, Content_Ar || null)
-           .input('CategoryID', sql.Int, parseInt(CategoryID))
-           .input('IsTopStory', sql.Bit, IsTopStory === 'true' ? 1 : 0)
-           .input('IsFeatured', sql.Bit, IsFeatured === 'true' ? 1 : 0);
+      .input('Title', sql.NVarChar(255), Title)
+      .input('Content', sql.NText, Content)
+      .input('Title_Ar', sql.NVarChar(255), Title_Ar || null)
+      .input('Content_Ar', sql.NText, Content_Ar || null)
+      .input('CategoryID', sql.Int, parseInt(CategoryID))
+      .input('IsTopStory', sql.Bit, IsTopStory === 'true' ? 1 : 0)
+      .input('IsFeatured', sql.Bit, IsFeatured === 'true' ? 1 : 0);
 
     if (ImageURL) request.input('ImageURL', sql.NVarChar(255), ImageURL);
 
@@ -346,7 +345,7 @@ router.get('/news/categories', async (req, res) => {
       .query(`
         SELECT CategoryID, 
                CategoryName, 
-               CategoryName_Ar
+               CategoryName_Ar,Description,Description_Ar,IsActive
         FROM NewsCategories
         WHERE IsActive = 1
         ORDER BY CategoryName
@@ -360,46 +359,23 @@ router.get('/news/categories', async (req, res) => {
 });
 
 // -------------------------
-// Login
+// 9️⃣ Get All Active News Categories
 // -------------------------
-router.post('/login', async (req, res) => {
-  const { Email, Password } = req.body;
-  if (!Email || !Password) return res.status(400).json({ success: false, message: 'Email & password required' });
-
+router.get('/news/Allcategories', async (req, res) => {
   try {
     await sql.connect(sqlConfig);
     const result = await new sql.Request()
-      .input('Email', sql.NVarChar, Email)
-      .query('SELECT * FROM Users WHERE Email=@Email AND IsActive=1');
+      .query(`
+        SELECT *
+        FROM NewsCategories
+        ORDER BY CategoryName
+      `);
 
-    const user = result.recordset[0];
-    if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials' });
-
-    const match = await bcrypt.compare(Password, user.PasswordHash);
-    if (!match) return res.status(401).json({ success: false, message: 'Invalid credentials' });
-
-    // Save user info in session
-    req.session.user = { 
-      UserID: user.UserID, 
-      Email: user.Email, 
-      Role: user.Role, 
-      FullName: user.FullName 
-    };
-    res.json({ success: true, message: 'Login successful', user: req.session.user });
+    res.json(result.recordset);
   } catch (err) {
-    console.error('LOGIN ERROR:', err);
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.error('GET NEWS CATEGORIES ERROR:', err);
+    res.status(500).json({ success: false, message: err.message });
   }
-});
-
-// -------------------------
-// Logout
-// -------------------------
-router.post('/logout', (req, res) => {
-  req.session.destroy(err => {
-    if (err) return res.status(500).json({ success: false, message: 'Logout failed' });
-    res.json({ success: true, message: 'Logged out successfully' });
-  });
 });
 
 // Get article by ID
@@ -435,39 +411,328 @@ router.get('/news/:id', async (req, res) => {
   }
 });
 
-// -------------------------
-// Get comments for a news article (public)
-// -------------------------
-router.get('/news/:id/comments', async (req, res) => {
-  try {
-    const articleId = parseInt(req.params.id);
-    if (!articleId) return res.status(400).json({ success: false, message: 'Invalid article ID' });
+// --------------------
+// Add new category
+// --------------------
+router.post('/news/category/add', isAdmin, async (req, res) => {
+  const { CategoryName, CategoryName_Ar, Description, Description_Ar, IsActive } = req.body;
 
-    await sql.connect(sqlConfig);
-    const result = await new sql.Request()
-      .input('ArticleID', sql.Int, articleId)
+  if (!CategoryName) return res.json({ success: false, message: 'Category name (English) is required.' });
+
+  try {
+    const pool = await sql.connect(sqlConfig);
+
+    // Check for duplicate
+    const duplicateCheck = await pool.request()
+      .input('CategoryName', sql.NVarChar, CategoryName)
+      .input('CategoryName_Ar', sql.NVarChar, CategoryName_Ar || '')
       .query(`
-        SELECT 
-          CommentID,
-          ArticleID,
-          UserID,
-          CommentText AS Text,
-          IsApproved,
-          CreatedOn,
-          u.FullName AS Name
-        FROM Comments c
-        LEFT JOIN Users u ON c.UserID = u.UserID
-        WHERE ArticleID=@ArticleID AND IsApproved=1
-        ORDER BY CreatedOn DESC
+        SELECT 1 FROM NewsCategories
+        WHERE CategoryName = @CategoryName OR CategoryName_Ar = @CategoryName_Ar
       `);
 
-    res.json({ success: true, data: result.recordset });
+    if (duplicateCheck.recordset.length > 0) {
+      return res.json({ success: false, message: 'Category name already exists (English or Arabic).' });
+    }
+
+    // Insert new category
+    await pool.request()
+      .input('CategoryName', sql.NVarChar, CategoryName)
+      .input('CategoryName_Ar', sql.NVarChar, CategoryName_Ar || '')
+      .input('Description', sql.NVarChar, Description || '')
+      .input('Description_Ar', sql.NVarChar, Description_Ar || '')
+      .input('IsActive', sql.Bit, IsActive ? 1 : 0)
+      .query(`
+        INSERT INTO NewsCategories 
+          (CategoryName, CategoryName_Ar, Description, Description_Ar, IsActive)
+        VALUES 
+          (@CategoryName, @CategoryName_Ar, @Description, @Description_Ar, @IsActive)
+      `);
+
+    res.json({ success: true, message: 'Category added successfully.' });
+
   } catch (err) {
-    console.error('GET COMMENTS ERROR:', err);
-    res.status(500).json({ success: false, message: 'Error fetching comments' });
+    console.error('Add Category Error:', err);
+    res.status(500).json({ success: false, message: 'Failed to add category.' });
   }
 });
 
+// --------------------
+// Update category
+// --------------------
+router.put('/news/category/update/:id', isAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { CategoryName, CategoryName_Ar, Description, Description_Ar, IsActive } = req.body;
+
+  if (!CategoryName) return res.json({ success: false, message: 'Category name (English) is required.' });
+
+  try {
+    const pool = await sql.connect(sqlConfig);
+
+    // Check for duplicate excluding current
+    const duplicateCheck = await pool.request()
+      .input('CategoryID', sql.Int, id)
+      .input('CategoryName', sql.NVarChar, CategoryName)
+      .input('CategoryName_Ar', sql.NVarChar, CategoryName_Ar || '')
+      .query(`
+        SELECT 1 FROM NewsCategories
+        WHERE (CategoryName = @CategoryName OR CategoryName_Ar = @CategoryName_Ar)
+          AND CategoryID <> @CategoryID
+      `);
+
+    if (duplicateCheck.recordset.length > 0) {
+      return res.json({ success: false, message: 'Another category with same name exists.' });
+    }
+
+    // Update
+    await pool.request()
+      .input('CategoryID', sql.Int, id)
+      .input('CategoryName', sql.NVarChar, CategoryName)
+      .input('CategoryName_Ar', sql.NVarChar, CategoryName_Ar || '')
+      .input('Description', sql.NVarChar, Description || '')
+      .input('Description_Ar', sql.NVarChar, Description_Ar || '')
+      .input('IsActive', sql.Bit, IsActive ? 1 : 0)
+      .query(`
+        UPDATE NewsCategories
+        SET CategoryName = @CategoryName,
+            CategoryName_Ar = @CategoryName_Ar,
+            Description = @Description,
+            Description_Ar = @Description_Ar,
+            IsActive = @IsActive
+        WHERE CategoryID = @CategoryID
+      `);
+
+    res.json({ success: true, message: 'Category updated successfully.' });
+
+  } catch (err) {
+    console.error('Update Category Error:', err);
+    res.status(500).json({ success: false, message: 'Failed to update category.' });
+  }
+});
+
+// --------------------
+// Delete category (only if no linked articles)
+// --------------------
+router.delete('/news/category/delete/:id', isAdmin, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const pool = await sql.connect(sqlConfig);
+
+    // Check linked articles
+    const linkedArticles = await pool.request()
+      .input('CategoryID', sql.Int, id)
+      .query(`SELECT COUNT(*) AS Count FROM NewsArticles WHERE CategoryID = @CategoryID AND IsActive = 1`);
+
+    if (linkedArticles.recordset[0].Count > 0) {
+      return res.json({ success: false, message: 'Cannot delete category with active articles.' });
+    }
+
+    // Delete
+    await pool.request()
+      .input('CategoryID', sql.Int, id)
+      .query(`DELETE FROM NewsCategories WHERE CategoryID = @CategoryID`);
+
+    res.json({ success: true, message: 'Category deleted successfully.' });
+
+  } catch (err) {
+    console.error('Delete Category Error:', err);
+    res.status(500).json({ success: false, message: 'Failed to delete category.' });
+  }
+});
+
+// --------------------
+// Get all categories
+// --------------------
+router.get('/news/categories', isAdmin, async (req, res) => {
+  try {
+    const pool = await sql.connect(sqlConfig);
+    const result = await pool.request()
+      .query(`SELECT * FROM NewsCategories ORDER BY CategoryName`);
+
+    res.json(result.recordset);
+
+  } catch (err) {
+    console.error('Get Categories Error:', err);
+    res.status(500).json({ success: false, message: 'Failed to load categories.' });
+  }
+});
+
+// --------------------
+// Get single category by ID
+// --------------------
+router.get('/news/category/:id', isAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const pool = await sql.connect(sqlConfig);
+    const result = await pool.request()
+      .input('CategoryID', sql.Int, id)
+      .query(`SELECT * FROM NewsCategories WHERE CategoryID = @CategoryID`);
+
+    res.json(result.recordset[0] || {});
+
+  } catch (err) {
+    console.error('Get Category Error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch category.' });
+  }
+});
+
+
+
+// ----------------------
+// GET comments for article
+// ----------------------
+router.get('/comments/:articleId', async (req, res) => {
+  try {
+    const articleId = parseInt(req.params.articleId);
+    if (isNaN(articleId)) return res.status(400).json([]);
+
+    const pool = await sql.connect(sqlConfig);
+    const result = await pool.request()
+      .input('articleId', sql.Int, articleId)
+      .query(`
+        SELECT CommentID, ArticleID, Name, Email, Content, ParentCommentID, CreatedOn, IsActive, IsApproved
+        FROM NewsComments
+        WHERE ArticleID = @articleId AND IsApproved = 1
+        ORDER BY CreatedOn DESC
+      `);
+
+    const comments = result.recordset.map(c => ({ ...c, Replies: [] }));
+    res.json(comments);
+  } catch (err) {
+    console.error('❌ GET /comments error:', err);
+    res.status(500).json([]);
+  }
+});
+
+// ----------------------
+// POST new comment or reply
+// ----------------------
+router.post('/comments', async (req, res) => {
+  try {
+    const { articleId, name, email, content, parentCommentId = null } = req.body;
+    const articleIdNum = parseInt(articleId);
+    const parentIdNum = parentCommentId ? parseInt(parentCommentId) : null;
+
+    if (!articleIdNum || !name || !content) {
+      return res.status(400).json({ success: false, message: 'Missing required fields' });
+    }
+
+    const pool = await sql.connect(sqlConfig);
+    await pool.request()
+      .input('articleId', sql.Int, articleIdNum)
+      .input('name', sql.NVarChar, name)
+      .input('email', sql.NVarChar, email || 'noreply@tobnews.com')
+      .input('content', sql.NText, content)
+      .input('parentCommentId', sql.Int, parentIdNum)
+      .query(`
+        INSERT INTO NewsComments
+        (ArticleID, Name, Email, Content, ParentCommentID, CreatedOn, IsActive, IsApproved)
+        VALUES (@articleId, @name, @email, @content, @parentCommentId, GETDATE(), 1, 0)
+      `);
+
+    res.json({ success: true, message: 'Comment submitted and pending approval.' });
+  } catch (err) {
+    console.error('❌ POST /comments error:', err);
+    res.status(500).json({ success: false, message: 'Server error adding comment.' });
+  }
+});
+
+// ----------------------
+// POST like
+// ----------------------
+router.post('/likes', async (req, res) => {
+  try {
+    const { articleId, userIdentifier } = req.body;
+    const articleIdNum = parseInt(articleId);
+    if (!articleIdNum || !userIdentifier) return res.status(400).json({ success: false });
+
+    const pool = await sql.connect(sqlConfig);
+    const exists = await pool.request()
+      .input('articleId', sql.Int, articleIdNum)
+      .input('userIdentifier', sql.NVarChar, userIdentifier)
+      .query(`
+        SELECT 1 FROM NewsLikes WHERE ArticleID = @articleId AND UserIdentifier = @userIdentifier
+      `);
+
+    if (exists.recordset.length) {
+      return res.json({ success: false, message: "Already liked" });
+    }
+
+    await pool.request()
+      .input('articleId', sql.Int, articleIdNum)
+      .input('userIdentifier', sql.NVarChar, userIdentifier)
+      .query(`INSERT INTO NewsLikes (ArticleID, UserIdentifier, LikedOn) VALUES (@articleId, @userIdentifier, GETDATE())`);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('❌ POST /likes error:', err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// ----------------------
+// GET likes count
+// ----------------------
+router.get('/likes/:articleId', async (req, res) => {
+  try {
+    const articleIdNum = parseInt(req.params.articleId);
+    if (!articleIdNum) return res.status(400).json({ LikeCount: 0 });
+
+    const pool = await sql.connect(sqlConfig);
+    const result = await pool.request()
+      .input('articleId', sql.Int, articleIdNum)
+      .query(`SELECT COUNT(*) AS LikeCount FROM NewsLikes WHERE ArticleID = @articleId`);
+
+    res.json(result.recordset[0] || { LikeCount: 0 });
+  } catch (err) {
+    console.error('❌ GET /likes error:', err);
+    res.status(500).json({ LikeCount: 0 });
+  }
+});
+
+// -------------------------
+// Login
+// -------------------------
+router.post('/login', async (req, res) => {
+  const { Email, Password } = req.body;
+  if (!Email || !Password) return res.status(400).json({ success: false, message: 'Email & password required' });
+
+  try {
+    await sql.connect(sqlConfig);
+    const result = await new sql.Request()
+      .input('Email', sql.NVarChar, Email)
+      .query('SELECT * FROM Users WHERE Email=@Email AND IsActive=1');
+
+    const user = result.recordset[0];
+    if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+
+    const match = await bcrypt.compare(Password, user.PasswordHash);
+    if (!match) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+
+    // Save user info in session
+    req.session.user = {
+      UserID: user.UserID,
+      Email: user.Email,
+      Role: user.Role,
+      FullName: user.FullName
+    };
+    res.json({ success: true, message: 'Login successful', user: req.session.user });
+  } catch (err) {
+    console.error('LOGIN ERROR:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// -------------------------
+// Logout
+// -------------------------
+router.post('/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) return res.status(500).json({ success: false, message: 'Logout failed' });
+    res.json({ success: true, message: 'Logged out successfully' });
+  });
+});
 
 // -------------------------
 // Middleware to protect routes
@@ -477,8 +742,6 @@ function requireLogin(req, res, next) {
   res.status(401).json({ success: false, message: 'Login required' });
 }
 module.exports.requireLogin = requireLogin;
-
-
 
 // -------------------------
 // 404 fallback for API

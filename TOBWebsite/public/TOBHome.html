@@ -2,311 +2,301 @@
 <html lang="en" dir="ltr">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>TOB News Portal</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <title>TOB News Portal</title>
 
-    <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <!-- AOS -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
-    <!-- Owl Carousel -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" rel="stylesheet">
-    <!-- Leaflet -->
-    <link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet" />
-    <!-- Custom CSS -->
-    <link href="css/TOBStyle.css" rel="stylesheet" />
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <!-- AOS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+  <!-- Owl Carousel -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" rel="stylesheet">
+  <!-- Leaflet -->
+  <link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet" />
+  <!-- Custom CSS -->
+  <link href="css/TOBStyle.css" rel="stylesheet" />
 </head>
 
 <body>
-    <!-- 🌤️ Topbar -->
-    <div class="topbar py-2 shadow-sm">
-        <div class="container d-flex align-items-center justify-content-between flex-wrap gap-3">
+  <!-- 🌤️ Topbar -->
+  <div class="topbar py-2 shadow-sm">
+    <div class="container d-flex align-items-center justify-content-between flex-wrap gap-3">
 
-            <!-- 🔹 Logo & Branding -->
-            <div class="d-flex align-items-center gap-2 brand-box">
-                <img src="images/TOBTransparent.png" class="logo" alt="TOB Logo" id="siteLogo">
-                <div>
-                    <div id="brandTitle">TOB News</div>
-                    <div class="muted-small">Reliable local & global news</div>
-                </div>
-            </div>
-
-            <!-- 🔹 Live Info Section -->
-            <div class="d-flex align-items-center gap-4 info-area">
-
-                <!-- 🌍 Location Info -->
-                <div class="location-box d-flex align-items-center gap-2">
-                    <i class="fa-solid fa-location-dot text-danger fs-5"></i>
-                    <div id="userLocation" class="fw-semibold small text-muted">Detecting...</div>
-                </div>
-
-                <!-- 🌤️ Weather Info -->
-                <div
-                    class="climate-box d-flex align-items-center gap-2 px-3 py-1 rounded-4 bg-white bg-opacity-75 shadow-sm">
-                    <i class="fa-solid fa-cloud-sun text-warning fs-5"></i>
-                    <div class="text-end small">
-                        <div id="weatherText" class="text-secondary">Loading...</div>
-                        <div id="weatherTemp" class="fw-bold text-dark">--°C</div>
-                    </div>
-                </div>
-
-                <!-- 🕒 Date & Time -->
-                <div class="datetime text-end px-3 py-1 rounded-4 bg-white bg-opacity-75 shadow-sm">
-                    <div><i class="fa-regular fa-calendar-days me-1 text-danger"></i> <span id="currentDateTime"
-                            class="fw-bold"></span></div>
-                    <div><i class="fa-regular fa-clock me-1 text-danger"></i> <span id="currentTimeSmall"
-                            class="fw-semibold"></span></div>
-                </div>
-
-                <!-- 🌐 Language Switch -->
-                <div class="lang-switch">
-                    <button id="langToggle" class="btn btn-sm lang-btn px-3 py-1">
-                        <i class="fa-solid fa-globe"></i> <span id="langLabel">العربية</span>
-                    </button>
-                </div>
-            </div>
+      <!-- 🔹 Logo & Branding -->
+      <div class="d-flex align-items-center gap-2 brand-box">
+        <img src="images/TOBTransparent.png" class="logo" alt="TOB Logo" id="siteLogo">
+        <div>
+          <div id="brandTitle">TOB News</div>
+          <div class="muted-small">Reliable local & global news</div>
         </div>
-    </div>
+      </div>
 
-   <!-- 🌐 Second Top Bar (Navbar + Centered Trends) -->
-<nav class="navbar site-navbar shadow-sm py-2">
-  <!-- 🔹 Left: Brand -->
-  <div class="navbar-left d-flex align-items-center gap-2 flex-shrink-0">
-    <i class="fa-solid fa-newspaper text-danger fs-4"></i>
-    <strong class="fs-5">TOB News</strong>
-  </div>
+      <!-- 🔹 Live Info Section -->
+      <div class="d-flex align-items-center gap-4 info-area">
 
-  <!-- 🔹 Center: Scrolling Trends -->
-  <div class="navbar-center">
-    <div class="trends-strip-container rounded-pill px-2">
-      <div class="trends-ticker">
-        <div id="trendsTickerInner">
-          Loading trends...
+        <!-- 🌍 Location Info -->
+        <div class="location-box d-flex align-items-center gap-2">
+          <i class="fa-solid fa-location-dot text-danger fs-5"></i>
+          <div id="userLocation" class="fw-semibold small text-muted">Detecting...</div>
+        </div>
+
+        <!-- 🌤️ Weather Info -->
+        <div class="climate-box d-flex align-items-center gap-2 px-3 py-1 rounded-4 bg-white bg-opacity-75 shadow-sm">
+          <i class="fa-solid fa-cloud-sun text-warning fs-5"></i>
+          <div class="text-end small">
+            <div id="weatherText" class="text-secondary">Loading...</div>
+            <div id="weatherTemp" class="fw-bold text-dark">--°C</div>
+          </div>
+        </div>
+
+        <!-- 🕒 Date & Time -->
+        <div class="datetime text-end px-3 py-1 rounded-4 bg-white bg-opacity-75 shadow-sm">
+          <div><i class="fa-regular fa-calendar-days me-1 text-danger"></i> <span id="currentDateTime"
+              class="fw-bold"></span></div>
+          <div><i class="fa-regular fa-clock me-1 text-danger"></i> <span id="currentTimeSmall"
+              class="fw-semibold"></span></div>
+        </div>
+
+        <!-- 🌐 Language Switch -->
+        <div class="lang-switch">
+          <button id="langToggle" class="btn btn-sm lang-btn px-3 py-1">
+            <i class="fa-solid fa-globe"></i> <span id="langLabel">العربية</span>
+          </button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 🔹 Right: Menu Links -->
-  <div class="navbar-right d-flex align-items-center gap-2 flex-shrink-0">
-    <button class="hamburger-btn d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNav">
-      <i class="fa-solid fa-bars fs-4"></i>
-    </button>
-    <div class="collapse d-lg-flex flex-column flex-lg-row gap-3" id="mobileNav">
-      <a class="nav-link" href="#"><i class="fa-solid fa-house"></i> Home</a>
-      <a class="nav-link" href="#newsSection"><i class="fa-solid fa-fire-flame-curved"></i> Top Stories</a>
-      <a class="nav-link" href="#trendsSection"><i class="fa-solid fa-chart-line"></i> Trending</a>
-      <a class="nav-link" href="#contact"><i class="fa-solid fa-envelope"></i> Contact</a>
+  <!-- 🌐 Second Top Bar (Navbar + Centered Trends) -->
+  <nav class="navbar site-navbar shadow-sm py-2">
+    <!-- 🔹 Left: Brand -->
+    <div class="navbar-left d-flex align-items-center gap-2 flex-shrink-0">
+      <i class="fa-solid fa-newspaper text-danger fs-4"></i>
+      <strong class="fs-5">TOB News</strong>
     </div>
-  </div>
-</nav>
 
-
-    <!-- 📰 News Section Wrapper -->
-    <div id="newsSectionWrapper" class="container my-4">
-        <!-- News Section Header - Modern Animated Design -->
-        <div class="news-section-header-modern mb-4" data-aos="fade-up" data-aos-duration="1000">
-            <i class="fa-solid fa-newspaper text-danger fs-3 me-2"></i>
-            <div>
-                <h2 class="news-section-title mb-1">Top Stories</h2>
-                <div class="news-section-underline"></div>
-                <p class="news-section-subtitle mb-0">
-                    Stay updated with the latest news from around the world and your city
-                </p>
-            </div>
+    <!-- 🔹 Center: Scrolling Trends -->
+    <div class="navbar-center">
+      <div class="trends-strip-container rounded-pill px-2">
+        <div class="trends-ticker">
+          <div id="trendsTickerInner">
+            Loading trends...
+          </div>
         </div>
-
-        <!-- News Section Content -->
-        <section id="newsSection">
-            <div class="row g-3">
-                <!-- Left: Main Carousel -->
-                <div class="col-lg-8">
-                    <div id="topStoriesCarousel" class="owl-carousel owl-theme h-100"></div>
-                </div>
-
-                <!-- Right: Two Side Stories -->
-                <div class="col-lg-4 d-flex flex-column gap-3 side-stories-container">
-                    <div id="sideTopStory1" class="side-story"></div>
-                    <div id="sideTopStory2" class="side-story"></div>
-                </div>
-            </div>
-        </section>
+      </div>
     </div>
 
-    <!-- 🌟 Highlights Featured Section -->
-<div id="highlightsWrapper" class="container my-5">
-  <!-- Header -->
-  <div class="news-section-header-modern mb-4" data-aos="fade-up" data-aos-duration="1000">
-    <i class="fa-solid fa-star text-danger fs-3 me-2"></i>
-    <div>
-      <h2 class="news-section-title mb-1">Highlights Featured</h2>
-      <div class="news-section-underline"></div>
-      <p class="news-section-subtitle mb-0">
-        Handpicked stories that deserve your attention
-      </p>
+    <!-- 🔹 Right: Menu Links -->
+    <div class="navbar-right d-flex align-items-center gap-2 flex-shrink-0">
+      <button class="hamburger-btn d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNav">
+        <i class="fa-solid fa-bars fs-4"></i>
+      </button>
+      <div class="collapse d-lg-flex flex-column flex-lg-row gap-3" id="mobileNav">
+        <a class="nav-link" href="#"><i class="fa-solid fa-house"></i> Home</a>
+        <a class="nav-link" href="#newsSection"><i class="fa-solid fa-fire-flame-curved"></i> Top Stories</a>
+        <a class="nav-link" href="#trendsSection"><i class="fa-solid fa-chart-line"></i> Trending</a>
+        <a class="nav-link" href="#contact"><i class="fa-solid fa-envelope"></i> Contact</a>
+      </div>
     </div>
-  </div>
+  </nav>
 
-  <!-- ✅ Use grid instead of Bootstrap row -->
-  <section id="featuredHighlights" class="featured-grid"></section>
-</div>
-
-
-    <!-- 🌟 Trending Articles Section -->
-    <div id="trendsWrapper" class="container my-5">
-        <!-- Header -->
-        <div class="news-section-header-modern mb-4" data-aos="fade-up" data-aos-duration="1000">
-            <i class="fa-solid fa-fire text-danger fs-3 me-2"></i>
-            <div>
-                <h2 class="news-section-title mb-1">Trending Articles</h2>
-                <div class="news-section-underline"></div>
-                <p class="news-section-subtitle mb-0">
-                    Handpicked stories that are catching everyone’s eye
-                </p>
-            </div>
-        </div>
-
-        <!-- Dynamic Cards Grid -->
-        <section id="trendsSection" class="row g-4 justify-content-center"></section>
-    </div>
-
-    <!-- 🌟 Newsletter Subscription Section -->
-<div id="newsletterWrapper" class="container my-5">
-  <div class="newsletter-card p-4 p-md-5 rounded-4 shadow-sm text-center bg-white">
-    <h2 class="newsletter-title mb-2">Subscribe to Our Newsletter</h2>
-    <p class="newsletter-subtitle mb-4">
-      Get the latest news, trending stories, and updates delivered straight to your inbox.
-    </p>
-    <form id="newsletterForm" class="d-flex flex-column flex-sm-row justify-content-center gap-3">
-      <input type="email" class="form-control newsletter-input" placeholder="Enter your email" required>
-      <button type="submit" class="btn newsletter-btn">Subscribe</button>
-    </form>
-    <small class="text-muted d-block mt-3">We respect your privacy. Unsubscribe anytime.</small>
-  </div>
-</div>
-<div id="newsWrapper" class="container my-5">
-  <div class="news-section-header-modern mb-4" data-aos="fade-up" data-aos-duration="1000">
-    <i class="fa-solid fa-newspaper text-danger fs-3 me-2"></i>
-    <div>
-      <h2 class="news-section-title mb-1">Latest News</h2>
-      <div class="news-section-underline"></div>
-      <p class="news-section-subtitle mb-0">
-        Explore the latest stories, grouped by category
-      </p>
-    </div>
-  </div>
-
-  <div id="newsCategoriesSection"></div>
-</div>
-
-<!-- 🔥 Most Read News Articles Section -->
-<div id="mostReadWrapper" class="container my-5">
-  <!-- Header -->
-  <div class="news-section-header-modern mb-4" data-aos="fade-up" data-aos-duration="1000">
-    <i class="fa-solid fa-fire text-danger fs-3 me-2"></i>
-    <div>
-      <h2 class="news-section-title mb-1 text-dark">Most Read News</h2>
-      <div class="news-section-underline"></div>
-      <p class="news-section-subtitle mb-0 text-secondary">
-        See what everyone’s talking about the most
-      </p>
-    </div>
-  </div>
-
-  <!-- 🕒 Timeline Style List -->
-  <section id="mostReadList" class="most-read-timeline"></section>
-</div>
-
-
-
-    <!-- 🔝 Scroll-to-Top Button -->
-    <button id="scrollTopBtn" title="Go to top">
-        <i class="fa-solid fa-arrow-up"></i>
-    </button>
-    
-    <footer class="site-footer text-light">
-  <div class="overlay"></div>
-  <div class="container py-5">
-
-    <!-- 🔹 Row 1: Logo, Categories, Address & Map -->
-    <div class="row align-items-start gy-4">
-
-      <!-- Logo -->
-      <div class="col-md-3 text-center text-md-start">
-        <img src="images/TOBLogo.jpg" alt="TOB News" class="footer-logo mb-3">
-        <p class="footer-desc">
-          Bahrain’s trusted source for news and insights.
+  <!-- 📰 News Section Wrapper -->
+  <div id="newsSectionWrapper" class="container my-4">
+    <!-- News Section Header - Modern Animated Design -->
+    <div class="news-section-header-modern mb-4" data-aos="fade-up" data-aos-duration="1000">
+      <i class="fa-solid fa-newspaper text-danger fs-3 me-2"></i>
+      <div>
+        <h2 class="news-section-title mb-1">Top Stories</h2>
+        <div class="news-section-underline"></div>
+        <p class="news-section-subtitle mb-0">
+          Stay updated with the latest news from around the world and your city
         </p>
-        <div class="social-icons mt-3">
-          <a href="#"><i class="fab fa-facebook-f"></i></a>
-          <a href="#"><i class="fab fa-twitter"></i></a>
-          <a href="#"><i class="fab fa-instagram"></i></a>
-          <a href="#"><i class="fab fa-youtube"></i></a>
+      </div>
+    </div>
+
+    <!-- News Section Content -->
+    <section id="newsSection">
+      <div class="row g-3">
+        <!-- Left: Main Carousel -->
+        <div class="col-lg-8">
+          <div id="topStoriesCarousel" class="owl-carousel owl-theme h-100"></div>
+        </div>
+
+        <!-- Right: Two Side Stories -->
+        <div class="col-lg-4 d-flex flex-column gap-3 side-stories-container">
+          <div id="sideTopStory1" class="side-story"></div>
+          <div id="sideTopStory2" class="side-story"></div>
         </div>
       </div>
-
-      <!-- News Categories -->
-      <div class="col-md-3">
-        <h5 class="footer-title">News Categories</h5>
-        <ul id="footerCategories" class="footer-links list-unstyled mb-0">
-          <li>Loading...</li>
-        </ul>
-      </div>
-
-      <!-- Address -->
-      <div class="col-md-3">
-        <h5 class="footer-title">Contact Us</h5>
-        <p class="mb-1"><i class="fa-solid fa-location-dot me-2 text-accent"></i>123 News Street, Manama</p>
-        <p class="mb-1"><i class="fa-solid fa-phone me-2 text-accent"></i>+973 1234 5678</p>
-        <p class="mb-0"><i class="fa-solid fa-envelope me-2 text-accent"></i>contact@tobnews.com</p>
-      </div>
-
-      <!-- Map -->
-      <div class="col-md-3">
-        <h5 class="footer-title">Find Us</h5>
-        <div class="footer-map">
-          <iframe 
-            src="https://www.google.com/maps?q=Manama,Bahrain&output=embed"
-            width="100%" height="150" style="border:0;" allowfullscreen loading="lazy">
-          </iframe>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- 🔹 Row 2: Newsletter -->
-    <div class="newsletter-section mt-5 p-4 rounded-4 bg-glass text-center">
-      <h5 class="footer-title mb-3">Subscribe to Our Newsletter</h5>
-      <form class="newsletter-form d-flex flex-wrap justify-content-center gap-2"
-            onsubmit="event.preventDefault(); subscribeNewsletter();">
-        <input type="email" id="newsletterEmail" class="form-control rounded-pill px-3"
-               placeholder="Enter your email address" required>
-        <button type="submit" class="btn btn-news rounded-pill px-4">Subscribe</button>
-      </form>
-      <small id="newsletterMsg" class="text-success d-block mt-2"></small>
-    </div>
-
-    <!-- 🔹 Row 3: Copyright -->
-    <div class="footer-bottom text-center mt-4 pt-3 border-top border-light-subtle">
-      <small>© <span id="year"></span> TOB News Portal. All rights reserved.</small>
-    </div>
-
+    </section>
   </div>
-</footer>
+
+  <!-- 🌟 Highlights Featured Section -->
+  <div id="highlightsWrapper" class="container my-5">
+    <!-- Header -->
+    <div class="news-section-header-modern mb-4" data-aos="fade-up" data-aos-duration="1000">
+      <i class="fa-solid fa-star text-danger fs-3 me-2"></i>
+      <div>
+        <h2 class="news-section-title mb-1">Highlights Featured</h2>
+        <div class="news-section-underline"></div>
+        <p class="news-section-subtitle mb-0">
+          Handpicked stories that deserve your attention
+        </p>
+      </div>
+    </div>
+
+    <!-- ✅ Use grid instead of Bootstrap row -->
+    <section id="featuredHighlights" class="featured-grid"></section>
+  </div>
 
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+  <!-- 🌟 Trending Articles Section -->
+  <div id="trendsWrapper" class="container my-5">
+    <!-- Header -->
+    <div class="news-section-header-modern mb-4" data-aos="fade-up" data-aos-duration="1000">
+      <i class="fa-solid fa-fire text-danger fs-3 me-2"></i>
+      <div>
+        <h2 class="news-section-title mb-1">Trending Articles</h2>
+        <div class="news-section-underline"></div>
+        <p class="news-section-subtitle mb-0">
+          Handpicked stories that are catching everyone’s eye
+        </p>
+      </div>
+    </div>
 
-    <script src="js/TOBMain.js"></script>
+    <!-- Dynamic Cards Grid -->
+    <section id="trendsSection" class="row g-4 justify-content-center"></section>
+  </div>
+
+  <!-- 🌟 Newsletter Subscription Section -->
+  <div id="newsletterWrapper" class="container my-5">
+    <div class="newsletter-card p-4 p-md-5 rounded-4 shadow-sm text-center bg-white">
+      <h2 class="newsletter-title mb-2">Subscribe to Our Newsletter</h2>
+      <p class="newsletter-subtitle mb-4">
+        Get the latest news, trending stories, and updates delivered straight to your inbox.
+      </p>
+      <form id="newsletterForm" class="d-flex flex-column flex-sm-row justify-content-center gap-3">
+        <input type="email" class="form-control newsletter-input" placeholder="Enter your email" required>
+        <button type="submit" class="btn newsletter-btn">Subscribe</button>
+      </form>
+      <small class="text-muted d-block mt-3">We respect your privacy. Unsubscribe anytime.</small>
+    </div>
+  </div>
+  <div id="newsWrapper" class="container my-5">
+    <div class="news-section-header-modern mb-4" data-aos="fade-up" data-aos-duration="1000">
+      <i class="fa-solid fa-newspaper text-danger fs-3 me-2"></i>
+      <div>
+        <h2 class="news-section-title mb-1">Latest News</h2>
+        <div class="news-section-underline"></div>
+        <p class="news-section-subtitle mb-0">
+          Explore the latest stories, grouped by category
+        </p>
+      </div>
+    </div>
+
+    <div id="newsCategoriesSection"></div>
+  </div>
+
+  <!-- 🔥 Most Read News Articles Section -->
+  <div id="mostReadWrapper" class="container my-5">
+    <!-- Header -->
+    <div class="news-section-header-modern mb-4" data-aos="fade-up" data-aos-duration="1000">
+      <i class="fa-solid fa-fire text-danger fs-3 me-2"></i>
+      <div>
+        <h2 class="news-section-title mb-1 text-dark">Most Read News</h2>
+        <div class="news-section-underline"></div>
+        <p class="news-section-subtitle mb-0 text-secondary">
+          See what everyone’s talking about the most
+        </p>
+      </div>
+    </div>
+
+    <!-- 🕒 Timeline Style List -->
+    <section id="mostReadList" class="most-read-timeline"></section>
+  </div>
+
+  <!-- 🔝 Scroll-to-Top Button -->
+  <button id="scrollTopBtn" title="Go to top">
+    <i class="fa-solid fa-arrow-up"></i>
+  </button>
+
+  <footer class="site-footer text-light">
+    <div class="overlay"></div>
+    <div class="container py-5">
+      <!-- 🔹 Row 1: Logo, Categories, Address & Map -->
+      <div class="row align-items-start gy-4">
+        <!-- Logo -->
+        <div class="col-md-3 text-center text-md-start">
+          <img src="images/TOBLogo.jpg" alt="TOB News" class="footer-logo mb-3">
+          <p class="footer-desc">
+            Bahrain’s trusted source for news and insights.
+          </p>
+          <div class="social-icons mt-3">
+            <a href="#"><i class="fab fa-facebook-f"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-youtube"></i></a>
+          </div>
+        </div>
+
+        <!-- News Categories -->
+        <div class="col-md-3">
+          <h5 class="footer-title">News Categories</h5>
+          <ul id="footerCategories" class="footer-links list-unstyled mb-0">
+            <li>Loading...</li>
+          </ul>
+        </div>
+
+        <!-- Address -->
+        <div class="col-md-3">
+          <h5 class="footer-title">Contact Us</h5>
+          <p class="mb-1"><i class="fa-solid fa-location-dot me-2 text-accent"></i>123 News Street, Manama</p>
+          <p class="mb-1"><i class="fa-solid fa-phone me-2 text-accent"></i>+973 1234 5678</p>
+          <p class="mb-0"><i class="fa-solid fa-envelope me-2 text-accent"></i>contact@tobnews.com</p>
+        </div>
+
+        <!-- Map -->
+        <div class="col-md-3">
+          <h5 class="footer-title">Find Us</h5>
+          <div class="footer-map">
+            <iframe src="https://www.google.com/maps?q=Manama,Bahrain&output=embed" width="100%" height="150"
+              style="border:0;" allowfullscreen loading="lazy">
+            </iframe>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🔹 Row 2: Newsletter -->
+      <div class="newsletter-section mt-5 p-4 rounded-4 bg-glass text-center">
+        <h5 class="footer-title mb-3">Subscribe to Our Newsletter</h5>
+        <form class="newsletter-form d-flex flex-wrap justify-content-center gap-2"
+          onsubmit="event.preventDefault(); subscribeNewsletter();">
+          <input type="email" id="newsletterEmail" class="form-control rounded-pill px-3"
+            placeholder="Enter your email address" required>
+          <button type="submit" class="btn btn-news rounded-pill px-4">Subscribe</button>
+        </form>
+        <small id="newsletterMsg" class="text-success d-block mt-2"></small>
+      </div>
+
+      <!-- 🔹 Row 3: Copyright -->
+      <div class="footer-bottom text-center mt-4 pt-3 border-top border-light-subtle">
+        <small>© <span id="year"></span> TOB News Portal. All rights reserved.</small>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+
+  <script src="js/TOBMain.js"></script>
 </body>
 
 </html>

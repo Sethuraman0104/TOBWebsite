@@ -58,8 +58,8 @@ async function loadTrends(status = 'all', month = '', year = '') {
         ${trends.map(t => `
           <div class="news-card ${t.IsActive ? '' : 'inactive'}">
             ${t.ImageURL
-              ? `<img src="${t.ImageURL}" alt="${t.TrendTitle_EN}" class="news-img"/>`
-              : `<div class="news-img placeholder"></div>`}
+        ? `<img src="${t.ImageURL}" alt="${t.TrendTitle_EN}" class="news-img"/>`
+        : `<div class="news-img placeholder"></div>`}
             <div class="news-body">
               <h3>${t.TrendTitle_EN}</h3>
               <p>${t.TrendDescription_EN?.substring(0, 220) || ''}...</p>
@@ -67,17 +67,17 @@ async function loadTrends(status = 'all', month = '', year = '') {
                 <span>📅 ${formatDateTime(t.FromDate)} → ${t.ToDate ? formatDateTime(t.ToDate) : '∞'}</span>
               </div>
               <div class="news-actions">
-                <button class="btn action-btn edit-btn" onclick="openTrendModal(${t.TrendID})">
+                <button class="edit-btn" onclick="openTrendModal(${t.TrendID})">
                   <i class="fa-solid fa-pen-to-square"></i> Edit
                 </button>
                 ${t.IsActive
-                  ? `<button class="btn action-btn deactivate-btn" onclick="toggleTrendStatus(${t.TrendID}, false)">
+        ? `<button class="deactivate-btn" onclick="toggleTrendStatus(${t.TrendID}, false)">
                        <i class="fa-solid fa-ban"></i> Deactivate
                      </button>`
-                  : `<button class="btn action-btn reactivate-btn" onclick="toggleTrendStatus(${t.TrendID}, true)">
+        : `<button class="reactivate-btn" onclick="toggleTrendStatus(${t.TrendID}, true)">
                        <i class="fa-solid fa-toggle-on"></i> Activate
                      </button>`}
-                <button class="btn action-btn delete-btn" onclick="deleteTrend(${t.TrendID})">
+                <button class="delete-btn" onclick="deleteTrend(${t.TrendID})">
                   <i class="fa-solid fa-trash"></i> Delete
                 </button>
               </div>
@@ -284,7 +284,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (lastLoginElement) {
       if (user.LastLogin) {
         const formatted = moment(user.LastLogin, 'YYYY-MM-DD HH:mm:ss.SSS')
-  .format('DD MMM YYYY hh:mm:ss A');
+          .format('DD MMM YYYY hh:mm:ss A');
         lastLoginElement.textContent = `Last logged in: ${formatted}`;
       } else {
         lastLoginElement.textContent = 'Last logged in: –';
@@ -320,7 +320,7 @@ menuItems.forEach(item => {
 
     newsSearchInput.value = '';
     filterNews('');
-    newsSearchInput.style.display = ['pending','allnews','inactive'].includes(sectionId) ? 'inline-block' : 'none';
+    newsSearchInput.style.display = ['pending', 'allnews', 'inactive'].includes(sectionId) ? 'inline-block' : 'none';
 
     if (sectionId === 'profile') loadProfile();
   });
@@ -469,8 +469,8 @@ async function loadPendingNews() {
         <div class="news-grid">
           ${pending.map(n => `
             <div class="news-card">
-              ${n.ImageURL ? `<img src="${n.ImageURL}" alt="${n.Title}" class="news-img"/>` 
-                           : `<div class="news-img placeholder"></div>`}
+              ${n.ImageURL ? `<img src="${n.ImageURL}" alt="${n.Title}" class="news-img"/>`
+          : `<div class="news-img placeholder"></div>`}
               <div class="news-body">
                 <h3>${n.Title}</h3>
                 <p>${n.Content.substring(0, 200)}...</p>
@@ -479,13 +479,13 @@ async function loadPendingNews() {
                   <span>💬 ${n.CommentsCount || 0}</span>
                 </div>
                 <div class="news-actions">
-                  <button class="btn action-btn approve-btn" onclick="approveNews(${n.ArticleID})">
+                  <button class="approve-btn" onclick="approveNews(${n.ArticleID})">
                     <i class="fa-solid fa-check"></i> Approve
                   </button>
-                  <button class="btn action-btn edit-btn" onclick="openEditModal(${n.ArticleID})">
+                  <button class="edit-btn" onclick="openEditModal(${n.ArticleID})">
                     <i class="fa-solid fa-pen-to-square"></i> Edit
                   </button>
-                  <button class="btn action-btn delete-btn" onclick="deleteNews(${n.ArticleID})">
+                  <button class="delete-btn" onclick="deleteNews(${n.ArticleID})">
                     <i class="fa-solid fa-trash"></i> Delete
                   </button>
                 </div>
@@ -527,8 +527,8 @@ async function loadAllNewsEngagement(filterMonthValue = null) {
         <div class="news-grid">
           ${filteredNews.map(n => `
             <div class="news-card">
-              ${n.ImageURL ? `<img src="${n.ImageURL}" alt="${n.Title}" class="news-img"/>` 
-                           : `<div class="news-img placeholder"></div>`}
+              ${n.ImageURL ? `<img src="${n.ImageURL}" alt="${n.Title}" class="news-img"/>`
+          : `<div class="news-img placeholder"></div>`}
               <div class="news-body">
                 <h3>${n.Title}</h3>
                 <p>${n.Content.substring(0, 220)}...</p>
@@ -538,13 +538,13 @@ async function loadAllNewsEngagement(filterMonthValue = null) {
                   <span>💬 ${n.CommentsCount || 0}</span>
                 </div>
                 <div class="news-actions">
-                  <button class="btn action-btn edit-btn" onclick="openEditModal(${n.ArticleID})">
+                  <button class="edit-btn" onclick="openEditModal(${n.ArticleID})">
                     <i class="fa-solid fa-pen-to-square"></i> Edit
                   </button>
-                  <button class="btn action-btn deactivate-btn" onclick="deactivateNews(${n.ArticleID})">
+                  <button class="deactivate-btn" onclick="deactivateNews(${n.ArticleID})">
                     <i class="fa-solid fa-ban"></i> Deactivate
                   </button>
-                  <button class="btn action-btn delete-btn" onclick="deleteNews(${n.ArticleID})">
+                  <button class="delete-btn" onclick="deleteNews(${n.ArticleID})">
                     <i class="fa-solid fa-trash"></i> Delete
                   </button>
                 </div>
@@ -577,8 +577,8 @@ async function loadInactiveNews() {
         <div class="news-grid">
           ${inactive.map(n => `
             <div class="news-card inactive">
-              ${n.ImageURL ? `<img src="${n.ImageURL}" alt="${n.Title}" class="news-img"/>` 
-                           : `<div class="news-img placeholder"></div>`}
+              ${n.ImageURL ? `<img src="${n.ImageURL}" alt="${n.Title}" class="news-img"/>`
+          : `<div class="news-img placeholder"></div>`}
               <div class="news-body">
                 <h3>${n.Title}</h3>
                 <p>${n.Content.substring(0, 220)}...</p>
@@ -588,13 +588,13 @@ async function loadInactiveNews() {
                   <span>💬 ${n.CommentsCount || 0}</span>
                 </div>
                 <div class="news-actions">
-                  <button class="btn action-btn reactivate-btn" onclick="reactivateNews(${n.ArticleID})">
+                  <button class="reactivate-btn" onclick="reactivateNews(${n.ArticleID})">
                     <i class="fa-solid fa-toggle-on"></i> Reactivate
                   </button>
-                  <button class="btn action-btn edit-btn" onclick="openEditModal(${n.ArticleID})">
+                  <button class="edit-btn" onclick="openEditModal(${n.ArticleID})">
                     <i class="fa-solid fa-pen-to-square"></i> Edit
                   </button>
-                  <button class="btn action-btn delete-btn" onclick="deleteNews(${n.ArticleID})">
+                  <button class="delete-btn" onclick="deleteNews(${n.ArticleID})">
                     <i class="fa-solid fa-trash"></i> Delete
                   </button>
                 </div>
@@ -694,7 +694,6 @@ function formatDateTime(dateString) {
   return `${day} ${month} ${year} ${hours}:${minutes}:${seconds} ${ampm}`;
 }
 
-
 // --------------------
 // Month filter
 // --------------------
@@ -738,7 +737,7 @@ window.openEditModal = async (articleID) => {
   document.getElementById('editContent').value = article.Content;
   document.getElementById('editContent_Ar').value = article.Content_Ar || '';
   document.getElementById('editCategorySelect').value = article.CategoryID || '';
-  
+
   document.getElementById('editIsTopStory').checked = article.IsTopStory;
   document.getElementById('editIsFeatured').checked = article.IsFeatured;
 
@@ -761,6 +760,177 @@ editForm.onsubmit = async (e) => {
   await loadAllNewsEngagement(filterMonthInput.value);
   await loadInactiveNews();
 };
+
+
+let categories = [];
+let currentPage = 1;
+const pageSize = 5;
+let filteredCategories = [];
+
+// Load categories from API
+async function loadCategoriesList() {
+  try {
+    const res = await fetch('/api/news/Allcategories');
+    categories = await res.json();
+    filteredCategories = [...categories];
+    currentPage = 1;
+    renderCategoriesTable();
+    renderPagination();
+  } catch (err) {
+    console.error('Error loading categories list:', err);
+  }
+}
+
+// Render categories in table
+function renderCategoriesTable() {
+  const tbody = document.querySelector('#categoriesTable tbody');
+  tbody.innerHTML = '';
+
+  const start = (currentPage - 1) * pageSize;
+  const end = start + pageSize;
+  const pageItems = filteredCategories.slice(start, end);
+
+  pageItems.forEach(cat => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${cat.CategoryID}</td>
+      <td>${cat.CategoryName}</td>
+      <td>${cat.CategoryName_Ar || ''}</td>
+      <td>${cat.Description || ''}</td>
+      <td>${cat.Description_Ar || ''}</td>
+      <td>${cat.IsActive ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Inactive</span>'}</td>
+      <td>
+        <button class="btn btn-sm btn-warning edit-cat" data-id="${cat.CategoryID}">
+          <i class="fa fa-edit"></i>
+        </button>
+        <button class="btn btn-sm btn-danger delete-cat" data-id="${cat.CategoryID}">
+          <i class="fa fa-trash"></i>
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Bind buttons
+  document.querySelectorAll('.edit-cat').forEach(btn => btn.addEventListener('click', openEditCategoryModal));
+  document.querySelectorAll('.delete-cat').forEach(btn => btn.addEventListener('click', deleteCategory));
+}
+
+// Pagination
+function renderPagination() {
+  const pagination = document.getElementById('categoryPagination');
+  pagination.innerHTML = '';
+  const pageCount = Math.ceil(filteredCategories.length / pageSize);
+
+  for (let i = 1; i <= pageCount; i++) {
+    const li = document.createElement('li');
+    li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+    li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+    li.addEventListener('click', e => {
+      e.preventDefault();
+      currentPage = i;
+      renderCategoriesTable();
+      renderPagination();
+    });
+    pagination.appendChild(li);
+  }
+}
+
+// Search filter
+document.getElementById('categorySearch').addEventListener('input', e => {
+  const query = e.target.value.toLowerCase();
+  filteredCategories = categories.filter(cat =>
+    cat.CategoryName.toLowerCase().includes(query) ||
+    (cat.CategoryName_Ar && cat.CategoryName_Ar.toLowerCase().includes(query)) ||
+    (cat.Description && cat.Description.toLowerCase().includes(query)) ||
+    (cat.Description_Ar && cat.Description_Ar.toLowerCase().includes(query))
+  );
+  currentPage = 1;
+  renderCategoriesTable();
+  renderPagination();
+});
+
+// Add/Edit Category Modal (Bootstrap 5)
+const categoryModalEl = document.getElementById('categoryModal');
+const categoryModal = new bootstrap.Modal(categoryModalEl);
+
+document.getElementById('addCategoryBtn').addEventListener('click', () => {
+  document.getElementById('categoryModalTitle').textContent = 'Add Category';
+  document.getElementById('categoryForm').reset();
+  document.getElementById('CategoryID').value = '';
+  categoryModal.show();
+});
+
+// document.getElementById('closeCategoryModal').addEventListener('click', () => categoryModal.hide());
+document.getElementById('closeCategoryModalFooter').addEventListener('click', () => categoryModal.hide());
+
+// Edit Category
+async function openEditCategoryModal(e) {
+  const id = e.currentTarget.dataset.id;
+  try {
+    const res = await fetch(`/api/news/category/${id}`);
+    const cat = await res.json();
+
+    document.getElementById('categoryModalTitle').textContent = 'Edit Category';
+    document.getElementById('CategoryID').value = cat.CategoryID;
+    document.getElementById('CategoryName').value = cat.CategoryName || '';
+    document.getElementById('CategoryName_Ar').value = cat.CategoryName_Ar || '';
+    document.getElementById('Description').value = cat.Description || '';
+    document.getElementById('Description_Ar').value = cat.Description_Ar || '';
+    document.getElementById('IsActive').checked = cat.IsActive;
+    categoryModal.show();
+  } catch (err) {
+    console.error('Failed to open edit modal:', err);
+  }
+}
+
+// Save (Add or Update)
+document.getElementById('categoryForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const id = document.getElementById('CategoryID').value;
+  const payload = {
+    CategoryName: document.getElementById('CategoryName').value.trim(),
+    CategoryName_Ar: document.getElementById('CategoryName_Ar').value.trim(),
+    Description: document.getElementById('Description').value.trim(),
+    Description_Ar: document.getElementById('Description_Ar').value.trim(),
+    IsActive: document.getElementById('IsActive').checked
+  };
+  if (!payload.CategoryName) return alert('Please enter a category name.');
+
+  const url = id ? `/api/news/category/update/${id}` : '/api/news/category/add';
+  const method = id ? 'PUT' : 'POST';
+  try {
+    const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const result = await res.json();
+    if (!result.success) return alert(result.message || 'Operation failed.');
+    alert(result.message);
+    categoryModal.hide();
+    loadCategoriesList();
+  } catch (err) {
+    console.error('Save Category Error:', err);
+    alert('Something went wrong while saving category.');
+  }
+});
+
+// Delete Category
+async function deleteCategory(e) {
+  const id = e.currentTarget.dataset.id;
+  if (!confirm('Are you sure you want to delete this category?')) return;
+
+  try {
+    const res = await fetch(`/api/news/category/delete/${id}`, { method: 'DELETE' });
+    const result = await res.json();
+    alert(result.message);
+    if (result.success) loadCategoriesList();
+  } catch (err) {
+    console.error('Delete Category Error:', err);
+  }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', loadCategoriesList);
+
+
 
 // --------------------
 // Initial Load
