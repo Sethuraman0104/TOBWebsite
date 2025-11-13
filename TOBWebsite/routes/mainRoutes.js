@@ -5,6 +5,8 @@ const sqlConfig = require('../sqlconfig');
 const multer = require('multer');
 const path = require('path');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
 // Multer setup
 const storage = multer.diskStorage({
@@ -18,6 +20,8 @@ const isAdmin = (req, res, next) => {
   req.user = { UserID: 1, Role: 'Admin' };
   next();
 };
+
+const token = crypto.randomBytes(20).toString('hex');
 
 router.get('/:id', async (req, res) => {
   try {
@@ -775,6 +779,176 @@ router.put('/comments/:commentId/status', async (req, res) => {
   } catch (err) {
     console.error('❌ PUT /comments/:commentId/status error:', err);
     res.status(500).json({ success: false });
+  }
+});
+
+// -------------------------------
+// POST /newsletter/subscribe
+// -------------------------------
+router.post('/newsletter/subscribe', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      return res.status(400).json({ success: false, message: 'Invalid email address.' });
+
+    const pool = await sql.connect(sqlConfig);
+
+    // Check if already exists
+    const check = await pool.request()
+      .input('Email', sql.NVarChar(255), email)
+      .query(`SELECT * FROM NewsletterSubscribers WHERE Email = @Email`);
+
+    const token = crypto.randomBytes(20).toString('hex');
+
+    // Already confirmed & active
+    if (check.recordset.length && check.recordset[0].IsConfirmed && check.recordset[0].IsActive) {
+      return res.json({ success: false, message: 'You are already subscribed with us.' });
+    }
+
+    // Existing but inactive/unconfirmed → update token
+    if (check.recordset.length) {
+      await pool.request()
+        .input('Email', sql.NVarChar(255), email)
+        .input('Token', sql.NVarChar(100), token)
+        .query(`
+          UPDATE NewsletterSubscribers
+          SET IsActive = 1, IsConfirmed = 0, ConfirmationToken = @Token, CreatedOn = GETDATE()
+          WHERE Email = @Email
+        `);
+
+      await sendConfirmationEmail(email, token);
+      return res.json({ success: true, message: 'Welcome back! Please check your email to confirm your subscription.' });
+    }
+
+    // New subscriber
+    await pool.request()
+      .input('Email', sql.NVarChar(255), email)
+      .input('Token', sql.NVarChar(100), token)
+      .query(`
+        INSERT INTO NewsletterSubscribers (Email, IsActive, IsConfirmed, ConfirmationToken, CreatedOn)
+        VALUES (@Email, 1, 0, @Token, GETDATE())
+      `);
+
+    await sendConfirmationEmail(email, token);
+    res.json({ success: true, message: 'Subscription started! Please check your inbox to confirm your subscription.' });
+
+  } catch (err) {
+    console.error('❌ POST /newsletter/subscribe error:', err);
+    res.status(500).json({ success: false, message: 'Server error occurred.' });
+  }
+});
+
+// -------------------------------
+// Confirmation route
+// GET /newsletter/confirm/:token
+// -------------------------------
+router.get('/newsletter/confirm/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    const pool = await sql.connect(sqlConfig);
+
+    const result = await pool.request()
+      .input('Token', sql.NVarChar(100), token)
+      .query(`SELECT * FROM NewsletterSubscribers WHERE ConfirmationToken = @Token`);
+
+    if (!result.recordset.length)
+      return res.status(400).send('<h3>Invalid or expired confirmation link.</h3>');
+
+    const subscriber = result.recordset[0];
+    await pool.request()
+      .input('Email', sql.NVarChar(255), subscriber.Email)
+      .query(`
+        UPDATE NewsletterSubscribers
+        SET IsConfirmed = 1, ConfirmedOn = GETDATE(), ConfirmationToken = NULL
+        WHERE Email = @Email
+      `);
+
+    res.send(`<h3>Thank you, ${subscriber.Email}! 🎉<br>Your subscription has been confirmed successfully.</h3>`);
+
+  } catch (err) {
+    console.error('❌ GET /newsletter/confirm/:token error:', err);
+    res.status(500).send('<h3>Server error occurred while confirming your subscription.</h3>');
+  }
+});
+
+async function sendConfirmationEmail(email, token) {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'sethuraman0104@gmail.com',
+      pass: 'lujjbfhwjahqdarm'
+    }
+  });
+
+  const confirmLink = `http://localhost:3000/api/newsletter/confirm/${token}`;
+  const mailOptions = {
+    from: '"TOB News" <sethuraman0104@gmail.com>',
+    to: email,
+    subject: 'Confirm Your Subscription to TOB News',
+    html: `
+      <div style="font-family:sans-serif; line-height:1.6;">
+        <h2>Confirm your subscription</h2>
+        <p>Hi there,</p>
+        <p>Thank you for subscribing to TOB News. Please confirm your subscription by clicking the button below:</p>
+        <a href="${confirmLink}" style="display:inline-block;background:#007bff;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;">Confirm Subscription</a>
+        <p>If you didn’t request this, you can ignore this email.</p>
+      </div>
+    `
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Email sent info:', info);
+  } catch (err) {
+    console.error('❌ Failed to send confirmation email:', err);
+  }
+}
+
+// ----------------------------------------------
+// PUT newsletter unsubscribe
+// ----------------------------------------------
+router.put('/newsletter/unsubscribe', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ success: false, message: 'Email is required.' });
+
+    const pool = await sql.connect(sqlConfig);
+
+    const result = await pool.request()
+      .input('Email', sql.NVarChar(150), email)
+      .query(`
+        UPDATE NewsletterSubscribers
+        SET IsActive = 0, UnsubscribedOn = GETDATE()
+        WHERE Email = @Email AND IsActive = 1
+      `);
+
+    if (result.rowsAffected[0] === 0)
+      return res.json({ success: false, message: 'Email not found or already unsubscribed.' });
+
+    res.json({ success: true, message: 'You have been unsubscribed successfully.' });
+  } catch (err) {
+    console.error('❌ PUT /newsletter/unsubscribe error:', err);
+    res.status(500).json({ success: false, message: 'Internal server error.' });
+  }
+});
+
+// ----------------------------------------------
+// GET newsletter subscribers list (Admin view)
+// ----------------------------------------------
+router.get('/newsletter/list', async (req, res) => {
+  try {
+    const pool = await sql.connect(sqlConfig);
+    const result = await pool.request()
+      .query(`
+        SELECT SubscriberID, Email, SubscribedOn, UnsubscribedOn, IsActive, IsConfirmed
+        FROM NewsletterSubscribers
+        ORDER BY SubscribedOn DESC
+      `);
+
+    res.json({ success: true, data: result.recordset });
+  } catch (err) {
+    console.error('❌ GET /newsletter/list error:', err);
+    res.status(500).json({ success: false, message: 'Internal server error.' });
   }
 });
 

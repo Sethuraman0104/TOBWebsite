@@ -16,6 +16,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" rel="stylesheet">
     <!-- Leaflet -->
     <link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet" />
+    <!-- Masonry & imagesLoaded -->
+    <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+    <script src="https://unpkg.com/imagesloaded@4/imagesloaded.pkgd.min.js"></script>
     <!-- Custom CSS -->
     <link href="css/TOBStyle.css" rel="stylesheet" />
 </head>
@@ -27,7 +30,8 @@
 
             <!-- 🔹 Logo & Branding -->
             <div class="d-flex align-items-center gap-2 brand-box">
-                <img src="images/TOBTransparent.png" class="logo" alt="TOB Logo" id="siteLogo">
+                <a href="TOBHome.html#home"><img src="images/TOBTransparent.png" class="logo" alt="TOB Logo"
+                        id="siteLogo"></a>
                 <div>
                     <div id="brandTitle">TOB News</div>
                     <div class="muted-small">Reliable local & global news</div>
@@ -37,12 +41,15 @@
             <!-- 🔹 Live Info Section -->
             <div class="d-flex align-items-center gap-4 info-area">
 
-                <!-- 🌍 Location Info -->
-                <div class="location-box d-flex align-items-center gap-2">
-                    <i class="fa-solid fa-location-dot text-danger fs-5"></i>
-                    <div id="userLocation" class="fw-semibold small text-muted">Detecting...</div>
+                <!-- 🌍 Location + Phone Numbers -->
+                <div
+                    class="location-box d-flex align-items-center gap-3 px-3 py-1 rounded-4 bg-white bg-opacity-75 shadow-sm">
+                    <!-- Country / Location -->
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-location-dot text-danger fs-5"></i>
+                        <div id="userLocation" class="fw-semibold small text-muted">Detecting...</div>
+                    </div>
                 </div>
-
                 <!-- 🌤️ Weather Info -->
                 <div
                     class="climate-box d-flex align-items-center gap-2 px-3 py-1 rounded-4 bg-white bg-opacity-75 shadow-sm">
@@ -136,12 +143,12 @@
             <small id="commentMsg" class="text-success d-block mt-2"></small>
         </div>
 
-        <!-- Other News -->
-        <div class="category-header mb-3">
-            Other News
-        </div>
-        <div id="otherNewsContainer" class="row g-3 mt-4">
-            Loading other news...
+        <div class="category-header mb-3">Other News</div>
+        <div id="otherNewsContainer" class="other-news-grid"></div>
+        <div id="newsLoader" class="text-center py-3" style="display:none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
         </div>
     </div>
 

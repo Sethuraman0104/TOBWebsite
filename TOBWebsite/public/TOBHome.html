@@ -27,7 +27,7 @@
 
       <!-- 🔹 Logo & Branding -->
       <div class="d-flex align-items-center gap-2 brand-box">
-        <img src="images/TOBTransparent.png" class="logo" alt="TOB Logo" id="siteLogo">
+        <a href="TOBHome.html#home"><img src="images/TOBTransparent.png" class="logo" alt="TOB Logo" id="siteLogo"></a>
         <div>
           <div id="brandTitle">TOB News</div>
           <div class="muted-small">Reliable local & global news</div>
@@ -37,10 +37,13 @@
       <!-- 🔹 Live Info Section -->
       <div class="d-flex align-items-center gap-4 info-area">
 
-        <!-- 🌍 Location Info -->
-        <div class="location-box d-flex align-items-center gap-2">
-          <i class="fa-solid fa-location-dot text-danger fs-5"></i>
-          <div id="userLocation" class="fw-semibold small text-muted">Detecting...</div>
+        <!-- 🌍 Location + Phone Numbers -->
+        <div class="location-box d-flex align-items-center gap-3 px-3 py-1 rounded-4 bg-white bg-opacity-75 shadow-sm">
+          <!-- Country / Location -->
+          <div class="d-flex align-items-center gap-2">
+            <i class="fa-solid fa-location-dot text-danger fs-5"></i>
+            <div id="userLocation" class="fw-semibold small text-muted">Detecting...</div>
+          </div>
         </div>
 
         <!-- 🌤️ Weather Info -->
@@ -96,7 +99,7 @@
       </button>
       <div class="collapse d-lg-flex flex-column flex-lg-row gap-3" id="mobileNav">
         <a class="nav-link" href="#"><i class="fa-solid fa-house"></i> Home</a>
-        <a class="nav-link" href="#newsSection"><i class="fa-solid fa-fire-flame-curved"></i> Top Stories</a>
+        <a class="nav-link" href="#newsSection"><i class="fa-solid fa-thumbtack"></i> Top Stories</a>
         <a class="nav-link" href="#trendsSection"><i class="fa-solid fa-chart-line"></i> Trending</a>
         <a class="nav-link" href="#contact"><i class="fa-solid fa-envelope"></i> Contact</a>
       </div>
@@ -107,7 +110,7 @@
   <div id="newsSectionWrapper" class="container my-4">
     <!-- News Section Header - Modern Animated Design -->
     <div class="news-section-header-modern mb-4" data-aos="fade-up" data-aos-duration="1000">
-      <i class="fa-solid fa-newspaper text-danger fs-3 me-2"></i>
+      <i class="fa-solid fa-thumbtack text-danger fs-3 me-2"></i>
       <div>
         <h2 class="news-section-title mb-1">Top Stories</h2>
         <div class="news-section-underline"></div>
@@ -135,10 +138,9 @@
   </div>
 
   <!-- 🌟 Highlights Featured Section -->
-  <div id="highlightsWrapper" class="container my-5">
-    <!-- Header -->
+  <!-- <div id="highlightsWrapper" class="container my-5">   
     <div class="news-section-header-modern mb-4" data-aos="fade-up" data-aos-duration="1000">
-      <i class="fa-solid fa-star text-danger fs-3 me-2"></i>
+      <i class="fa-solid fa-burst text-danger fs-3 me-2"></i>
       <div>
         <h2 class="news-section-title mb-1">Highlights Featured</h2>
         <div class="news-section-underline"></div>
@@ -147,23 +149,35 @@
         </p>
       </div>
     </div>
-
-    <!-- ✅ Use grid instead of Bootstrap row -->
     <section id="featuredHighlights" class="featured-grid"></section>
+  </div> -->
+  <!-- 📰 TOB Individual Section Header -->
+  <div id="highlightsWrapper" class="container my-5">
+    <div class="TOBIndividualSectionHeader" data-aos="fade-up">
+      <div class="header-icon">
+        <i class="fa-solid fa-bolt"></i>
+      </div>
+      <div class="header-text">
+        <h2 class="header-title">Highlights</h2>
+        <p class="header-subtitle">Handpicked stories that matter most</p>
+      </div>
+    </div>
+
+    <!-- Section Content -->
+    <section id="featuredHighlights" class="section-content-grid">
+      <!-- Your dynamic cards go here -->
+    </section>
   </div>
-
-
   <!-- 🌟 Trending Articles Section -->
   <div id="trendsWrapper" class="container my-5">
-    <!-- Header -->
-    <div class="news-section-header-modern mb-4" data-aos="fade-up" data-aos-duration="1000">
-      <i class="fa-solid fa-fire text-danger fs-3 me-2"></i>
-      <div>
-        <h2 class="news-section-title mb-1">Trending Articles</h2>
-        <div class="news-section-underline"></div>
-        <p class="news-section-subtitle mb-0">
-          Handpicked stories that are catching everyone’s eye
-        </p>
+
+    <div class="TOBIndividualSectionHeader" data-aos="fade-up">
+      <div class="header-icon">
+        <i class="fa-solid fa-chart-line"></i>
+      </div>
+      <div class="header-text">
+        <h2 class="header-title">Trending Articles</h2>
+        <p class="header-subtitle">Handpicked stories that are catching everyone’s eye</p>
       </div>
     </div>
 
@@ -185,9 +199,27 @@
       <small class="text-muted d-block mt-3">We respect your privacy. Unsubscribe anytime.</small>
     </div>
   </div>
+
+  <!-- 🔥 Spotlight News Collage Section -->
+  <div id="spotlightCollageWrapper" class="container my-5">
+    <div class="news-section-header-modern mb-4" data-aos="fade-up" data-aos-duration="1000">
+      <i class="fa-solid fa-lightbulb text-danger fs-3 me-2"></i>
+      <div>
+        <h2 class="news-section-title mb-1">Spotlight News</h2>
+        <div class="news-section-underline"></div>
+        <p class="news-section-subtitle mb-0 text-secondary">
+          Featured stories in a visual collage
+        </p>
+      </div>
+    </div>
+
+    <div id="spotlightCollage" class="spotlight-collage-grid"></div>
+  </div>
+
+
   <div id="newsWrapper" class="container my-5">
     <div class="news-section-header-modern mb-4" data-aos="fade-up" data-aos-duration="1000">
-      <i class="fa-solid fa-newspaper text-danger fs-3 me-2"></i>
+      <i class="fa-solid fa-bullhorn text-danger fs-3 me-2"></i>
       <div>
         <h2 class="news-section-title mb-1">Latest News</h2>
         <div class="news-section-underline"></div>

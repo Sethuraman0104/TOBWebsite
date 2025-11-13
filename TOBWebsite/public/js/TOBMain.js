@@ -455,19 +455,63 @@ scrollTopBtn.addEventListener("click", () => {
 
 document.getElementById('newsletterForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const email = e.target.querySelector('input').value.trim();
-  if (!email) return;
 
-  // Example: send to your API endpoint
+  const email = e.target.querySelector('input').value.trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showToast('Please enter a valid email address.', 'warning');
+    return;
+  }
+
   try {
-    // await fetch('/api/subscribe', { method: 'POST', body: JSON.stringify({ email }) });
-    alert(`Subscribed with ${email}!`);
-    e.target.reset();
+    const res = await fetch('/api/newsletter/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      showToast(data.message || 'Subscription successful! 🎉', 'success');
+      e.target.reset();
+    } else {
+      showToast(data.message || 'Subscription failed, please try again.', 'error');
+    }
   } catch (err) {
-    console.error(err);
-    alert('Subscription failed, try again.');
+    console.error('❌ Newsletter subscribe error:', err);
+    showToast('Something went wrong. Please try again later.', 'error');
   }
 });
+
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast-message toast-${type}`;
+  toast.textContent = message;
+
+  Object.assign(toast.style, {
+    position: 'fixed',
+    bottom: '30px',
+    right: '30px',
+    background: type === 'success' ? '#28a745' :
+      type === 'warning' ? '#ffc107' :
+        type === 'error' ? '#dc3545' : '#17a2b8',
+    color: '#fff',
+    padding: '12px 20px',
+    borderRadius: '8px',
+    fontSize: '15px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+    zIndex: 1050,
+    opacity: '0',
+    transition: 'opacity 0.3s ease'
+  });
+
+  document.body.appendChild(toast);
+  setTimeout(() => (toast.style.opacity = '1'), 100);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 400);
+  }, 4000);
+}
 
 async function loadNewsArticles() {
   const container = document.getElementById('newsCategoriesSection');
@@ -558,14 +602,6 @@ async function loadFooterCategories() {
   } catch {
     container.innerHTML = '<li>Error loading</li>';
   }
-}
-
-function subscribeNewsletter() {
-  const email = document.getElementById('newsletterEmail').value.trim();
-  const msg = document.getElementById('newsletterMsg');
-  if (!email) return;
-  msg.textContent = `✅ Thanks for subscribing, ${email}!`;
-  document.getElementById('newsletterEmail').value = '';
 }
 
 document.getElementById('year').textContent = new Date().getFullYear();
@@ -662,6 +698,89 @@ async function loadComments(articleId) {
     console.error('loadComments error:', err);
   }
 }
+
+async function subscribeNewsletter() {
+  const emailInput = document.getElementById('newsletterEmail');
+  const msgEl = document.getElementById('newsletterMsg');
+  const email = emailInput.value.trim();
+  if (!email) return;
+
+  msgEl.textContent = ''; // clear previous message
+
+  try {
+    const res = await fetch('/api/newsletter/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+
+    const result = await res.json();
+
+    if (result.success) {
+      msgEl.classList.remove('text-danger');
+      msgEl.classList.add('text-success');
+      msgEl.textContent = result.message;
+      emailInput.value = '';
+    } else {
+      msgEl.classList.remove('text-success');
+      msgEl.classList.add('text-danger');
+      msgEl.textContent = result.message;
+    }
+  } catch (err) {
+    console.error('Newsletter subscription error:', err);
+    msgEl.classList.remove('text-success');
+    msgEl.classList.add('text-danger');
+    msgEl.textContent = 'Subscription failed. Please try again later.';
+  }
+}
+
+async function loadSpotlightCollage() {
+  try {
+    const res = await fetch('/api/news/admin', { cache: 'no-store' });
+    const news = await res.json();
+
+    const validNews = (Array.isArray(news) ? news : []).filter(
+      n => n.IsActive && n.IsApproved
+    );
+
+    const spotlight = validNews
+      .sort((a, b) => new Date(b.PublishedOn) - new Date(a.PublishedOn))
+      .slice(0, 12); // max 12 for collage
+
+    const container = document.getElementById('spotlightCollage');
+    container.innerHTML = '';
+
+    if (!spotlight.length) {
+      container.innerHTML = `<div class="text-center text-muted py-5">
+        <i class="fa-regular fa-eye-slash fs-2"></i>
+        <p class="mt-2">No Spotlight News available right now.</p>
+      </div>`;
+      return;
+    }
+
+    spotlight.forEach(n => {
+      const img = n.ImageURL || '/images/default-news.jpg';
+      const date = new Date(n.PublishedOn).toLocaleDateString();
+      const card = `
+        <div class="spotlight-collage-item" onclick="openArticle(${n.ArticleID})">
+          <img src="${img}" alt="${n.Title}" onerror="this.src='/images/default-news.jpg'">
+          <div class="spotlight-collage-overlay">
+            <div class="spotlight-collage-title">${n.Title}</div>
+            <div class="spotlight-collage-footer">
+              <span>${date}</span>
+              <button class="spotlight-collage-btn">Read More</button>
+            </div>
+          </div>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', card);
+    });
+  } catch (err) {
+    console.error('loadSpotlightCollage error:', err);
+  }
+}
+
+loadSpotlightCollage();
 
 // ---------- INIT ----------
 document.getElementById('siteLogo').addEventListener('error', () => { document.getElementById('siteLogo').src = SITE.logoPath; });

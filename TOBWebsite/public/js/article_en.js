@@ -200,62 +200,143 @@ async function loadArticle() {
     }
 }
 
-async function loadOtherNews() {
-    const container = document.getElementById('otherNewsContainer');
-    container.innerHTML = `
-    <div class="news-spinner">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-    </div>
-  `;
+// async function loadOtherNews() {
+//     const container = document.getElementById('otherNewsContainer');
+//     container.innerHTML = `
+//     <div class="news-spinner">
+//       <div class="spinner-border text-primary" role="status">
+//         <span class="visually-hidden">Loading...</span>
+//       </div>
+//     </div>
+//   `;
+
+//     try {
+//         const res = await fetch('/api/news/admin');
+//         const news = await res.json();
+
+//         const otherNews = (Array.isArray(news) ? news : [])
+//             .filter(n => n.IsActive && n.IsApproved && n.ArticleID != articleId)
+//             .slice(0, 4);
+
+//         if (!otherNews.length) {
+//             container.innerHTML = '<p class="text-muted">No other news available.</p>';
+//             return;
+//         }
+
+//         container.innerHTML = otherNews.map(n => {
+//             const publishedDate = formatDateTime(n.PublishedOn);
+//             return `
+//         <div class="col-md-3">
+//           <div class="card news-card-custom animate-card">
+//             <div class="news-card-img-wrapper">
+//               <img src="${n.ImageURL || '/images/default-news.jpg'}" alt="${n.Title}">
+//             </div>
+//             <div class="news-card-body">
+//               <h5 class="card-title">${n.Title}</h5>
+//               <p class="news-card-text-truncate" style="padding-left:5px;">${n.Content}</p>
+//             </div>
+//             <div class="news-card-footer">
+//   <small class="text-muted">📅 ${publishedDate}</small>
+//   <a href="article_en.html?id=${n.ArticleID}" class="articlepg-read-btn">Read More</a>
+// </div>
+//           </div>
+//         </div>
+//       `;
+//         }).join('');
+
+//         // Fade-in animation
+//         const cards = container.querySelectorAll('.animate-card');
+//         cards.forEach((card, i) => {
+//             card.style.animationDelay = `${i * 0.15}s`;
+//             card.classList.add('fade-in-up-custom');
+//         });
+
+//     } catch (err) {
+//         console.error(err);
+//         container.innerHTML = '<p class="text-danger">Failed to load other news.</p>';
+//     }
+// }
+
+let otherNewsPage = 0;
+const pageSize = 8;
+let isLoadingNews = false;
+let allNewsLoaded = false;
+
+const container = document.querySelector('#otherNewsContainer');
+container.innerHTML = '';   // clear previous content
+otherNewsPage = 0;          // reset page
+allNewsLoaded = false;      // reset flag
+
+// Keep track of already loaded article IDs to prevent duplicates
+const loadedArticleIds = new Set();
+
+async function loadOtherNewsGrid() {
+    if (isLoadingNews || allNewsLoaded) return;
+    isLoadingNews = true;
+    document.getElementById('newsLoader').style.display = 'block';
 
     try {
-        const res = await fetch('/api/news/admin');
+        const res = await fetch(`/api/news/admin?skip=${otherNewsPage * pageSize}&take=${pageSize}`);
         const news = await res.json();
 
         const otherNews = (Array.isArray(news) ? news : [])
-            .filter(n => n.IsActive && n.IsApproved && n.ArticleID != articleId)
-            .slice(0, 4);
+            .filter(n => n.IsActive && n.IsApproved && n.ArticleID != articleId && !loadedArticleIds.has(n.ArticleID));
 
         if (!otherNews.length) {
-            container.innerHTML = '<p class="text-muted">No other news available.</p>';
+            allNewsLoaded = true;
             return;
         }
 
-        container.innerHTML = otherNews.map(n => {
-            const publishedDate = formatDateTime(n.PublishedOn);
-            return `
-        <div class="col-md-3">
-          <div class="card news-card-custom animate-card">
-            <div class="news-card-img-wrapper">
-              <img src="${n.ImageURL || '/images/default-news.jpg'}" alt="${n.Title}">
-            </div>
-            <div class="news-card-body">
-              <h5 class="card-title">${n.Title}</h5>
-              <p class="news-card-text-truncate" style="padding-left:5px;">${n.Content}</p>
-            </div>
-            <div class="news-card-footer">
-  <small class="text-muted">📅 ${publishedDate}</small>
-  <a href="article_en.html?id=${n.ArticleID}" class="articlepg-read-btn">Read More</a>
-</div>
-          </div>
-        </div>
-      `;
-        }).join('');
+        const fragment = document.createDocumentFragment();
 
-        // Fade-in animation
-        const cards = container.querySelectorAll('.animate-card');
-        cards.forEach((card, i) => {
-            card.style.animationDelay = `${i * 0.15}s`;
-            card.classList.add('fade-in-up-custom');
+        otherNews.forEach((n, i) => {
+            loadedArticleIds.add(n.ArticleID);  // mark as loaded
+
+            const img = n.ImageURL || '/images/default-news.jpg';
+            const item = document.createElement('div');
+            item.className = 'other-news-item';
+            item.innerHTML = `
+                <div class="other-news-card">
+                    <img data-src="${img}" alt="${n.Title}" class="lazy-image" onerror="this.src='/images/default-news.jpg'">
+                    <div class="overlay">
+                        <div class="title">${n.Title}</div>
+                        <a href="article_en.html?id=${n.ArticleID}" class="btn-read">Read More</a>
+                    </div>
+                </div>
+            `;
+            fragment.appendChild(item);
         });
 
+        container.appendChild(fragment);
+
+        // Lazy load images
+        container.querySelectorAll('.lazy-image').forEach(img => {
+            if (img.dataset.src && !img.src) img.src = img.dataset.src;
+        });
+
+        // Animate cards with staggered delay
+        container.querySelectorAll('.other-news-item:not(.show)').forEach((el, i) => {
+            setTimeout(() => el.classList.add('show'), i * 100);
+        });
+
+        otherNewsPage++;
     } catch (err) {
         console.error(err);
-        container.innerHTML = '<p class="text-danger">Failed to load other news.</p>';
+    } finally {
+        isLoadingNews = false;
+        document.getElementById('newsLoader').style.display = 'none';
     }
 }
+
+// Infinite scroll
+window.addEventListener('scroll', () => {
+    if ((window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 300)) {
+        loadOtherNewsGrid();
+    }
+});
+
+// Initial load
+loadOtherNewsGrid();
 
 async function loadFooterCategories() {
     const container = document.getElementById('footerCategories');
@@ -283,30 +364,34 @@ async function loadFooterCategories() {
         container.innerHTML = '<li>Error loading</li>';
     }
 }
-
 function formatDateTime(dateStr) {
     const d = new Date(dateStr);
     const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true };
     return d.toLocaleString('en-US', options);
 }
-
-// Submit comment
+// Submit new comment
 document.getElementById('commentForm').addEventListener('submit', async e => {
     e.preventDefault();
     const data = {
         articleId: document.getElementById('articleId').value,
         name: document.getElementById('commentName').value,
         email: document.getElementById('commentEmail').value,
-        content: document.getElementById('commentContent').value
+        content: document.getElementById('commentContent').value,
+        parentCommentId: null
     };
+
     try {
-        const res = await fetch('/api/comments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        const res = await fetch('/api/comments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
         const result = await res.json();
-        alert(result.message);
         if (result.success) {
             document.getElementById('commentForm').reset();
             loadComments();
         }
+        alert(result.message);
     } catch (err) {
         console.error(err);
         alert('Error submitting comment');
@@ -315,76 +400,112 @@ document.getElementById('commentForm').addEventListener('submit', async e => {
 
 async function loadComments() {
     try {
+        const articleId = document.getElementById('articleId').value;
         const res = await fetch(`/api/comments/${articleId}`);
         const comments = await res.json();
-        const container = document.getElementById('commentsContainer');
-        if (!comments.length) return container.innerHTML = '<p class="text-muted">No comments yet.</p>';
 
-        container.innerHTML = comments.map(c => `
+        const container = document.getElementById('commentsContainer');
+        if (!comments.length) {
+            container.innerHTML = '<p class="text-muted">No comments yet.</p>';
+            return;
+        }
+
+        // Build hierarchical tree
+        const commentMap = {};
+        comments.forEach(c => (commentMap[c.CommentID] = { ...c, Replies: [] }));
+        const rootComments = [];
+
+        comments.forEach(c => {
+            if (c.ParentCommentID) {
+                commentMap[c.ParentCommentID]?.Replies.push(commentMap[c.CommentID]);
+            } else {
+                rootComments.push(commentMap[c.CommentID]);
+            }
+        });
+
+        // Render recursively
+        container.innerHTML = renderCommentsRecursive(rootComments);
+    } catch (err) {
+        console.error(err);
+        document.getElementById('commentsContainer').innerHTML =
+            '<p class="text-danger">Failed to load comments.</p>';
+    }
+}
+function renderCommentsRecursive(comments) {
+    return comments
+        .map(c => `
       <div class="comment-card mb-3" id="comment-${c.CommentID}">
         <div class="comment-header d-flex justify-content-between align-items-center">
           <div>
-            <strong>${c.Name}</strong> <small class="text-muted">• ${new Date(c.CreatedOn).toLocaleString()}</small>
+            <strong>${escapeHtml(c.Name)}</strong>
+            <small class="text-muted">• ${formatDateTime(c.CreatedOn)}</small>
           </div>
-          <button class="btn btn-sm btn-outline-primary reply-btn" data-commentid="${c.CommentID}"><i class="fa fa-reply"></i> Reply</button>
+          <button class="btn btn-sm btn-outline-primary reply-btn" data-commentid="${c.CommentID}">
+            <i class="fa fa-reply"></i> Reply
+          </button>
         </div>
         <div class="comment-body mt-2">
-          <p>${c.Content}</p>
+          <p>${escapeHtml(c.Content)}</p>
         </div>
         <div class="reply-box mt-2 p-2 bg-light rounded" id="replyBox-${c.CommentID}" style="display:none;">
           <input type="text" class="form-control mb-2" placeholder="Your Name" id="replyName-${c.CommentID}">
           <textarea class="form-control mb-2" rows="3" placeholder="Your Reply" id="replyContent-${c.CommentID}"></textarea>
           <button class="btn btn-sm btn-success send-reply-btn" data-parentid="${c.CommentID}">Post Reply</button>
         </div>
-
-        ${c.Replies && c.Replies.length ? `
-          <div class="replies ms-4 mt-3">
-            ${c.Replies.map(r => `
-              <div class="reply-card p-2 mb-2 bg-white rounded shadow-sm">
-                <strong>${r.Name}</strong> <small class="text-muted">• ${new Date(r.CreatedOn).toLocaleString()}</small>
-                <p class="mb-0">${r.Content}</p>
-              </div>
-            `).join('')}
-          </div>
-        ` : ''}
+        ${c.Replies && c.Replies.length
+                ? `<div class="replies ms-4 mt-3 border-start ps-3">
+                ${renderCommentsRecursive(c.Replies)}
+               </div>`
+                : ''
+            }
       </div>
-    `).join('');
-    } catch (err) {
-        console.error(err);
-        document.getElementById('commentsContainer').innerHTML = '<p class="text-danger">Failed to load comments.</p>';
-    }
+    `)
+        .join('');
 }
-
-// Reply button click
+// Escape HTML to prevent injection
+function escapeHtml(text) {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+// Reply button & submit reply
 document.addEventListener('click', async e => {
-    if (e.target.classList.contains('reply-btn')) {
-        const id = e.target.dataset.commentid;
+    if (e.target.closest('.reply-btn')) {
+        const id = e.target.closest('.reply-btn').dataset.commentid;
         const box = document.getElementById(`replyBox-${id}`);
         box.style.display = box.style.display === 'none' ? 'block' : 'none';
     }
 
-    if (e.target.classList.contains('send-reply-btn')) {
-        const parentId = e.target.dataset.parentid;
-        const name = document.getElementById(`replyName-${parentId}`).value;
-        const content = document.getElementById(`replyContent-${parentId}`).value;
+    if (e.target.closest('.send-reply-btn')) {
+        const btn = e.target.closest('.send-reply-btn');
+        const parentId = btn.dataset.parentid;
+        const articleId = document.getElementById('articleId').value;
+        const name = document.getElementById(`replyName-${parentId}`).value.trim();
+        const content = document.getElementById(`replyContent-${parentId}`).value.trim();
         if (!name || !content) return alert('Please fill both fields');
 
         try {
             const res = await fetch('/api/comments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ articleId, name, email: 'noreply@tobnews.com', content, parentCommentId: parentId })
+                body: JSON.stringify({
+                    articleId,
+                    name,
+                    email: 'noreply@tobnews.com',
+                    content,
+                    parentCommentId: parentId
+                })
             });
             const result = await res.json();
             alert(result.message);
-            loadComments();
+            if (result.success) loadComments();
         } catch (err) {
             console.error(err);
             alert('Failed to submit reply');
         }
     }
 });
-
 // Like button
 document.addEventListener('click', async e => {
     if (!e.target.closest('#likeBtn')) return;
@@ -403,7 +524,6 @@ document.addEventListener('click', async e => {
         console.error(err);
     }
 });
-
 // Load likes count
 async function loadLikes() {
     const likeEl = document.getElementById('likeCount');
@@ -419,11 +539,44 @@ async function loadLikes() {
     }
 }
 
+async function subscribeNewsletter() {
+    const emailInput = document.getElementById('newsletterEmail');
+    const msgEl = document.getElementById('newsletterMsg');
+    const email = emailInput.value.trim();
+    if (!email) return;
+
+    msgEl.textContent = ''; // clear previous message
+
+    try {
+        const res = await fetch('/api/newsletter/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+            msgEl.classList.remove('text-danger');
+            msgEl.classList.add('text-success');
+            msgEl.textContent = result.message;
+            emailInput.value = '';
+        } else {
+            msgEl.classList.remove('text-success');
+            msgEl.classList.add('text-danger');
+            msgEl.textContent = result.message;
+        }
+    } catch (err) {
+        console.error('Newsletter subscription error:', err);
+        msgEl.classList.remove('text-success');
+        msgEl.classList.add('text-danger');
+        msgEl.textContent = 'Subscription failed. Please try again later.';
+    }
+}
 // Initial load
 loadComments();
 loadLikes();
-
 // Initialize
 loadArticle();
-loadOtherNews();
+//loadOtherNews();
 loadFooterCategories();

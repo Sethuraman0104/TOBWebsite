@@ -1048,6 +1048,15 @@ async function updateCommentStatus(commentId, status, articleId, articleTitle) {
 // Init on load
 document.addEventListener('DOMContentLoaded', loadArticlesWithComments);
 
+// document.getElementById('commentsModal').addEventListener('shown.bs.modal', function () {
+//   const btns = this.querySelectorAll('.modal-content button');
+//   btns.forEach(btn => {
+//     btn.classList.remove('btn-primary', 'bg-danger', 'bg-warning');
+//     btn.style.background = 'none'; // optional
+//   });
+// });
+
+
 
 // --------------------
 // Initial Load
