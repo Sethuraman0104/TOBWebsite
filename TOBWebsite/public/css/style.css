@@ -745,7 +745,7 @@ body {
 }
 
 .modal-content button {
-  background: #004080;
+  /* background: #004080; */
   color: white;
   border: none;
   cursor: pointer;
@@ -885,4 +885,337 @@ body {
 }
 .comment-stats .fa-check-circle {
   color: #28a745;
+}
+
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.4); z-index:1000; }
+.modal-content { background:#fff; margin:5% auto; padding:20px; width:90%; max-width:1000px; border-radius:8px; position:relative; }
+.close { position:absolute; top:10px; right:15px; font-size:24px; cursor:pointer; }
+
+
+/* Rounded Tabs Wrapper */
+.nav-tabs {
+  display: flex;
+  gap: 10px;
+  list-style: none;
+  margin: 15px 0;
+  padding: 10px;
+  background: #f3f4f6;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+}
+
+/* Remove default li styles */
+.nav-tabs li {
+  margin: 0;
+  padding: 0;
+}
+
+/* Tab Button Style */
+.nav-tabs .tablink {
+  padding: 10px 20px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+  color: lightslategray;
+  font-weight: 600;
+  transition: 0.25s ease-in-out;
+}
+
+/* Hover */
+.nav-tabs .tablink:hover {
+  background: #eef2ff;
+  border-color: #6366f1;
+}
+
+/* Active Tab */
+.nav-tabs .tablink.active {
+  background: #6366f1;
+  color: white;
+  border-color: #6366f1;
+  box-shadow: 0 2px 6px rgba(99,102,241,0.3);
+}
+
+/* ---------------------- */
+/* Card Container Wrapper */
+/* ---------------------- */
+#tabContent {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 14px;
+  margin-top: 10px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+/* Hide other panes */
+.tab-pane {
+  display: none;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+/* Eye icon button */
+.view-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  padding: 6px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.view-icon:hover {
+  background: rgba(0,0,0,0.9);
+}
+
+/* Modal background */
+.preview-modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.6);
+  padding: 50px 0;
+  overflow: hidden;
+}
+
+/* Modal content */
+.preview-modal-content {
+  background: #fff;
+  margin: auto;
+  border-radius: 12px;
+  max-width: 900px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+
+/* Fixed header */
+.preview-header {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  padding: 15px 20px;
+  border-bottom: 1px solid #ddd;
+  z-index: 2;
+}
+
+.preview-header h2 {
+  margin: 2px 0;
+  text-align: center;
+  font-weight: 600;
+  color: #222;
+}
+
+.preview-close {
+  position: absolute;
+  right: 15px; top: 15px;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Scrollable content */
+.preview-scrollable {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Image */
+.preview-image-container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.preview-image {
+  width: 500px;
+  height: 500px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+/* Content body */
+.preview-body {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.preview-left, .preview-right {
+  flex: 1 1 45%;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.preview-left h3, .preview-right h3 {
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: #333;
+}
+
+.preview-left div, .preview-right div {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Footer */
+.preview-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #ddd;
+  text-align: center;
+}
+
+/* Bottom close button */
+.btn-close-modal {
+  padding: 8px 20px;
+  border: none;
+  background: #007bff;
+  color: #fff;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.btn-close-modal:hover {
+  background: #0056b3;
+}
+
+/* Custom thin scrollbar */
+.preview-scrollable::-webkit-scrollbar,
+.preview-left::-webkit-scrollbar,
+.preview-right::-webkit-scrollbar {
+  width: 6px;
+}
+
+.preview-scrollable::-webkit-scrollbar-track,
+.preview-left::-webkit-scrollbar-track,
+.preview-right::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.preview-scrollable::-webkit-scrollbar-thumb,
+.preview-left::-webkit-scrollbar-thumb,
+.preview-right::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+.preview-scrollable::-webkit-scrollbar-thumb:hover,
+.preview-left::-webkit-scrollbar-thumb:hover,
+.preview-right::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+
+/* Overlay */
+.trendsmdl-overlay {
+  display: none;
+  position: fixed;
+  z-index: 999999;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  justify-content: center;
+  align-items: center;
+}
+
+/* Modal Box */
+.trendsmdl-box {
+  background: #fff;
+  width: 80%;
+  max-width: 900px;
+  max-height: 90vh;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0px 8px 40px rgba(0,0,0,0.25);
+}
+
+/* Fixed Header */
+.trendsmdl-header {
+  padding: 15px 20px;
+  background: #f5f5f5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #ddd;
+}
+
+.trendsmdl-close-btn {
+  background: none;
+  border: none;
+  font-size: 26px;
+  cursor: pointer;
+  color: #444;
+}
+
+.trendsmdl-close-btn:hover {
+  color: red;
+}
+
+/* Scrollable Body */
+.trendsmdl-content {
+  padding: 20px;
+  overflow-y: auto;
+  flex-grow: 1;
+  scrollbar-width: thin;
+}
+
+/* Image Center */
+.trendsmdl-img-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.trendsmdl-image {
+  width: 500px;
+  height: 500px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+/* Columns */
+.trendsmdl-row {
+  display: flex;
+  gap: 20px;
+}
+
+.trendsmdl-col {
+  width: 50%;
+}
+
+.trendsmdl-text {
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+/* Bottom Close Button */
+.trendsmdl-bottom-close {
+  margin-top: 25px;
+  width: 100%;
+  padding: 12px;
+  background: #444;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.trendsmdl-bottom-close:hover {
+  background: black;
 }

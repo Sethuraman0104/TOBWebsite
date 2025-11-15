@@ -57,9 +57,17 @@ async function loadTrends(status = 'all', month = '', year = '') {
       <div class="news-grid">
         ${trends.map(t => `
           <div class="news-card ${t.IsActive ? '' : 'inactive'}">
+
+            <!-- Eye Icon -->
+            <span class="view-icon" onclick="openTrendPreview(${t.TrendID})">
+              <i class="fa-solid fa-eye"></i>
+            </span>
+
+            <!-- Image -->
             ${t.ImageURL
-        ? `<img src="${t.ImageURL}" alt="${t.TrendTitle_EN}" class="news-img"/>`
-        : `<div class="news-img placeholder"></div>`}
+              ? `<img src="${t.ImageURL}" alt="${t.TrendTitle_EN}" class="news-img"/>`
+              : `<div class="news-img placeholder"></div>`}
+
             <div class="news-body">
               <h3>${t.TrendTitle_EN}</h3>
               <p>${t.TrendDescription_EN?.substring(0, 220) || ''}...</p>
@@ -71,10 +79,10 @@ async function loadTrends(status = 'all', month = '', year = '') {
                   <i class="fa-solid fa-pen-to-square"></i> Edit
                 </button>
                 ${t.IsActive
-        ? `<button class="deactivate-btn" onclick="toggleTrendStatus(${t.TrendID}, false)">
+                  ? `<button class="deactivate-btn" onclick="toggleTrendStatus(${t.TrendID}, false)">
                        <i class="fa-solid fa-ban"></i> Deactivate
                      </button>`
-        : `<button class="reactivate-btn" onclick="toggleTrendStatus(${t.TrendID}, true)">
+                  : `<button class="reactivate-btn" onclick="toggleTrendStatus(${t.TrendID}, true)">
                        <i class="fa-solid fa-toggle-on"></i> Activate
                      </button>`}
                 <button class="delete-btn" onclick="deleteTrend(${t.TrendID})">
@@ -91,6 +99,41 @@ async function loadTrends(status = 'all', month = '', year = '') {
     trendsContainer.textContent = 'Error loading trends: ' + err.message;
   }
 }
+
+async function openTrendPreview(id) {
+  try {
+    const res = await fetch(`/api/trends/${id}`, { cache: "no-store" });
+    const t = await res.json();
+
+    // Apply data
+    document.getElementById("trendsmdl-title-en").innerHTML = t.TrendTitle_EN || "";
+    document.getElementById("trendsmdl-desc-en").innerHTML = t.TrendDescription_EN || "";
+    document.getElementById("trendsmdl-desc-ar").innerHTML = t.TrendDescription_AR || "";
+
+    const img = document.getElementById("trendsmdl-image");
+    img.src = t.ImageURL || "";
+
+    // Show modal
+    document.getElementById("trendsmdl-modal").style.display = "flex";
+
+  } catch (err) {
+    console.error("Trend Preview Error:", err);
+  }
+}
+
+// Close buttons
+document.getElementById("trendsmdl-close-top").onclick = () =>
+  document.getElementById("trendsmdl-modal").style.display = "none";
+
+document.getElementById("trendsmdl-close-bottom").onclick = () =>
+  document.getElementById("trendsmdl-modal").style.display = "none";
+
+// Close when clicking outside
+window.addEventListener("click", e => {
+  const modal = document.getElementById("trendsmdl-modal");
+  if (e.target === modal) modal.style.display = "none";
+});
+
 
 // --------------------
 // Apply filters
@@ -221,28 +264,33 @@ logoutBtn.addEventListener('click', async () => {
 });
 
 function filterNews(query) {
+  query = query.toLowerCase();
+
+  // Helper: matches ANY content inside the card + inside .news-body
+  function matches(card) {
+    const fullText =
+      card.textContent.toLowerCase() + 
+      (card.querySelector('.news-body')?.textContent.toLowerCase() || '');
+
+    return fullText.includes(query);
+  }
+
   // Pending / Unpublished News
   const pendingCards = pendingNewsContainer.querySelectorAll('.news-card');
   pendingCards.forEach(card => {
-    const title = card.querySelector('h3')?.textContent.toLowerCase() || '';
-    const content = card.querySelector('p')?.textContent.toLowerCase() || '';
-    card.style.display = title.includes(query) || content.includes(query) ? '' : 'none';
+    card.style.display = matches(card) ? '' : 'none';
   });
 
   // Published News
   const publishedCards = allNewsEngagementContainer.querySelectorAll('.news-card');
   publishedCards.forEach(card => {
-    const title = card.querySelector('h3')?.textContent.toLowerCase() || '';
-    const content = card.querySelector('p')?.textContent.toLowerCase() || '';
-    card.style.display = title.includes(query) || content.includes(query) ? '' : 'none';
+    card.style.display = matches(card) ? '' : 'none';
   });
 
   // Deactivated News
   const inactiveCards = inactiveNewsContainer.querySelectorAll('.news-card');
   inactiveCards.forEach(card => {
-    const title = card.querySelector('h3')?.textContent.toLowerCase() || '';
-    const content = card.querySelector('p')?.textContent.toLowerCase() || '';
-    card.style.display = title.includes(query) || content.includes(query) ? '' : 'none';
+    card.style.display = matches(card) ? '' : 'none';
   });
 }
 
@@ -433,7 +481,6 @@ changePasswordForm.onsubmit = async (e) => {
   }
 };
 
-
 // --------------------
 // Post News
 // --------------------
@@ -462,6 +509,7 @@ async function loadPendingNews() {
     const news = await res.json();
 
     news.forEach(n => n.IsActive = !!n.IsActive);
+
     const pending = news.filter(n => !n.IsApproved && n.IsActive);
 
     if (pending.length) {
@@ -469,15 +517,26 @@ async function loadPendingNews() {
         <div class="news-grid">
           ${pending.map(n => `
             <div class="news-card">
-              ${n.ImageURL ? `<img src="${n.ImageURL}" alt="${n.Title}" class="news-img"/>`
-          : `<div class="news-img placeholder"></div>`}
+
+              <!-- Eye Icon -->
+              <span class="view-icon" onclick="openNewsPreview(${n.ArticleID})">
+                <i class="fa-solid fa-eye"></i>
+              </span>
+
+              <!-- Image -->
+              ${n.ImageURL 
+                ? `<img src="${n.ImageURL}" alt="${n.Title}" class="news-img"/>`
+                : `<div class="news-img placeholder"></div>`}
+
               <div class="news-body">
                 <h3>${n.Title}</h3>
                 <p>${n.Content.substring(0, 200)}...</p>
+
                 <div class="info">
                   <span>👍 ${n.LikesCount || 0}</span>
                   <span>💬 ${n.CommentsCount || 0}</span>
                 </div>
+
                 <div class="news-actions">
                   <button class="approve-btn" onclick="approveNews(${n.ArticleID})">
                     <i class="fa-solid fa-check"></i> Approve
@@ -496,11 +555,56 @@ async function loadPendingNews() {
     } else {
       pendingNewsContainer.innerHTML = '<p class="text-muted">No pending news awaiting approval.</p>';
     }
+
   } catch (err) {
     console.error('Error loading pending news:', err);
     pendingNewsContainer.textContent = 'Error: ' + err.message;
   }
 }
+
+async function openNewsPreview(articleId) {
+  try {
+    const res = await fetch(`/api/newscheck/${articleId}`, { cache: "no-store" });
+    if (!res.ok) return console.error("API error:", res.status);
+
+    const reply = await res.json();
+    if (!reply.success || !reply.data) return console.error("No data returned");
+
+    const n = reply.data;
+
+    // Set image
+    document.getElementById("previewImage").src = n.ImageURL || "";
+
+    // Titles
+    document.getElementById("previewTitleEn").textContent = n.Title ?? "";
+    document.getElementById("previewTitleAr").textContent = n.Title_Ar ?? "";
+
+    // Contents (render HTML)
+    document.getElementById("previewContentEn").innerHTML = n.Content ?? "";
+    document.getElementById("previewContentAr").innerHTML = n.Content_Ar ?? "";
+
+    // Show modal
+    document.getElementById("newsPreviewModal").style.display = "block";
+
+  } catch (err) {
+    console.error("Preview load error:", err);
+  }
+}
+
+// Close modal
+document.getElementById("closeNewsPreview").onclick = () => {
+  document.getElementById("newsPreviewModal").style.display = "none";
+};
+document.getElementById("closeNewsPreviewFooter").onclick = () => {
+  document.getElementById("newsPreviewModal").style.display = "none";
+};
+
+// Close if click outside
+window.onclick = (e) => {
+  if (e.target.id === "newsPreviewModal") {
+    document.getElementById("newsPreviewModal").style.display = "none";
+  }
+};
 
 // --------------------
 // Load All Active News (Published)
@@ -523,35 +627,45 @@ async function loadAllNewsEngagement(filterMonthValue = null) {
     }
 
     if (filteredNews.length) {
-      allNewsEngagementContainer.innerHTML = `
-        <div class="news-grid">
-          ${filteredNews.map(n => `
-            <div class="news-card">
-              ${n.ImageURL ? `<img src="${n.ImageURL}" alt="${n.Title}" class="news-img"/>`
-          : `<div class="news-img placeholder"></div>`}
-              <div class="news-body">
-                <h3>${n.Title}</h3>
-                <p>${n.Content.substring(0, 220)}...</p>
-                <div class="info">
-                  <span>📅 ${n.PublishedOn ? formatDateTime(n.PublishedOn) : '—'}</span>
-                  <span>👍 ${n.LikesCount || 0}</span>
-                  <span>💬 ${n.CommentsCount || 0}</span>
-                </div>
-                <div class="news-actions">
-                  <button class="edit-btn" onclick="openEditModal(${n.ArticleID})">
-                    <i class="fa-solid fa-pen-to-square"></i> Edit
-                  </button>
-                  <button class="deactivate-btn" onclick="deactivateNews(${n.ArticleID})">
-                    <i class="fa-solid fa-ban"></i> Deactivate
-                  </button>
-                  <button class="delete-btn" onclick="deleteNews(${n.ArticleID})">
-                    <i class="fa-solid fa-trash"></i> Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          `).join('')}
-        </div>`;
+      // Inside loadAllNewsEngagement function, update card HTML
+allNewsEngagementContainer.innerHTML = `
+  <div class="news-grid">
+    ${filteredNews.map(n => `
+      <div class="news-card">
+
+        <!-- Eye Icon to view full news -->
+        <span class="view-icon" onclick="openNewsPreview(${n.ArticleID})">
+          <i class="fa-solid fa-eye"></i>
+        </span>
+
+        <!-- Image -->
+        ${n.ImageURL ? `<img src="${n.ImageURL}" alt="${n.Title}" class="news-img"/>`
+        : `<div class="news-img placeholder"></div>`}
+
+        <div class="news-body">
+          <h3>${n.Title}</h3>
+          <p>${n.Content.substring(0, 220)}...</p>
+          <div class="info">
+            <span>📅 ${n.PublishedOn ? formatDateTime(n.PublishedOn) : '—'}</span>
+            <span>👍 ${n.LikesCount || 0}</span>
+            <span>💬 ${n.CommentsCount || 0}</span>
+          </div>
+          <div class="news-actions">
+            <button class="edit-btn" onclick="openEditModal(${n.ArticleID})">
+              <i class="fa-solid fa-pen-to-square"></i> Edit
+            </button>
+            <button class="deactivate-btn" onclick="deactivateNews(${n.ArticleID})">
+              <i class="fa-solid fa-ban"></i> Deactivate
+            </button>
+            <button class="delete-btn" onclick="deleteNews(${n.ArticleID})">
+              <i class="fa-solid fa-trash"></i> Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('')}
+  </div>`;
+
     } else {
       allNewsEngagementContainer.innerHTML = '<p class="text-muted">No published news found.</p>';
     }
@@ -577,8 +691,16 @@ async function loadInactiveNews() {
         <div class="news-grid">
           ${inactive.map(n => `
             <div class="news-card inactive">
+
+              <!-- Eye Icon to view full news -->
+              <span class="view-icon" onclick="openNewsPreview(${n.ArticleID})">
+                <i class="fa-solid fa-eye"></i>
+              </span>
+
+              <!-- Image -->
               ${n.ImageURL ? `<img src="${n.ImageURL}" alt="${n.Title}" class="news-img"/>`
-          : `<div class="news-img placeholder"></div>`}
+              : `<div class="news-img placeholder"></div>`}
+
               <div class="news-body">
                 <h3>${n.Title}</h3>
                 <p>${n.Content.substring(0, 220)}...</p>
@@ -930,131 +1052,184 @@ async function deleteCategory(e) {
 // Initialize
 document.addEventListener('DOMContentLoaded', loadCategoriesList);
 
-// ---------------------------
-// Load Articles with Comments
-// ---------------------------
+let pendingComments = [], approvedComments = [], rejectedComments = [];
+let currentPendingPage = 1, currentApprovedPage = 1, currentRejectedPage = 1;
+const commentsPageSize = 5;
+let filteredPending = [], filteredApproved = [], filteredRejected = [];
+
+// Load articles with comments
 async function loadArticlesWithComments() {
   try {
     const res = await fetch('/api/articles/with-comments');
     const data = await res.json();
-    if (!data.success) throw new Error();
+    if(!data.success) throw new Error();
 
     const container = document.getElementById('articlesWithComments');
     container.innerHTML = '';
 
-    if (data.data.length === 0) {
+    if(!data.data.length){
       container.innerHTML = '<p>No articles with comments found.</p>';
       return;
     }
 
     data.data.forEach(article => {
       const card = document.createElement('div');
-      card.className = 'article-card';
-      card.innerHTML = `
+      card.className='article-card';
+      card.innerHTML=`
         <img src="${article.ImageURL || 'images/default.jpg'}" alt="${article.Title}">
         <h5>${article.Title}</h5>
         <p class="text-muted mb-1">Created: ${moment(article.CreatedOn).format('LL')}</p>
-
         <div class="comment-stats text-start mt-2">
           <p class="mb-0 text-warning"><i class="fa-solid fa-hourglass-half"></i> Pending: ${article.PendingCount}</p>
           <p class="mb-0 text-success"><i class="fa-solid fa-check-circle"></i> Approved: ${article.ApprovedCount}</p>
         </div>
-
-        <button class="btn btn-primary btn-sm mt-3" 
-          onclick="viewComments(${article.ArticleID}, '${article.Title.replace(/'/g, "\\'")}')">
-          View Comments
-        </button>
+        <button class="btn btn-primary btn-sm mt-3" onclick="viewComments(${article.ArticleID}, '${article.Title.replace(/'/g,"\\'")}')">View Comments</button>
       `;
       container.appendChild(card);
     });
-  } catch (err) {
+  } catch(err){
     console.error('❌ Error loading articles:', err);
   }
 }
 
-// ---------------------------
-// View Comments Modal
-// ---------------------------
-async function viewComments(articleId, articleTitle) {
-  try {
+// View comments modal
+async function viewComments(articleId, articleTitle){
+  try{
     const res = await fetch(`/api/admincomments/${articleId}`);
     const data = await res.json();
-    if (!data.success) throw new Error();
+    if(!data.success) throw new Error();
 
     document.getElementById('modalArticleTitle').textContent = articleTitle;
 
-    const renderComments = (list, target, showActions = false, type = '') => {
-      const container = document.getElementById(target);
-      container.innerHTML = '';
+    // Store comments
+    pendingComments = data.pending || [];
+    approvedComments = data.approved || [];
+    rejectedComments = data.rejected || [];
 
-      if (list.length === 0) {
-        container.innerHTML = '<p class="text-muted">No comments.</p>';
-        return;
-      }
+    filteredPending = [...pendingComments];
+    filteredApproved = [...approvedComments];
+    filteredRejected = [...rejectedComments];
 
-      list.forEach(c => {
-        const div = document.createElement('div');
-        div.className = 'comment-card p-2 mb-2 border rounded';
-        div.innerHTML = `
-          <p><strong>${c.Name}</strong> (${c.Email})</p>
-          <p>${c.Content}</p>
-          <small class="text-muted">${moment(c.CreatedOn).fromNow()}</small>
-          ${showActions ? `
-            <div class="mt-2">
-              ${type === 'pending' ? `
-                <button class="btn btn-success btn-sm me-2" onclick="updateCommentStatus(${c.CommentID}, 'approve', ${articleId}, '${articleTitle}')">Approve</button>
-                <button class="btn btn-danger btn-sm" onclick="updateCommentStatus(${c.CommentID}, 'reject', ${articleId}, '${articleTitle}')">Reject</button>
-              ` : type === 'approved' ? `
-                <button class="btn btn-danger btn-sm" onclick="updateCommentStatus(${c.CommentID}, 'reject', ${articleId}, '${articleTitle}')">Reject</button>
-              ` : ''}
-            </div>
-          ` : ''}
-        `;
-        container.appendChild(div);
-      });
-    };
+    currentPendingPage = currentApprovedPage = currentRejectedPage = 1;
 
-    renderComments(data.approved, 'approvedComments', true, 'approved');
-    renderComments(data.pending, 'pendingComments', true, 'pending');
-    renderComments(data.rejected, 'rejectedComments', false);
+    renderCommentsTable(filteredPending,'pendingCommentsTable','pending',currentPendingPage, articleTitle,'pendingPagination');
+    renderCommentsTable(filteredApproved,'approvedCommentsTable','approved',currentApprovedPage, articleTitle,'approvedPagination');
+    renderCommentsTable(filteredRejected,'rejectedCommentsTable','rejected',currentRejectedPage, articleTitle,'rejectedPagination');
 
-    const modal = new bootstrap.Modal(document.getElementById('commentsModal'));
-    modal.show();
-  } catch (err) {
+    document.getElementById('commentsModalCustom').style.display='block';
+  } catch(err){
     console.error('❌ Error loading comments:', err);
   }
 }
 
-// ---------------------------
-// Update Comment Status
-// ---------------------------
-async function updateCommentStatus(commentId, status, articleId, articleTitle) {
-  try {
-    const res = await fetch(`/api/comments/${commentId}/status`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
-    });
+// Render comments table with pagination
+function renderCommentsTable(list, tableId, type, currentPage, articleTitle, paginationId){
+  const tbody = document.querySelector(`#${tableId} tbody`);
+  tbody.innerHTML='';
 
+  const start = (currentPage-1)*commentsPageSize;
+  const end = start+commentsPageSize;
+  const pageItems = list.slice(start,end);
+
+  if(!pageItems.length){
+    tbody.innerHTML=`<tr><td colspan="${type!=='rejected'?6:5}" class="text-center text-muted">No comments.</td></tr>`;
+  } else {
+    pageItems.forEach((c,idx)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
+        <td>${start+idx+1}</td>
+        <td>${c.Name}</td>
+        <td>${c.Email}</td>
+        <td>${c.Content}</td>
+        <td>${moment(c.CreatedOn).fromNow()}</td>
+        ${type!=='rejected'?`<td>
+          ${type==='pending'?`<button class="btn btn-success btn-sm me-1" onclick="updateCommentStatus(${c.CommentID},'approve',${c.ArticleID},'${articleTitle.replace(/'/g,"\\'")}')">Approve</button>
+          <button class="btn btn-danger btn-sm" onclick="updateCommentStatus(${c.CommentID},'reject',${c.ArticleID},'${articleTitle.replace(/'/g,"\\'")}')">Reject</button>`:
+          type==='approved'?`<button class="btn btn-danger btn-sm" onclick="updateCommentStatus(${c.CommentID},'reject',${c.ArticleID},'${articleTitle.replace(/'/g,"\\'")}')">Reject</button>`:''}
+        </td>`:''}
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Pagination
+  const pagination = document.getElementById(paginationId);
+  pagination.innerHTML='';
+  const pageCount = Math.ceil(list.length/commentsPageSize);
+  for(let i=1;i<=pageCount;i++){
+    const li=document.createElement('li');
+    li.className=`page-item ${i===currentPage?'active':''}`;
+    li.innerHTML=`<a class="page-link" href="#">${i}</a>`;
+    li.addEventListener('click',e=>{
+      e.preventDefault();
+      if(type==='pending') currentPendingPage=i;
+      else if(type==='approved') currentApprovedPage=i;
+      else currentRejectedPage=i;
+      renderCommentsTable(list, tableId, type, i, articleTitle, paginationId);
+    });
+    pagination.appendChild(li);
+  }
+}
+
+// Update comment status
+async function updateCommentStatus(commentId, status, articleId, articleTitle){
+  try{
+    const res = await fetch(`/api/comments/${commentId}/status`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({status})
+    });
     const data = await res.json();
-    if (data.success) {
-      await viewComments(articleId, articleTitle); // refresh modal
-    }
-  } catch (err) {
+    if(data.success) await viewComments(articleId, articleTitle);
+  } catch(err){
     console.error('❌ Error updating comment status:', err);
   }
 }
 
-// Init on load
+// Modal close
+document.getElementById('closeCommentsModal').onclick = ()=>{ document.getElementById('commentsModalCustom').style.display='none'; };
+window.onclick = e => { if(e.target==document.getElementById('commentsModalCustom')) document.getElementById('commentsModalCustom').style.display='none'; };
+
+// Tabs
+document.querySelectorAll('.tablink').forEach(tab=>{
+  tab.addEventListener('click',function(){
+    const target=this.dataset.tab;
+    document.querySelectorAll('.tablink').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById(target).classList.add('active');
+  });
+});
+
+// Search
+document.getElementById('commentSearch').addEventListener('input',e=>{
+  const q = e.target.value.toLowerCase();
+  const activeTab = document.querySelector('.tablink.active').dataset.tab;
+  if(activeTab==='pendingTab'){
+    filteredPending = pendingComments.filter(c=> c.Name.toLowerCase().includes(q) || c.Email.toLowerCase().includes(q) || c.Content.toLowerCase().includes(q));
+    currentPendingPage=1;
+    renderCommentsTable(filteredPending,'pendingCommentsTable','pending',currentPendingPage, document.getElementById('modalArticleTitle').textContent,'pendingPagination');
+  } else if(activeTab==='approvedTab'){
+    filteredApproved = approvedComments.filter(c=> c.Name.toLowerCase().includes(q) || c.Email.toLowerCase().includes(q) || c.Content.toLowerCase().includes(q));
+    currentApprovedPage=1;
+    renderCommentsTable(filteredApproved,'approvedCommentsTable','approved',currentApprovedPage, document.getElementById('modalArticleTitle').textContent,'approvedPagination');
+  } else if(activeTab==='rejectedTab'){
+    filteredRejected = rejectedComments.filter(c=> c.Name.toLowerCase().includes(q) || c.Email.toLowerCase().includes(q) || c.Content.toLowerCase().includes(q));
+    currentRejectedPage=1;
+    renderCommentsTable(filteredRejected,'rejectedCommentsTable','rejected',currentRejectedPage, document.getElementById('modalArticleTitle').textContent,'rejectedPagination');
+  }
+});
+
+// Init
 document.addEventListener('DOMContentLoaded', loadArticlesWithComments);
 
-// document.getElementById('commentsModal').addEventListener('shown.bs.modal', function () {
-//   const btns = this.querySelectorAll('.modal-content button');
-//   btns.forEach(btn => {
-//     btn.classList.remove('btn-primary', 'bg-danger', 'bg-warning');
-//     btn.style.background = 'none'; // optional
-//   });
-// });
+document.getElementById('commentsModalCustom').addEventListener('shown.bs.modal', function () {
+  const btns = this.querySelectorAll('.modal-content button');
+  btns.forEach(btn => {
+    btn.classList.remove('btn-primary', 'bg-danger', 'bg-warning');
+    btn.style.background = 'none'; // optional
+  });
+});
 
 
 

@@ -263,7 +263,7 @@ async function loadTrendsTicker() {
               </div>
               <div class="trend-card-footer">
                 <span class="trend-date">${date}</span>
-                <a href="${link}" class="trend-readmore">Read More →</a>
+                <button class="btn read-more-btn" onclick="openTrendArticle(${t.TrendID})">Read More</button>
               </div>
             </div>
           </div>
@@ -668,6 +668,11 @@ loadMostReadNews();
 function openArticle(articleId) {
   // Redirect to article.html with the articleId as a query parameter
   window.location.href = `article_en.html?id=${articleId}`;
+}
+
+function openTrendArticle(trendId) {
+  // Redirect to article.html with the articleId as a query parameter
+  window.location.href = `trendsarticle_en.html?id=${trendId}`;
 }
 
 function formatDateTime(dateStr) {

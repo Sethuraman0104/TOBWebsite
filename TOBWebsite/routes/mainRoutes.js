@@ -415,6 +415,34 @@ router.get('/news/:id', async (req, res) => {
   }
 });
 
+// Get article by ID
+router.get('/newscheck/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const pool = await sql.connect(sqlConfig);
+
+    // Get article with author name
+    const result = await pool.request()
+      .input('id', sql.Int, id)
+      .query(`
+        SELECT n.*, u.FullName AS AuthorName
+        FROM NewsArticles n
+        LEFT JOIN Users u ON n.AuthorID = u.UserID
+        WHERE n.ArticleID = @id
+      `);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ success: false, message: 'Article not found' });
+    }
+
+    res.json({ success: true, data: result.recordset[0] });
+
+  } catch (err) {
+    console.error('GET ARTICLE ERROR:', err);
+    res.status(500).json({ success: false, message: 'Error fetching article' });
+  }
+});
+
 // --------------------
 // Add new category
 // --------------------
@@ -852,9 +880,15 @@ router.get('/newsletter/confirm/:token', async (req, res) => {
       .query(`SELECT * FROM NewsletterSubscribers WHERE ConfirmationToken = @Token`);
 
     if (!result.recordset.length)
-      return res.status(400).send('<h3>Invalid or expired confirmation link.</h3>');
+      return res.status(400).send(`
+        <div style="font-family:Arial,sans-serif;text-align:center;padding:50px;">
+          <h2 style="color:#ff4d6d;">Invalid or Expired Link ❌</h2>
+          <p style="color:#555;">Please make sure you clicked the correct confirmation link or request a new subscription.</p>
+        </div>
+      `);
 
     const subscriber = result.recordset[0];
+
     await pool.request()
       .input('Email', sql.NVarChar(255), subscriber.Email)
       .query(`
@@ -863,13 +897,54 @@ router.get('/newsletter/confirm/:token', async (req, res) => {
         WHERE Email = @Email
       `);
 
-    res.send(`<h3>Thank you, ${subscriber.Email}! 🎉<br>Your subscription has been confirmed successfully.</h3>`);
+    // Serve a nice card-based confirmation page
+    res.send(`
+      <div style="background:#f4f6f9; min-height:100vh; display:flex; justify-content:center; align-items:center; padding:40px;">
+        <div style="background:#ffffff; max-width:500px; width:100%; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,0.1); text-align:center; overflow:hidden; font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+          
+          <!-- Logo Header -->
+          <div style="background:linear-gradient(135deg,#004aad,#007bff); padding:30px;">
+            <img src="http://mcfwll.runasp.net/images/Toblogo.jpg" alt="TOB News" style="max-width:120px; margin-bottom:15px;">
+            <h1 style="color:#fff; font-size:24px; margin:0;">TOB News</h1>
+          </div>
+
+          <!-- Confirmation Card -->
+          <div style="padding:40px 25px;">
+            <h2 style="color:#004aad; font-size:22px; margin-bottom:20px;">Subscription Confirmed 🎉</h2>
+            <p style="color:#555; font-size:15px; line-height:1.6;">
+              Thank you, <strong>${subscriber.Email}</strong>!<br>
+              You have successfully subscribed to <strong>TOB News</strong>.<br>
+              Get ready to receive the latest news, updates, and insights directly in your inbox.
+            </p>
+
+            <a href="https://tobnews.com" 
+               style="display:inline-block; margin-top:30px; background:linear-gradient(135deg,#007bff,#004aad); color:#fff; text-decoration:none; padding:14px 32px; border-radius:8px; font-weight:600; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+               Visit TOB News
+            </a>
+          </div>
+
+          <!-- Footer -->
+          <div style="background:#f0f3f8; padding:20px; font-size:13px; color:#666;">
+            <p style="margin:3px 0; font-weight:600;">TOB News</p>
+            <p style="margin:2px 0;">📍 Manama, Bahrain</p>
+            <p style="margin:2px 0;">📞 +973 1234 5678 | ☎️ +973 9876 5432</p>
+            <p style="margin:2px 0;">✉️ info@tobnews.com | 🌐 <a href="https://tobnews.com" style="color:#004aad; text-decoration:none;">tobnews.com</a></p>
+          </div>
+        </div>
+      </div>
+    `);
 
   } catch (err) {
     console.error('❌ GET /newsletter/confirm/:token error:', err);
-    res.status(500).send('<h3>Server error occurred while confirming your subscription.</h3>');
+    res.status(500).send(`
+      <div style="font-family:Arial,sans-serif;text-align:center;padding:50px;">
+        <h3 style="color:#ff4d6d;">Server Error ❌</h3>
+        <p style="color:#555;">An error occurred while confirming your subscription. Please try again later.</p>
+      </div>
+    `);
   }
 });
+
 
 async function sendConfirmationEmail(email, token) {
   const transporter = nodemailer.createTransport({
@@ -882,19 +957,71 @@ async function sendConfirmationEmail(email, token) {
 
   const confirmLink = `http://localhost:3000/api/newsletter/confirm/${token}`;
   const mailOptions = {
-    from: '"TOB News" <sethuraman0104@gmail.com>',
-    to: email,
-    subject: 'Confirm Your Subscription to TOB News',
-    html: `
-      <div style="font-family:sans-serif; line-height:1.6;">
-        <h2>Confirm your subscription</h2>
-        <p>Hi there,</p>
-        <p>Thank you for subscribing to TOB News. Please confirm your subscription by clicking the button below:</p>
-        <a href="${confirmLink}" style="display:inline-block;background:#007bff;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;">Confirm Subscription</a>
-        <p>If you didn’t request this, you can ignore this email.</p>
+  from: '"TOB News" <sethuraman0104@gmail.com>',
+  to: email,
+  subject: '📰 Confirm Your Subscription to TOB News',
+  html: `
+  <div style="background:#eef2f7; padding:40px 0; font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+    <div style="max-width:620px; margin:auto; background:#fff; border-radius:14px; box-shadow:0 8px 25px rgba(0,0,0,0.08); overflow:hidden;">
+
+      <!-- Header with Gradient -->
+      <div style="background:linear-gradient(135deg,#004aad,#007bff); padding:35px 25px; text-align:center; position:relative;">
+        <img src="http://mcfwll.runasp.net/images/Toblogo.jpg" alt="TOB News" style="max-width:120px; margin-bottom:10px;">
+        <h1 style="color:#fff; margin:8px 0 4px; font-size:26px; letter-spacing:1px;">TOB News</h1>
+        <p style="color:#dbe4ff; margin:0; font-size:14px;">Your Trusted Source for Business & Tech Updates</p>
+        <div style="position:absolute; bottom:-10px; left:50%; transform:translateX(-50%); width:80%; height:2px; background:#fff; opacity:0.3; border-radius:2px;"></div>
       </div>
-    `
-  };
+
+      <!-- Main Section -->
+      <div style="padding:35px 30px; color:#333;">
+        <h2 style="font-size:22px; color:#004aad; margin-bottom:12px;">Almost there! Confirm your subscription 👇</h2>
+        <p style="font-size:15px; color:#555; line-height:1.7;">
+          Hi there,<br><br>
+          Thanks for joining <strong>TOB News</strong>! You’re just one click away from receiving the latest stories, insights, and special features directly in your inbox.
+        </p>
+
+        <!-- Confirmation Button -->
+        <div style="text-align:center; margin:40px 0;">
+          <a href="${confirmLink}"
+             style="background:linear-gradient(135deg,#007bff,#004aad); color:#fff; padding:16px 36px; text-decoration:none; border-radius:8px; font-weight:600; letter-spacing:0.5px; display:inline-block; box-shadow:0 4px 12px rgba(0,0,0,0.15); transition:all 0.2s;">
+            ✅ Confirm My Subscription
+          </a>
+        </div>
+
+        <p style="font-size:14px; color:#777; text-align:center; margin-top:10px;">
+          Didn’t subscribe? You can safely ignore this email.
+        </p>
+      </div>
+
+      <!-- Divider -->
+      <div style="height:1px; background:#eee; margin:0 30px;"></div>
+
+      <!-- Footer -->
+      <div style="background:#fafbfc; padding:25px 20px; text-align:center; font-size:13px; color:#666;">
+        <p style="margin:6px 0; font-weight:600;">TOB News Media</p>
+        <p style="margin:2px 0;">📍 Manama, Bahrain</p>
+        <p style="margin:2px 0;">📞 +973 1234 5678 &nbsp; | &nbsp; ☎️ +973 9876 5432</p>
+        <p style="margin:2px 0;">✉️ <a href="mailto:info@tobnews.com" style="color:#004aad; text-decoration:none;">info@tobnews.com</a></p>
+        <p style="margin:4px 0;">🌐 <a href="https://tobnews.com" style="color:#004aad; text-decoration:none;">www.tobnews.com</a></p>
+
+        <!-- Social Icons -->
+        <div style="margin-top:15px;">
+          <a href="https://facebook.com/tobnews" style="margin:0 6px; text-decoration:none;">🌐</a>
+          <a href="https://twitter.com/tobnews" style="margin:0 6px; text-decoration:none;">🐦</a>
+          <a href="https://linkedin.com/company/tobnews" style="margin:0 6px; text-decoration:none;">💼</a>
+          <a href="https://youtube.com/tobnews" style="margin:0 6px; text-decoration:none;">▶️</a>
+        </div>
+
+        <hr style="border:none; border-top:1px solid #ddd; margin:18px 0;">
+        <p style="font-size:12px; color:#999; line-height:1.6;">
+          This is an automated message. Please do not reply to this email.<br>
+          © ${new Date().getFullYear()} TOB News. All rights reserved.
+        </p>
+      </div>
+    </div>
+  </div>
+  `
+};
 
   try {
     const info = await transporter.sendMail(mailOptions);
