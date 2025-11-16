@@ -35,18 +35,17 @@ app.use('/api', mainRoutes);
 console.log(listEndpoints(app));
 
 // -------------------------
-// Serve static files
-// -------------------------
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
-
-// -------------------------
 // Public Homepage -> TOBHome.html
 // -------------------------
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'TOBHome.html'));
 });
 
+// -------------------------
+// Serve static files
+// -------------------------
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 app.get('/TOBHome.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'TOBHome.html'));
 });

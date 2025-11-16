@@ -50,6 +50,76 @@ router.get("/", async (req, res) => {
 });
 
 // ===================================================================
+// GET OTHER TRENDS (exclude current)
+// ===================================================================
+// router.get("/other/:id", async (req, res) => {
+//   try {
+//     const TrendID = parseInt(req.params.id, 10);
+//     if (!TrendID || isNaN(TrendID)) {
+//       return res.status(400).json({ success: false, message: "Invalid TrendID" });
+//     }
+
+//     const pool = await sql.connect(sqlConfig);
+
+//     const result = await pool.request()
+//       .input("TrendID", sql.Int, TrendID)
+//       .query(`
+//         SELECT * 
+//         FROM TrendingCards
+//         WHERE TrendID <> @TrendID
+//           AND IsActive = 1
+//         ORDER BY CreatedOn DESC
+//       `);
+
+//     res.json({ success: true, data: result.recordset });
+
+//   } catch (err) {
+//     console.error("GET /trends/other/:id error:", err);
+//     res.status(500).json({ success: false, message: "Error loading other trends" });
+//   }
+// });
+
+// ===================================================================
+// GET OTHER TRENDS (exclude current) with likes & approved comments
+// ===================================================================
+router.get("/other/:id", async (req, res) => {
+  try {
+    const TrendID = parseInt(req.params.id, 10);
+    if (!TrendID || isNaN(TrendID)) {
+      return res.status(400).json({ success: false, message: "Invalid TrendID" });
+    }
+
+    const pool = await sql.connect(sqlConfig);
+
+    const result = await pool.request()
+      .input("TrendID", sql.Int, TrendID)
+      .query(`
+        SELECT 
+          t.*,
+          -- Total likes for this trend
+          (SELECT COUNT(*) 
+           FROM TrendLikes l
+           WHERE l.TrendID = t.TrendID) AS LikeCount,
+          
+          -- Total approved comments for this trend
+          (SELECT COUNT(*) 
+           FROM TrendComments c
+           WHERE c.TrendID = t.TrendID AND c.IsApproved = 1 AND c.IsActive = 1) AS CommentCount
+        FROM TrendingCards t
+        WHERE t.TrendID <> @TrendID
+          AND t.IsActive = 1
+        ORDER BY t.CreatedOn DESC
+      `);
+
+    res.json({ success: true, data: result.recordset });
+
+  } catch (err) {
+    console.error("GET /trends/other/:id error:", err);
+    res.status(500).json({ success: false, message: "Error loading other trends" });
+  }
+});
+
+// ===================================================================
 // DELETE TREND
 // ===================================================================
 router.delete("/delete/:id", async (req, res) => {
@@ -298,7 +368,7 @@ router.get("/:id/comments", async (req, res) => {
       .request()
       .input("TrendID", sql.Int, req.params.id)
       .query(`
-        SELECT CommentID, TrendID, ParentCommentID, Name, Email, Content, IsApproved, CreatedOn
+        SELECT CommentID, TrendID, ParentCommentID, Name, Email, Content, IsApproved, CreatedOn,IsActive
         FROM TrendComments
         WHERE TrendID = @TrendID
         ORDER BY CreatedOn ASC
@@ -325,8 +395,8 @@ router.post("/comments", async (req, res) => {
       .input("Content", sql.NVarChar, Content)
       .query(`
         INSERT INTO TrendComments 
-        (TrendID, ParentCommentID, Name, Email, Content, IsApproved, CreatedOn)
-        VALUES (@TrendID, @ParentCommentID, @Name, @Email, @Content, 0, GETDATE())
+        (TrendID, ParentCommentID, Name, Email, Content, IsApproved, CreatedOn,IsActive = 1)
+        VALUES (@TrendID, @ParentCommentID, @Name, @Email, @Content, 0, GETDATE(),1)
       `);
 
     res.json({ success: true, message: "Comment submitted for approval." });

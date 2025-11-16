@@ -737,7 +737,7 @@ router.get('/articles/with-comments', async (req, res) => {
         a.ImageURL,
         a.CreatedOn,
         COUNT(CASE WHEN c.IsApproved = 1 THEN 1 END) AS ApprovedCount,
-        COUNT(CASE WHEN c.IsApproved = 0 THEN 1 END) AS PendingCount
+        COUNT(CASE WHEN (c.IsApproved = 0 AND c.IsActive = 1) THEN 1 END) AS PendingCount
       FROM NewsArticles a
       INNER JOIN NewsComments c ON a.ArticleID = c.ArticleID
       WHERE a.IsApproved = 1 AND a.IsActive = 1
@@ -806,6 +806,114 @@ router.put('/comments/:commentId/status', async (req, res) => {
     res.json({ success: true, message: 'Comment status updated' });
   } catch (err) {
     console.error('❌ PUT /comments/:commentId/status error:', err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// ===================================================================
+// GET SINGLE TREND
+// ===================================================================
+router.get("/gettrend/:id", async (req, res) => {
+  try {
+    const pool = await sql.connect(sqlConfig);
+
+    const result = await pool
+      .request()
+      .input("TrendID", sql.Int, req.params.id)
+      .query("SELECT * FROM TrendingCards WHERE TrendID = @TrendID");
+
+    if (result.recordset.length === 0)
+      return res.json({ success: false, data: null });
+
+    res.json({ success: true, data: result.recordset[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// -----------------------------
+// GET trends with comment stats
+// -----------------------------
+router.get('/trends/with-comments', async (req, res) => {
+  try {
+    const pool = await sql.connect(sqlConfig);
+
+    const result = await pool.request().query(`
+      SELECT 
+        t.TrendID,
+        t.TrendTitle_EN,
+        t.ImageURL,
+        t.CreatedOn,
+        COUNT(CASE WHEN c.IsApproved = 1 THEN 1 END) AS ApprovedCount,
+        COUNT(CASE WHEN c.IsApproved = 0 AND c.IsActive=1 AND c.IsApproved IS NOT NULL THEN 1 END) AS PendingCount
+      FROM TrendingCards t
+      LEFT JOIN TrendComments c ON t.TrendID = c.TrendID
+      WHERE t.IsActive = 1 AND c.IsActive = 1
+      GROUP BY t.TrendID, t.TrendTitle_EN, t.ImageURL, t.CreatedOn
+      ORDER BY t.CreatedOn DESC
+    `);
+
+    res.json({ success: true, data: result.recordset });
+  } catch (err) {
+    console.error('❌ Error fetching trends with comments:', err);
+    res.status(500).json({ success: false, message: 'Error fetching trends with comments' });
+  }
+});
+
+// ----------------------------------------------
+// GET comments for specific trend
+// ----------------------------------------------
+router.get('/admintrendcomments/:trendId', async (req, res) => {
+  try {
+    const trendId = parseInt(req.params.trendId);
+    if (isNaN(trendId)) return res.status(400).json({ success: false });
+
+    const pool = await sql.connect(sqlConfig);
+    const result = await pool.request()
+      .input('trendId', sql.Int, trendId)
+      .query(`
+        SELECT CommentID, TrendID, ParentCommentID, Depth, Name, Email, Content, CreatedOn, IsApproved, IsActive
+        FROM TrendComments
+        WHERE TrendID = @trendId
+        ORDER BY CreatedOn DESC
+      `);
+
+    const approved = result.recordset.filter(c => c.IsApproved === true && c.IsActive === true);
+    const pending = result.recordset.filter(c => c.IsApproved === false && c.IsActive === true);
+    const rejected = result.recordset.filter(c => c.IsActive === false); // optional if you want rejected comments as null
+
+    res.json({ success: true, approved, pending, rejected });
+  } catch (err) {
+    console.error('❌ GET /admintrendcomments/:trendId error:', err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// ----------------------------------------------
+// PUT comment approve/reject (TrendComments)
+// ----------------------------------------------
+router.put('/trendcomments/:commentId/status', async (req, res) => {
+  try {
+    const { status } = req.body; // "approve" | "reject"
+    const commentId = parseInt(req.params.commentId);
+    if (isNaN(commentId) || !['approve', 'reject'].includes(status))
+      return res.status(400).json({ success: false });
+
+    const pool = await sql.connect(sqlConfig);
+
+    if (status === 'approve') {
+      await pool.request()
+        .input('commentId', sql.Int, commentId)
+        .query(`UPDATE TrendComments SET IsApproved = 1,IsActive = 1 WHERE CommentID = @commentId`);
+    } else {
+      await pool.request()
+        .input('commentId', sql.Int, commentId)
+        .query(`UPDATE TrendComments SET IsApproved = 0,IsActive = 0 WHERE CommentID = @commentId`);
+    }
+
+    res.json({ success: true, message: 'Trend comment status updated' });
+  } catch (err) {
+    console.error('❌ PUT /trendcomments/:commentId/status error:', err);
     res.status(500).json({ success: false });
   }
 });

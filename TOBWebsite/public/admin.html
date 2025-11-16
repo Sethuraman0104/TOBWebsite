@@ -37,7 +37,8 @@
         <li data-section="allnews"><i class="fa-solid fa-newspaper"></i> Published News</li>
         <li data-section="inactive"><i class="fa-solid fa-ban"></i> Deactivated News</li>
         <li data-section="trending"><i class="fa-solid fa-fire"></i> Manage Trending</li>
-        <li data-section="comments"><i class="fa-solid fa-comments"></i> Comments</li>
+        <li data-section="comments"><i class="fa-solid fa-comments"></i>Article Comments</li>
+        <li data-section="trendcomments"><i class="fa-solid fa-comments"></i>Trending Article Comments</li>
         <li data-section="managecategories"><i class="fa-solid fa-screwdriver-wrench"></i> Manage Categories</li>
         <li data-section="profile"><i class="fa-solid fa-user"></i> Profile</li>
       </ul>
@@ -52,7 +53,7 @@
   <main class="main-content">
     <!-- Publish News -->
     <section id="publish" class="section active">
-      <div class="floating-title">📝 Create News</div>
+      <div class="floating-title"><h1>📝 Create News</h1></div>
       <div class="card form-card">
         <form id="postNewsForm" enctype="multipart/form-data">
           <label>Title (English)</label>
@@ -82,7 +83,7 @@
 
     <!-- Pending News -->
     <section id="pending" class="section">
-      <div class="floating-title">⏳ Unpublished News</div>
+      <div class="floating-title"><h1>⏳ Unpublished News</h1></div>
       <div id="pendingNewsContainer"></div>
     </section>
 
@@ -138,13 +139,13 @@
     </section>
 
     <section id="inactive" class="section">
-      <div class="floating-title">🚫 Deactivated News</div>
+      <div class="floating-title"><h1>🚫 Deactivated News</h1></div>
       <div id="inactiveNewsContainer"></div>
     </section>
 
     <!-- Trending Section -->
     <section id="trending" class="section">
-      <div class="floating-title">🔥 Manage Trending Cards</div>
+      <div class="floating-title"><h1>🔥 Manage Trending Cards</h1></div>
 
       <div class="top-actions"
         style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
@@ -168,56 +169,58 @@
       <div id="trendsContainer" class="trends-grid"></div>
     </section>
 
-   <!-- Trend Preview Modal -->
-<div id="trendsmdl-modal" class="trendsmdl-overlay">
-
-  <div class="trendsmdl-box">
-
-    <!-- FIXED HEADER -->
-    <div class="trendsmdl-header">
-      <h2 id="trendsmdl-title-en"></h2>
-      <button id="trendsmdl-close-top" class="trendsmdl-close-btn">&times;</button>
-    </div>
-
-    <!-- SCROLLABLE CONTENT -->
-    <div class="trendsmdl-content">
-
-      <!-- Image -->
-      <div class="trendsmdl-img-wrapper">
-        <img id="trendsmdl-image" class="trendsmdl-image" />
-      </div>
-
-      <!-- Content Columns -->
-      <div class="trendsmdl-row">
-
-        <!-- English -->
-        <div class="trendsmdl-col">
-          <h3>English</h3>
-          <div id="trendsmdl-desc-en" class="trendsmdl-text"></div>
+    <!-- Trend Preview Modal -->
+    <div id="trendsmdl-modal" class="trendsmdl-overlay">
+      <div class="trendsmdl-box">
+        <!-- FIXED HEADER -->
+        <div class="trendsmdl-header">
+          <h2 id="trendsmdl-title-en"></h2>
+          <button id="trendsmdl-close-top" class="trendsmdl-close-btn">&times;</button>
         </div>
 
-        <!-- Arabic -->
-        <div class="trendsmdl-col" dir="rtl">
-          <h3>العربية</h3>
-          <div id="trendsmdl-desc-ar" class="trendsmdl-text"></div>
+        <!-- SCROLLABLE CONTENT -->
+        <div class="trendsmdl-content">
+          <!-- Image -->
+          <div class="trendsmdl-img-wrapper">
+            <img id="trendsmdl-image" class="trendsmdl-image" />
+          </div>
+
+          <!-- Content Columns -->
+          <div class="trendsmdl-row">
+            <!-- English -->
+            <div class="trendsmdl-col">
+              <h3>English</h3>
+              <div id="trendsmdl-desc-en" class="trendsmdl-text"></div>
+            </div>
+
+            <!-- Arabic -->
+            <div class="trendsmdl-col" dir="rtl">
+              <h3>العربية</h3>
+              <div id="trendsmdl-desc-ar" class="trendsmdl-text"></div>
+            </div>
+          </div>
+
+          <!-- Bottom Close Button -->
+          <button id="trendsmdl-close-bottom" class="trendsmdl-bottom-close">Close</button>
         </div>
-
       </div>
-
-      <!-- Bottom Close Button -->
-      <button id="trendsmdl-close-bottom" class="trendsmdl-bottom-close">Close</button>
-
     </div>
-  </div>
-</div>
 
     <!-- Comments -->
     <section id="comments" class="section">
-      <div class="floating-title">💬 Comments Management</div>
+      <div class="floating-title"><h1>💬 Article Comments Management</h1></div>
       <div id="articlesWithComments" class="articles-grid"></div>
-
     </section>
 
+    <!-- =================================== -->
+<!-- Trends Comments Management Section -->
+<!-- =================================== -->
+<section id="trendcomments" class="section">
+  <div class="floating-title"><h1>💬 Trends Comments Management</h1></div>
+
+  <!-- Container for all trends -->
+  <div id="trendsWithComments" class="articles-grid"></div>
+</section>
     <!-- Manage Categories -->
     <section id="managecategories" class="section container py-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
@@ -287,7 +290,7 @@
               </div>
             </div>
             <div class="form-check mb-3">
-              <input type="checkbox" class="form-check-input" id="IsActive" checked>
+              <input type="checkbox" class="form-check-input" id="categoryIsActive" checked>
               <label class="form-check-label" for="IsActive">Active</label>
             </div>
             <div class="modal-footer">
@@ -402,6 +405,89 @@
         </div>
       </div>
     </div>
+
+   <!-- =================================== -->
+<!-- Trends Comments Modal Custom -->
+<!-- =================================== -->
+<div id="trendsCommentsModalCustom" class="modal">
+  <div class="modal-content">
+    <span id="closeTrendsCommentsModal" class="close">&times;</span>
+    <h2 id="modalTrendTitle">Comments</h2>
+
+    <!-- Tabs -->
+    <ul class="nav-tabs">
+      <li><button class="tablink active" data-tab="trendsPendingTab">🕓 Pending</button></li>
+      <li><button class="tablink" data-tab="trendsApprovedTab">✅ Approved</button></li>
+      <li><button class="tablink" data-tab="trendsRejectedTab">🚫 Rejected</button></li>
+    </ul>
+
+    <!-- Search -->
+    <input type="text" id="trendsCommentSearch" placeholder="Search comments..."
+           style="margin:10px 0; padding:5px; width:100%;">
+
+    <!-- Tab Content -->
+    <div id="trendsTabContent">
+      <!-- Pending -->
+      <div id="trendsPendingTab" class="tab-pane active">
+        <div class="table-responsive">
+          <table class="table" id="trendsPendingCommentsTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Comment</th>
+                <th>Commented On</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <ul class="pagination" id="trendsPendingPagination"></ul>
+      </div>
+
+      <!-- Approved -->
+      <div id="trendsApprovedTab" class="tab-pane">
+        <div class="table-responsive">
+          <table class="table" id="trendsApprovedCommentsTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Comment</th>
+                <th>Commented On</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <ul class="pagination" id="trendsApprovedPagination"></ul>
+      </div>
+
+      <!-- Rejected -->
+      <div id="trendsRejectedTab" class="tab-pane">
+        <div class="table-responsive">
+          <table class="table" id="trendsRejectedCommentsTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Comment</th>
+                <th>Commented On</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <ul class="pagination" id="trendsRejectedPagination"></ul>
+      </div>
+    </div>
+  </div>
+</div>
 
     <!-- Add/Edit Trend Modal -->
     <div id="trendModal" class="modal">

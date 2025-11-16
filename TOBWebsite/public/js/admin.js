@@ -102,16 +102,23 @@ async function loadTrends(status = 'all', month = '', year = '') {
 
 async function openTrendPreview(id) {
   try {
-    const res = await fetch(`/api/trends/${id}`, { cache: "no-store" });
-    const t = await res.json();
+    const res = await fetch(`/api/trends/gettrend/${id}`, { cache: "no-store" });
+    const result = await res.json();
 
-    // Apply data
-    document.getElementById("trendsmdl-title-en").innerHTML = t.TrendTitle_EN || "";
+    if (!result.success || !result.data) {
+      console.error("Trend not found or API error");
+      return;
+    }
+
+    const t = result.data;
+
+    // Apply data to modal
+    document.getElementById("trendsmdl-title-en").textContent = t.TrendTitle_EN || "";
     document.getElementById("trendsmdl-desc-en").innerHTML = t.TrendDescription_EN || "";
     document.getElementById("trendsmdl-desc-ar").innerHTML = t.TrendDescription_AR || "";
 
     const img = document.getElementById("trendsmdl-image");
-    img.src = t.ImageURL || "";
+    img.src = t.ImageURL || "images/default-trend.jpg";
 
     // Show modal
     document.getElementById("trendsmdl-modal").style.display = "flex";
@@ -122,11 +129,10 @@ async function openTrendPreview(id) {
 }
 
 // Close buttons
-document.getElementById("trendsmdl-close-top").onclick = () =>
+document.getElementById("trendsmdl-close-top").onclick = 
+document.getElementById("trendsmdl-close-bottom").onclick = () => {
   document.getElementById("trendsmdl-modal").style.display = "none";
-
-document.getElementById("trendsmdl-close-bottom").onclick = () =>
-  document.getElementById("trendsmdl-modal").style.display = "none";
+};
 
 // Close when clicking outside
 window.addEventListener("click", e => {
@@ -147,9 +153,6 @@ applyTrendFilter.onclick = () => {
   loadTrends(status, month, year);
 };
 
-// --------------------
-// Open modal for add/edit
-// --------------------
 async function openTrendModal(trendID = null) {
   trendForm.reset();
   document.getElementById('TrendID').value = '';
@@ -157,17 +160,28 @@ async function openTrendModal(trendID = null) {
 
   if (trendID) {
     try {
-      const res = await fetch(`/api/trends/${trendID}`);
-      const t = await res.json();
+      const res = await fetch(`/api/trends/gettrend/${trendID}`);
+      const result = await res.json();
 
-      document.getElementById('TrendID').value = t.TrendID;
-      document.getElementById('TrendTitle_EN').value = t.TrendTitle_EN;
+      // Check if your API returns { success: true, data: {...} }
+      if (!result.success || !result.data) {
+        alert('Trend not found!');
+        return;
+      }
+
+      const t = result.data; // extract the trend data
+
+      document.getElementById('TrendID').value = t.TrendID || '';
+      document.getElementById('TrendTitle_EN').value = t.TrendTitle_EN || '';
       document.getElementById('TrendTitle_AR').value = t.TrendTitle_AR || '';
       document.getElementById('TrendDescription_EN').value = t.TrendDescription_EN || '';
       document.getElementById('TrendDescription_AR').value = t.TrendDescription_AR || '';
-      document.getElementById('FromDate').value = t.FromDate.split('T')[0];
-      if (t.ToDate) document.getElementById('ToDate').value = t.ToDate.split('T')[0];
-      document.getElementById('IsActive').checked = t.IsActive;
+
+      // Safely handle undefined dates
+      document.getElementById('FromDate').value = t.FromDate ? t.FromDate.split('T')[0] : '';
+      document.getElementById('ToDate').value = t.ToDate ? t.ToDate.split('T')[0] : '';
+
+      document.getElementById('IsActive').checked = !!t.IsActive;
     } catch (err) {
       alert('Error loading trend: ' + err.message);
       return;
@@ -1015,7 +1029,7 @@ document.getElementById('categoryForm').addEventListener('submit', async e => {
     CategoryName_Ar: document.getElementById('CategoryName_Ar').value.trim(),
     Description: document.getElementById('Description').value.trim(),
     Description_Ar: document.getElementById('Description_Ar').value.trim(),
-    IsActive: document.getElementById('IsActive').checked
+    IsActive: document.getElementById('categoryIsActive').checked
   };
   if (!payload.CategoryName) return alert('Please enter a category name.');
 
@@ -1231,7 +1245,239 @@ document.getElementById('commentsModalCustom').addEventListener('shown.bs.modal'
   });
 });
 
+// ==============================
+// Trends Comments Management
+// ==============================
+let pendingTrendComments = [], approvedTrendComments = [], rejectedTrendComments = [];
+let currentPendingTrendPage = 1, currentApprovedTrendPage = 1, currentRejectedTrendPage = 1;
+const trendCommentsPageSize = 5;
+let filteredPendingTrendComments = [], filteredApprovedTrendComments = [], filteredRejectedTrendComments = [];
 
+// ---------------------------------
+// Load trends with comment stats
+// ---------------------------------
+async function loadTrendsWithComments() {
+  try {
+    const res = await fetch('/api/trends/with-comments', { cache: 'no-store' });
+    const data = await res.json();
+    if (!data.success) throw new Error('Failed to load trends');
+
+    const container = document.getElementById('trendsWithComments');
+    container.innerHTML = '';
+
+    if (!data.data.length) {
+      container.innerHTML = '<p>No trends with comments found.</p>';
+      return;
+    }
+
+    data.data.forEach(trend => {
+      const card = document.createElement('div');
+      card.className = 'article-card';
+      card.innerHTML = `
+        <img src="${trend.ImageURL || 'images/default-trend.jpg'}" alt="${trend.TrendTitle_EN}">
+        <h5>${trend.TrendTitle_EN}</h5>
+        <p class="text-muted mb-1">Created: ${moment(trend.CreatedOn).format('LL')}</p>
+        <div class="comment-stats text-start mt-2">
+          <p class="mb-0 text-warning"><i class="fa-solid fa-hourglass-half"></i> Pending: ${trend.PendingCount}</p>
+          <p class="mb-0 text-success"><i class="fa-solid fa-check-circle"></i> Approved: ${trend.ApprovedCount}</p>
+        </div>
+      `;
+
+      // Create "View Comments" button safely
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-primary btn-sm mt-3';
+      btn.textContent = 'View Comments';
+      btn.addEventListener('click', () => viewTrendComments(trend.TrendID, trend.TrendTitle_EN));
+
+      card.appendChild(btn);
+      container.appendChild(card);
+    });
+  } catch (err) {
+    console.error('❌ Error loading trends:', err);
+  }
+}
+
+// ---------------------------------
+// View comments modal for trend
+// ---------------------------------
+async function viewTrendComments(trendId, trendTitle) {
+  try {
+    const res = await fetch(`/api/admintrendcomments/${trendId}`);
+    const data = await res.json();
+    if (!data.success) throw new Error('Failed to load trend comments');
+
+    document.getElementById('modalTrendTitle').textContent = trendTitle;
+
+    // Store comments
+    pendingTrendComments = data.pending || [];
+    approvedTrendComments = data.approved || [];
+    rejectedTrendComments = data.rejected || [];
+
+    filteredPendingTrendComments = [...pendingTrendComments];
+    filteredApprovedTrendComments = [...approvedTrendComments];
+    filteredRejectedTrendComments = [...rejectedTrendComments];
+
+    currentPendingTrendPage = currentApprovedTrendPage = currentRejectedTrendPage = 1;
+
+    renderTrendCommentsTable(filteredPendingTrendComments, 'trendsPendingCommentsTable', 'pending', currentPendingTrendPage, trendTitle, 'trendsPendingPagination');
+    renderTrendCommentsTable(filteredApprovedTrendComments, 'trendsApprovedCommentsTable', 'approved', currentApprovedTrendPage, trendTitle, 'trendsApprovedPagination');
+    renderTrendCommentsTable(filteredRejectedTrendComments, 'trendsRejectedCommentsTable', 'rejected', currentRejectedTrendPage, trendTitle, 'trendsRejectedPagination');
+
+    document.getElementById('trendsCommentsModalCustom').style.display = 'block';
+  } catch (err) {
+    console.error('❌ Error loading trend comments:', err);
+  }
+}
+
+// ---------------------------------
+// Render comments table with pagination
+// ---------------------------------
+function renderTrendCommentsTable(list, tableId, type, currentPage, trendTitle, paginationId) {
+  const tbody = document.querySelector(`#${tableId} tbody`);
+  tbody.innerHTML = '';
+
+  const start = (currentPage - 1) * trendCommentsPageSize;
+  const pageItems = list.slice(start, start + trendCommentsPageSize);
+
+  if (!pageItems.length) {
+    tbody.innerHTML = `<tr><td colspan="${type !== 'rejected' ? 6 : 5}" class="text-center text-muted">No comments.</td></tr>`;
+    return;
+  }
+
+  pageItems.forEach((c, idx) => {
+    const tr = document.createElement('tr');
+
+    const tdActions = document.createElement('td');
+    if (type !== 'rejected') {
+      if (type === 'pending') {
+        const approveBtn = document.createElement('button');
+        approveBtn.className = 'btn btn-success btn-sm me-1';
+        approveBtn.textContent = 'Approve';
+        approveBtn.addEventListener('click', () => updateTrendCommentStatus(c.CommentID, 'approve', c.TrendID, trendTitle));
+
+        const rejectBtn = document.createElement('button');
+        rejectBtn.className = 'btn btn-danger btn-sm';
+        rejectBtn.textContent = 'Reject';
+        rejectBtn.addEventListener('click', () => updateTrendCommentStatus(c.CommentID, 'reject', c.TrendID, trendTitle));
+
+        tdActions.appendChild(approveBtn);
+        tdActions.appendChild(rejectBtn);
+      } else if (type === 'approved') {
+        const rejectBtn = document.createElement('button');
+        rejectBtn.className = 'btn btn-danger btn-sm';
+        rejectBtn.textContent = 'Reject';
+        rejectBtn.addEventListener('click', () => updateTrendCommentStatus(c.CommentID, 'reject', c.TrendID, trendTitle));
+        tdActions.appendChild(rejectBtn);
+      }
+    }
+
+    tr.innerHTML = `
+      <td>${start + idx + 1}</td>
+      <td>${c.Name}</td>
+      <td>${c.Email}</td>
+      <td>${c.Content}</td>
+      <td>${moment(c.CreatedOn).fromNow()}</td>
+    `;
+    if (type !== 'rejected') tr.appendChild(tdActions);
+    tbody.appendChild(tr);
+  });
+
+  // Pagination
+  const pagination = document.getElementById(paginationId);
+  pagination.innerHTML = '';
+  const pageCount = Math.ceil(list.length / trendCommentsPageSize);
+  for (let i = 1; i <= pageCount; i++) {
+    const li = document.createElement('li');
+    li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+    const a = document.createElement('a');
+    a.className = 'page-link';
+    a.href = '#';
+    a.textContent = i;
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      if (type === 'pending') currentPendingTrendPage = i;
+      else if (type === 'approved') currentApprovedTrendPage = i;
+      else currentRejectedTrendPage = i;
+      renderTrendCommentsTable(list, tableId, type, i, trendTitle, paginationId);
+    });
+    li.appendChild(a);
+    pagination.appendChild(li);
+  }
+}
+
+// ---------------------------------
+// Update trend comment status
+// ---------------------------------
+async function updateTrendCommentStatus(commentId, status, trendId, trendTitle) {
+  try {
+    const res = await fetch(`/api/trendcomments/${commentId}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    const data = await res.json();
+    if (data.success) await viewTrendComments(trendId, trendTitle);
+  } catch (err) {
+    console.error('❌ Error updating trend comment status:', err);
+  }
+}
+
+// ---------------------------------
+// Modal close
+// ---------------------------------
+document.getElementById('closeTrendsCommentsModal').onclick = () => {
+  document.getElementById('trendsCommentsModalCustom').style.display = 'none';
+};
+window.onclick = e => {
+  if (e.target === document.getElementById('trendsCommentsModalCustom'))
+    document.getElementById('trendsCommentsModalCustom').style.display = 'none';
+};
+
+// ---------------------------------
+// Tabs
+// ---------------------------------
+document.querySelectorAll('#trendsCommentsModalCustom .tablink').forEach(tab => {
+  tab.addEventListener('click', function () {
+    const target = this.dataset.tab;
+    document.querySelectorAll('#trendsCommentsModalCustom .tablink').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#trendsCommentsModalCustom .tab-pane').forEach(p => p.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById(target).classList.add('active');
+  });
+});
+
+// ---------------------------------
+// Search
+// ---------------------------------
+document.getElementById('trendsCommentSearch').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
+  const activeTab = document.querySelector('#trendsCommentsModalCustom .tablink.active').dataset.tab;
+
+  if (activeTab === 'trendsPendingTab') {
+    filteredPendingTrendComments = pendingTrendComments.filter(c =>
+      c.Name.toLowerCase().includes(q) || c.Email.toLowerCase().includes(q) || c.Content.toLowerCase().includes(q)
+    );
+    currentPendingTrendPage = 1;
+    renderTrendCommentsTable(filteredPendingTrendComments, 'trendsPendingCommentsTable', 'pending', currentPendingTrendPage, document.getElementById('modalTrendTitle').textContent, 'trendsPendingPagination');
+  } else if (activeTab === 'trendsApprovedTab') {
+    filteredApprovedTrendComments = approvedTrendComments.filter(c =>
+      c.Name.toLowerCase().includes(q) || c.Email.toLowerCase().includes(q) || c.Content.toLowerCase().includes(q)
+    );
+    currentApprovedTrendPage = 1;
+    renderTrendCommentsTable(filteredApprovedTrendComments, 'trendsApprovedCommentsTable', 'approved', currentApprovedTrendPage, document.getElementById('modalTrendTitle').textContent, 'trendsApprovedPagination');
+  } else if (activeTab === 'trendsRejectedTab') {
+    filteredRejectedTrendComments = rejectedTrendComments.filter(c =>
+      c.Name.toLowerCase().includes(q) || c.Email.toLowerCase().includes(q) || c.Content.toLowerCase().includes(q)
+    );
+    currentRejectedTrendPage = 1;
+    renderTrendCommentsTable(filteredRejectedTrendComments, 'trendsRejectedCommentsTable', 'rejected', currentRejectedTrendPage, document.getElementById('modalTrendTitle').textContent, 'trendsRejectedPagination');
+  }
+});
+
+// ---------------------------------
+// Init
+// ---------------------------------
+document.addEventListener('DOMContentLoaded', loadTrendsWithComments);
 
 // --------------------
 // Initial Load

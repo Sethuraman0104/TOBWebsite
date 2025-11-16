@@ -108,49 +108,43 @@
 
     <div class="container my-5">
 
-    <!-- Trend Header -->
-    <div id="trendContainer" class="mb-5">
-        Loading trend...
-    </div>
-
-    <!-- Like Button Area -->
-    <div id="trendLikeBox" class="my-3"></div>
-
-    <!-- Comments Section -->
-    <div class="comments-section mb-5">
-        <h4>Comments</h4>
-        <div id="trendComments" class="mb-3">Loading comments...</div>
-
-        <h5 class="mt-4">Leave a Comment</h5>
-        <form id="trendCommentForm">
-            <input type="hidden" id="trendId" value="">
-            <div class="mb-3">
-                <input type="text" class="form-control" id="commentName" placeholder="Your Name" required>
-            </div>
-            <div class="mb-3">
-                <input type="email" class="form-control" id="commentEmail" placeholder="Your Email" required>
-            </div>
-            <div class="mb-3">
-                <textarea class="form-control" id="commentContent" placeholder="Your Comment" rows="3" required></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary">
-                <i class="fa-solid fa-paper-plane"></i> Submit Comment
-            </button>
-        </form>
-        <small id="commentMsg" class="text-success d-block mt-2"></small>
-    </div>
-
-    <!-- Related Trends -->
-    <div class="category-header mb-3">Other Trends</div>
-    <div id="otherTrendsContainer" class="other-news-grid"></div>
-
-    <div id="trendLoader" class="text-center py-3" style="display:none;">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
+        <!-- Trend Header -->
+        <div id="trendContainer" class="mb-5">
+            Loading trend...
         </div>
-    </div>
-</div>
 
+        <!-- Like Button Area -->
+        <div id="trendLikeBox" class="my-3"></div>
+
+        <!-- Comments Section -->
+        <div class="comments-section mb-5">
+            <h4>Comments</h4>
+            <div id="trendComments" class="mb-3">Loading comments...</div>
+
+            <h5 class="mt-4">Leave a Comment</h5>
+            <form id="trendCommentForm">
+                <input type="hidden" id="trendId" value="">
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="commentName" placeholder="Your Name" required>
+                </div>
+                <div class="mb-3">
+                    <input type="email" class="form-control" id="commentEmail" placeholder="Your Email" required>
+                </div>
+                <div class="mb-3">
+                    <textarea class="form-control" id="commentContent" placeholder="Your Comment" rows="3"
+                        required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-paper-plane"></i> Submit Comment
+                </button>
+            </form>
+            <small id="commentMsg" class="text-success d-block mt-2"></small>
+        </div>
+
+        <!-- Related Trends -->
+        <div class="category-header mb-3">Other Trends</div>
+        <div id="otherTrendsList" class="othertrends-grid"></div>
+    </div>
 
     <footer class="site-footer text-light">
         <div class="overlay"></div>
