@@ -1168,24 +1168,88 @@ router.put('/newsletter/unsubscribe', async (req, res) => {
 });
 
 // ----------------------------------------------
-// GET newsletter subscribers list (Admin view)
+// PUT newsletter unsubscribe (Admin)
 // ----------------------------------------------
+router.put('/newsletter/admin/unsubscribe', async (req, res) => {
+  try {
+    const { subscriberId } = req.body;
+
+    if (!subscriberId)
+      return res.status(400).json({ success: false, message: "Subscriber ID is required." });
+
+    const pool = await sql.connect(sqlConfig);
+
+    const result = await pool.request()
+      .input("SubscriberID", sql.Int, subscriberId)
+      .query(`
+        UPDATE NewsletterSubscribers
+        SET IsActive = 0, UnsubscribedOn = GETDATE()
+        WHERE SubscriberID = @SubscriberID AND IsActive = 1
+      `);
+
+    if (result.rowsAffected[0] === 0)
+      return res.json({ success: false, message: "Already unsubscribed or not found." });
+
+    res.json({ success: true, message: "Subscriber unsubscribed successfully." });
+
+  } catch (err) {
+    console.error("❌ PUT /newsletter/admin/unsubscribe:", err);
+    res.status(500).json({ success: false, message: "Internal server error." });
+  }
+});
+
+router.put('/newsletter/admin/reactivate', async (req, res) => {
+  try {
+    const { subscriberId } = req.body;
+
+    if (!subscriberId)
+      return res.status(400).json({ success: false, message: "Subscriber ID is required." });
+
+    const pool = await sql.connect(sqlConfig);
+
+    const result = await pool.request()
+      .input("SubscriberID", sql.Int, subscriberId)
+      .query(`
+        UPDATE NewsletterSubscribers
+        SET IsActive = 1, UnsubscribedOn = NULL
+        WHERE SubscriberID = @SubscriberID
+      `);
+
+    res.json({ success: true, message: "Subscriber reactivated successfully." });
+
+  } catch (err) {
+    console.error("❌ PUT /newsletter/admin/reactivate:", err);
+    res.status(500).json({ success: false, message: "Internal server error." });
+  }
+});
+
+
+// GET newsletter subscribers list (Admin)
 router.get('/newsletter/list', async (req, res) => {
   try {
     const pool = await sql.connect(sqlConfig);
-    const result = await pool.request()
-      .query(`
-        SELECT SubscriberID, Email, SubscribedOn, UnsubscribedOn, IsActive, IsConfirmed
-        FROM NewsletterSubscribers
-        ORDER BY SubscribedOn DESC
-      `);
+
+    const result = await pool.request().query(`
+      SELECT 
+        SubscriberID, 
+        Email, 
+        CreatedOn AS SubscribedOn, 
+        ConfirmedOn, 
+        UnsubscribedOn, 
+        IsActive, 
+        IsConfirmed
+      FROM NewsletterSubscribers
+      ORDER BY CreatedOn DESC
+    `);
 
     res.json({ success: true, data: result.recordset });
+
   } catch (err) {
-    console.error('❌ GET /newsletter/list error:', err);
-    res.status(500).json({ success: false, message: 'Internal server error.' });
+    console.error("❌ GET /newsletter/list error:", err);
+    res.status(500).json({ success: false, message: "Internal server error." });
   }
 });
+
 
 // -------------------------
 // Login
