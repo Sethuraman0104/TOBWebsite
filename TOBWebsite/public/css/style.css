@@ -251,15 +251,47 @@ body {
 
 /* Floating title */
 .floating-title {
-  background: #D9CFC7;
-  color: #000000;
-  font-size: 20px;
-  font-weight: bold;
-  padding: 15px 20px;
+  background: #D9CFC7;  
+  color: #01204E;
+  font-weight: 500;
+  font-size: 25px;
+  padding: 5px;
   border-radius: 12px;
   margin-bottom: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
+
+/* THEME BUTTON */
+.btn-theme {
+  background: #EE4E4E;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  font-weight: 600;
+  font-size: 15px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: 0.25s ease;
+  box-shadow: 0 4px 10px rgba(196, 17, 36, 0.2);
+  float: right;
+}
+
+.btn-theme i {
+  font-size: 16px;
+}
+
+.btn-theme:hover {
+  background: #DD5746;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(196, 17, 36, 0.35);
+}
+
+.btn-theme:active {
+  transform: scale(0.96);
+}
+
 
 /* Cards */
 .card,
@@ -796,14 +828,6 @@ body {
   .sidebar-footer {
     display: none;
   }
-}
-
-/* Floating section title */
-.floating-title {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 15px;
-  color: #d63384;
 }
 
 /* DataTable search input */

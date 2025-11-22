@@ -4,7 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title id="pageTitle">News Times of Bahrain</title>
+  <title id="pageTitle">TOB - Admin</title>
+  <link rel="icon" type="image/png" href="images/TOBLogoHeader.png">
   <link rel="stylesheet" href="css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -55,7 +56,7 @@
     <!-- Publish News -->
     <section id="publish" class="section active">
       <div class="floating-title">
-        <h1>📝 Create News</h1>
+        📝 Create News
       </div>
       <div class="card form-card">
         <form id="postNewsForm" enctype="multipart/form-data">
@@ -87,7 +88,7 @@
     <!-- Pending News -->
     <section id="pending" class="section">
       <div class="floating-title">
-        <h1>⏳ Unpublished News</h1>
+        ⏳ Unpublished News
       </div>
       <div id="pendingNewsContainer"></div>
     </section>
@@ -145,7 +146,7 @@
 
     <section id="inactive" class="section">
       <div class="floating-title">
-        <h1>🚫 Deactivated News</h1>
+        🚫 Deactivated News
       </div>
       <div id="inactiveNewsContainer"></div>
     </section>
@@ -153,7 +154,7 @@
     <!-- Trending Section -->
     <section id="trending" class="section">
       <div class="floating-title">
-        <h1>🔥 Manage Trending Cards</h1>
+        🔥 Manage Trending Cards
       </div>
 
       <div class="top-actions"
@@ -218,7 +219,7 @@
     <!-- Comments -->
     <section id="comments" class="section">
       <div class="floating-title">
-        <h1>💬 Article Comments Management</h1>
+        💬 Article Comments Management
       </div>
       <div id="articlesWithComments" class="articles-grid"></div>
     </section>
@@ -228,17 +229,17 @@
     <!-- =================================== -->
     <section id="trendcomments" class="section">
       <div class="floating-title">
-        <h1>💬 Trends Comments Management</h1>
+        💬 Trends Comments Management
       </div>
 
       <!-- Container for all trends -->
       <div id="trendsWithComments" class="articles-grid"></div>
     </section>
+
     <!-- Manage Categories -->
     <section id="managecategories" class="section container py-4">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3>🗂️ Manage Categories</h3>
-        <button id="addCategoryBtn" class="btn btn-primary">
+      <div class="floating-title">🗂️ Manage Categories
+        <button id="addCategoryBtn" class="btn-theme">
           <i class="fa-solid fa-plus"></i> Add New Category
         </button>
       </div>
@@ -318,9 +319,10 @@
     </div>
 
     <section id="profile" class="section container py-4">
+      <div class="floating-title">👤 Profile</div>
       <div class="profile-card">
         <div class="profile-header">
-          <h2>👤 Profile</h2>
+          <h2>Profile</h2>
           <button type="button" id="openChangePasswordBtn" class="btn btn-secondary">Change Password</button>
         </div>
 
@@ -345,8 +347,8 @@
 
     <!-- Manage Subscribers -->
     <section id="managesubscribers" class="section container py-4">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3>📧 Newsletter Subscribers</h3>
+      <div class="floating-title">
+        📧 Newsletter Subscribers
       </div>
 
       <!-- Search Bar -->

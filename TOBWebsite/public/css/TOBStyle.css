@@ -288,7 +288,7 @@ img:hover {
 
 
 /* Trends Strip */
-.trends-strip-container {
+/* .trends-strip-container {
   overflow: hidden;
   position: relative;
   height: 40px;
@@ -307,20 +307,49 @@ img:hover {
 #trendsTickerInner {
   display: inline-flex;
   gap: 2rem;
+  min-width: 100%;
   animation: tickerScroll 20s linear infinite;
+} */
+
+.trends-strip-container {
+  overflow: hidden;
+  height: 38px;
+  background: rgba(255, 77, 109, 0.05);
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
 }
 
+.trends-ticker {
+  display: flex;
+  white-space: nowrap;
+}
+
+#trendsTickerInner {
+  display: inline-flex;
+  align-items: center;
+  gap: 2rem;
+  animation: tickerScroll 25s linear infinite;
+}
+
+#trendsTickerInner.clone {
+  animation: tickerScroll2 20s linear infinite;
+}
+
+/* First copy (moves normally) */
 @keyframes tickerScroll {
-  0% {
-    transform: translateX(100%);
-  }
-
-  100% {
-    transform: translateX(-100%);
-  }
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
-.trend-item {
+/* Second copy (starts immediately after first) */
+@keyframes tickerScroll2 {
+  0%   { transform: translateX(100%); }
+  100% { transform: translateX(0); }
+}
+
+
+/* .trend-item {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -335,6 +364,28 @@ img:hover {
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
+} */
+
+/* Trend Ticker Items */
+/* .trend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-right: 25px;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.trend-item img {
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+    object-fit: cover;
+} */
+
+.trend-label i {
+    color: gold;
+    margin-right: 6px;
 }
 
 .trend-item:hover {
@@ -942,6 +993,34 @@ img:hover {
   text-decoration: underline;
 }
 
+/* Read More Button */
+.read-more-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(90deg, #ff7b00, #ff0055);
+    border-radius: 25px;
+    transition: all .3s ease;
+    border: none;
+}
+
+.read-more-btn:hover {
+    color: #fff;
+    background:linear-gradient(90deg, #ff0055, #ff7b00);
+    transform: translateY(-2px);
+}
+
+.read-more-btn i {
+    transition: transform .3s ease;
+}
+
+.read-more-btn:hover i {
+    transform: translateX(4px);
+}
 /* Newsletter Card */
 .newsletter-card {
   background: linear-gradient(90deg, rgba(255, 77, 109, 0.05), rgba(255, 143, 171, 0.05));
@@ -1902,3 +1981,175 @@ img:hover {
 .othertrends-view-btn:hover {
   background: #e63b59;
 }
+
+/* ARTICLE HEADER */
+.article-header {
+    margin-bottom: 20px;
+}
+
+.article-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.article-icon {
+    font-size: 32px;
+    color: #c41124;
+}
+
+.article-title {
+    font-size: 30px;
+    font-weight: 800;
+    margin: 0;
+}
+
+/* DATE LINE */
+.article-date {
+    margin-top: 6px;
+    color: #6c757d;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* FEATURED IMAGE */
+.article-image-box {
+    margin: 20px 0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.article-image {
+    width: 100%;
+    border-radius: 10px;
+    display: block;
+}
+
+/* MAIN CONTENT */
+.article-content {
+    font-size: 17px;
+    line-height: 1.7;
+    color: #2b2b2b;
+    margin-bottom: 30px;
+}
+
+/* ACTION SECTION */
+.article-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.like-btn {
+    background: #fff;
+    border: 2px solid #c41124;
+    color: #c41124;
+    padding: 8px 18px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-weight: 600;
+}
+
+.like-btn:hover {
+    background: #c41124;
+    color: #fff;
+}
+
+.like-count {
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.comment-submit-btn {
+    background: #c41124;
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    box-shadow: 0 3px 8px rgba(196, 17, 36, 0.35);
+    transition: all 0.25s ease;
+}
+
+/* Hover */
+.comment-submit-btn:hover {
+    background: #a10e1d;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(196, 17, 36, 0.45);
+}
+
+/* Active press */
+.comment-submit-btn:active {
+    transform: translateY(0px);
+    box-shadow: 0 2px 6px rgba(196, 17, 36, 0.25);
+}
+
+
+/* Fade-in Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Title Styling */
+.trend-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, #c41124, #ff5864);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Date Badge */
+.trend-date-badge {
+  display: inline-block;
+  background: #f3f3f3;
+  border-left: 4px solid #c41124;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+/* Image Box */
+.trend-image-box {
+  margin: 20px 0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.trend-main-image {
+  width: 100%;
+    border-radius: 10px;
+    display: block;
+}
+
+.trend-main-image:hover {
+  transform: scale(1.03);
+}
+
+/* Description Box */
+.trend-section h3 {
+  font-weight: 700;
+  color: #c41124;
+  margin-bottom: 10px;
+}
+
+.trend-description {
+  background: #fff;
+  padding: 18px;
+  border-radius: 10px;
+  line-height: 1.7;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+

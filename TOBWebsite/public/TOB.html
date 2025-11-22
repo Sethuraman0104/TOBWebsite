@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TOB News — Ultra Live Theme</title>
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+:root{
+  --brand:#d92528;
+  --glass-bg:rgba(255,255,255,0.15);
+  --glass-dark:rgba(0,0,0,0.35);
+  --blur:blur(18px);
+  --glow:0 0 12px rgba(217,37,40,.7);
+}
+
+/* Base */
+body{font-family:'Poppins',sans-serif;background:#f5f5f5;transition:0.3s;}
+@media (prefers-color-scheme:dark){body{background:#0d0d0f;color:#fff;}}
+[dir="rtl"]{direction:rtl;text-align:right;}
+
+/* Animations & Effects */
+.glass{backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);background:var(--glass-bg);border:1px solid rgba(255,255,255,0.3);border-radius:18px;}
+.neon{box-shadow:var(--glow);}
+.tilt:hover{transform:perspective(800px) rotateX(6deg) rotateY(-6deg);transition:.4s;}
+
+/* Topbar */
+.topbar{
+  padding:6px 0;color:#fff;
+  font-size:0.9rem;
+  animation: gradientTop 10s ease infinite;
+  background: linear-gradient(90deg,var(--brand),#ff6b6e,#ffb6b9,#d92528);
+  background-size: 400% 400%;
+}
+@keyframes gradientTop {
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+.topbar .icon{font-size:20px;}
+
+/* Navbar */
+.floating-navbar{position:sticky;top:0;z-index:999;background:rgba(255,255,255,0.85);backdrop-filter:blur(12px);border-bottom:2px solid rgba(217,37,40,.3);}
+.floating-navbar a{color:#333;font-weight:500;padding:10px 14px;border-radius:50px;transition:0.3s;}
+.floating-navbar a:hover{background:rgba(217,37,40,.1);color:var(--brand);}
+
+/* Live TV ribbon */
+.live-tv{background:var(--brand);color:#fff;padding:5px 15px;border-radius:50px;font-weight:600;box-shadow:var(--glow);}
+
+/* Trends ticker */
+.ticker-wrap{overflow:hidden;white-space:nowrap;width:100%;position:relative;}
+.ticker{display:inline-block;font-weight:500;}
+.ticker span{display:inline-block;margin-right:2rem;}
+.ticker-inner{
+  display:inline-block;
+  padding-left:100%;
+  animation: ticker 20s linear infinite;
+}
+@keyframes ticker{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+
+/* Floating AI Widget */
+.ai-widget{position:fixed;bottom:20px;right:20px;background:var(--glass-dark);backdrop-filter:blur(12px);padding:12px 18px;border-radius:18px;color:#fff;cursor:pointer;animation:float 3s ease-in-out infinite;}
+@keyframes float{0%{transform:translateY(0);}50%{transform:translateY(-8px);}100%{transform:translateY(0);}}
+
+/* Video & News Cards */
+.video-card,.news-card{border-radius:20px;overflow:hidden;box-shadow:var(--glow);}
+.news-card img{transition:.4s;}
+.news-card:hover img{transform:scale(1.12);}
+
+/* Footer */
+.footer{background:#111;color:#ccc;padding:40px 0;margin-top:50px;}
+
+/* Toggle Buttons */
+.toggle-btn{cursor:pointer;padding:5px 12px;border-radius:50px;font-weight:600;box-shadow:var(--glow);margin-left:8px;transition:0.3s;}
+.toggle-btn:hover{transform:translateY(-2px);}
+
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar d-flex justify-content-between align-items-center px-3">
+  <div class="d-flex gap-3 align-items-center">
+    <i class="fa-solid fa-location-dot icon"></i>
+    <span id="locationText">Detecting...</span>
+  </div>
+  <div class="d-flex align-items-center gap-3">
+    <i class="fa-solid fa-calendar-days"></i>
+    <span id="dateTime"></span>
+
+    <!-- Dark/Light Toggle -->
+    <span class="toggle-btn bg-white text-danger" id="darkLightToggle">🌙</span>
+    <!-- RTL Toggle -->
+    <span class="toggle-btn bg-white text-danger" id="rtlToggle">🔄</span>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="floating-navbar navbar navbar-expand-lg mt-2">
+  <div class="container">
+    <a class="navbar-brand fw-bold text-danger" href="#"><i class="fa-solid fa-newspaper"></i> TOB News</a>
+    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="nav">
+      <ul class="navbar-nav ms-auto gap-2">
+        <li><a href="#" class="nav-link">Home</a></li>
+        <li><a href="#latest" class="nav-link">Latest</a></li>
+        <li><a href="#videos" class="nav-link">Videos</a></li>
+        <li><a href="#live" class="nav-link">Live TV</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- LIVE TV + TRENDS -->
+<div class="container mt-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap">
+    <div class="live-tv"><i class="fa-solid fa-tower-broadcast"></i> LIVE NOW</div>
+    <div class="ticker-wrap flex-fill ms-3">
+      <div class="ticker">
+        <div class="ticker-inner" id="trendsTicker">
+          Loading trends...
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURED VIDEO -->
+<div class="container mt-4" id="videos">
+  <div class="video-card">
+    <video width="100%" controls autoplay muted>
+      <source src="https://cdn.coverr.co/videos/coverr-world-news-6181/1080p.mp4" type="video/mp4">
+    </video>
+  </div>
+</div>
+
+<!-- LATEST NEWS -->
+<div class="container mt-5" id="latest">
+  <h3 class="fw-bold text-danger mb-3">Latest Headlines</h3>
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="news-card glass tilt">
+        <img src="https://images.pexels.com/photos/3183197/pexels-photo-3183197.jpeg" class="w-100">
+        <div class="p-3">
+          <h5>Breaking: Global Markets Rally</h5>
+          <p class="small opacity-75">Stocks rise sharply following major economic announcement.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="news-card glass tilt">
+        <img src="https://images.pexels.com/photos/325185/pexels-photo-325185.jpeg" class="w-100">
+        <div class="p-3">
+          <h5>Middle East: Diplomatic Movement</h5>
+          <p class="small opacity-75">New peace talks scheduled for next week.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="news-card glass tilt">
+        <img src="https://images.pexels.com/photos/261579/pexels-photo-261579.jpeg" class="w-100">
+        <div class="p-3">
+          <h5>Tech: AI Advancements</h5>
+          <p class="small opacity-75">AI now enhances live journalism workflows.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AI WIDGET -->
+<div class="ai-widget">
+  <i class="fa-solid fa-robot me-2"></i> Ask AI
+</div>
+
+<!-- FOOTER -->
+<div class="footer text-center">
+  <p>© 2025 TOB News — Powered by Live Intelligence</p>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// LOCATION
+async function getLocation(){
+  if(!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const {latitude, longitude} = pos.coords;
+    const data = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`).then(r=>r.json());
+    document.getElementById("locationText").textContent = data.address.city || data.address.state || data.address.country;
+  });
+}
+getLocation();
+
+// DATE & TIME
+setInterval(()=>{
+  const now = new Date();
+  document.getElementById("dateTime").textContent = now.toLocaleDateString() + " — " + now.toLocaleTimeString();
+},1000);
+
+// LOAD TRENDS
+async function loadTrends(){
+  try{
+    const res = await fetch("/api/trends");
+    const data = await res.json();
+    const ticker = document.getElementById("trendsTicker");
+    // Duplicate for seamless scroll
+    ticker.innerHTML = [...data.trends,...data.trends].map(t=>`<span>🔥 ${t}</span>`).join('');
+  }catch{
+    document.getElementById("trendsTicker").textContent="Unable to load trends";
+  }
+}
+loadTrends();
+
+// DARK/LIGHT TOGGLE
+const darkLightBtn = document.getElementById("darkLightToggle");
+darkLightBtn.addEventListener("click", ()=>{
+  if(document.documentElement.getAttribute("data-theme")==="light"){
+    document.documentElement.setAttribute("data-theme","dark");
+    darkLightBtn.textContent="☀️";
+    document.body.style.background="#0d0d0f";
+    document.body.style.color="#fff";
+  }else{
+    document.documentElement.setAttribute("data-theme","light");
+    darkLightBtn.textContent="🌙";
+    document.body.style.background="#f5f5f5";
+    document.body.style.color="#000";
+  }
+});
+
+// RTL TOGGLE
+const rtlBtn = document.getElementById("rtlToggle");
+rtlBtn.addEventListener("click", ()=>{
+  if(document.documentElement.getAttribute("dir")==="rtl"){
+    document.documentElement.setAttribute("dir","ltr");
+  }else{
+    document.documentElement.setAttribute("dir","rtl");
+  }
+});
+</script>
+</body>
+</html>

@@ -170,6 +170,37 @@ async function loadTrendsTicker() {
 document.addEventListener('DOMContentLoaded', loadTrendsTicker);
 
 // Load article
+// async function loadArticle() {
+//     try {
+//         const res = await fetch(`/api/news/${articleId}`);
+//         const result = await res.json();
+
+//         const container = document.getElementById('articleContainer');
+
+//         if (result.success && result.data && result.data.IsActive && result.data.IsApproved) {
+//             const n = result.data;
+//             container.innerHTML = `
+//   <h1>${n.Title}</h1>
+//   <p class="text-muted">Published on ${formatDateTime(n.PublishedOn)}</p>
+//   ${n.ImageURL ? `<img src="${n.ImageURL}" alt="${n.Title}" class="img-fluid mb-3">` : ''}
+//   <div>${n.Content}</div>
+
+//   <div class="mt-4 d-flex align-items-center gap-3">
+//     <button id="likeBtn" class="btn btn-outline-danger"><i class="fa-solid fa-heart"></i> Like</button>
+//     <span id="likeCount" class="text-muted small">Loading likes...</span>
+//   </div>
+// `;
+//             loadLikes();
+//         } else {
+//             container.innerHTML = '<p class="text-muted">This article is not available.</p>';
+//         }
+//     } catch (err) {
+//         console.error(err);
+//         document.getElementById('articleContainer').innerHTML = '<p class="text-danger">Failed to load article.</p>';
+//     }
+// }
+
+// Load article
 async function loadArticle() {
     try {
         const res = await fetch(`/api/news/${articleId}`);
@@ -178,84 +209,57 @@ async function loadArticle() {
         const container = document.getElementById('articleContainer');
 
         if (result.success && result.data && result.data.IsActive && result.data.IsApproved) {
-            const n = result.data;
-            container.innerHTML = `
-  <h1>${n.Title}</h1>
-  <p class="text-muted">Published on ${formatDateTime(n.PublishedOn)}</p>
-  ${n.ImageURL ? `<img src="${n.ImageURL}" alt="${n.Title}" class="img-fluid mb-3">` : ''}
-  <div>${n.Content}</div>
 
-  <div class="mt-4 d-flex align-items-center gap-3">
-    <button id="likeBtn" class="btn btn-outline-danger"><i class="fa-solid fa-heart"></i> Like</button>
-    <span id="likeCount" class="text-muted small">Loading likes...</span>
-  </div>
-`;
+            const n = result.data;
+
+            container.innerHTML = `
+                <!-- ARTICLE HEADER -->
+                <div class="article-header">
+                    <div class="article-title-wrapper">
+                        <i class="fa-solid fa-newspaper article-icon"></i>
+                        <h1 class="article-title">${n.Title}</h1>
+                    </div>
+                    <p class="article-date">
+                        <i class="fa-regular fa-calendar"></i>
+                        ${formatDateTime(n.PublishedOn)}
+                    </p>
+                </div>
+
+                <!-- FEATURED IMAGE -->
+                ${n.ImageURL ? `
+                <div class="article-image-box">
+                    <img src="${n.ImageURL}" alt="${n.Title}" class="article-image">
+                </div>` : ''}
+
+                <!-- MAIN CONTENT -->
+                <div class="article-content">
+                    ${n.Content}
+                </div>
+
+                <!-- ACTIONS -->
+                <div class="article-actions">
+                    <button id="likeBtn" class="like-btn">
+                        <i class="fa-solid fa-heart"></i> Like
+                    </button>
+                    <span id="likeCount" class="like-count">Loading likes...</span>
+                </div>
+            `;
+
+            // Load Likes
             loadLikes();
+
         } else {
-            container.innerHTML = '<p class="text-muted">This article is not available.</p>';
+            container.innerHTML = `
+                <p class="text-muted">This article is not available.</p>
+            `;
         }
+
     } catch (err) {
         console.error(err);
-        document.getElementById('articleContainer').innerHTML = '<p class="text-danger">Failed to load article.</p>';
+        document.getElementById('articleContainer').innerHTML =
+            '<p class="text-danger">Failed to load article.</p>';
     }
 }
-
-// async function loadOtherNews() {
-//     const container = document.getElementById('otherNewsContainer');
-//     container.innerHTML = `
-//     <div class="news-spinner">
-//       <div class="spinner-border text-primary" role="status">
-//         <span class="visually-hidden">Loading...</span>
-//       </div>
-//     </div>
-//   `;
-
-//     try {
-//         const res = await fetch('/api/news/admin');
-//         const news = await res.json();
-
-//         const otherNews = (Array.isArray(news) ? news : [])
-//             .filter(n => n.IsActive && n.IsApproved && n.ArticleID != articleId)
-//             .slice(0, 4);
-
-//         if (!otherNews.length) {
-//             container.innerHTML = '<p class="text-muted">No other news available.</p>';
-//             return;
-//         }
-
-//         container.innerHTML = otherNews.map(n => {
-//             const publishedDate = formatDateTime(n.PublishedOn);
-//             return `
-//         <div class="col-md-3">
-//           <div class="card news-card-custom animate-card">
-//             <div class="news-card-img-wrapper">
-//               <img src="${n.ImageURL || '/images/default-news.jpg'}" alt="${n.Title}">
-//             </div>
-//             <div class="news-card-body">
-//               <h5 class="card-title">${n.Title}</h5>
-//               <p class="news-card-text-truncate" style="padding-left:5px;">${n.Content}</p>
-//             </div>
-//             <div class="news-card-footer">
-//   <small class="text-muted">📅 ${publishedDate}</small>
-//   <a href="article_en.html?id=${n.ArticleID}" class="articlepg-read-btn">Read More</a>
-// </div>
-//           </div>
-//         </div>
-//       `;
-//         }).join('');
-
-//         // Fade-in animation
-//         const cards = container.querySelectorAll('.animate-card');
-//         cards.forEach((card, i) => {
-//             card.style.animationDelay = `${i * 0.15}s`;
-//             card.classList.add('fade-in-up-custom');
-//         });
-
-//     } catch (err) {
-//         console.error(err);
-//         container.innerHTML = '<p class="text-danger">Failed to load other news.</p>';
-//     }
-// }
 
 let otherNewsPage = 0;
 const pageSize = 8;

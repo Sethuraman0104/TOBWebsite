@@ -877,10 +877,10 @@ router.get('/admintrendcomments/:trendId', async (req, res) => {
         WHERE TrendID = @trendId
         ORDER BY CreatedOn DESC
       `);
-
+    console.log(result.recordset);
     const approved = result.recordset.filter(c => c.IsApproved === true && c.IsActive === true);
     const pending = result.recordset.filter(c => c.IsApproved === false && c.IsActive === true);
-    const rejected = result.recordset.filter(c => c.IsActive === false); // optional if you want rejected comments as null
+    const rejected = result.recordset.filter(c => c.IsActive === false);
 
     res.json({ success: true, approved, pending, rejected });
   } catch (err) {
@@ -888,6 +888,7 @@ router.get('/admintrendcomments/:trendId', async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
+
 
 // ----------------------------------------------
 // PUT comment approve/reject (TrendComments)

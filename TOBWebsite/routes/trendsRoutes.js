@@ -281,13 +281,13 @@ router.get("/gettrend/:id", async (req, res) => {
 // ===================================================================
 router.post("/:id/likes", async (req, res) => {
   const TrendID = parseInt(req.params.id, 10);
-  const { userIdentifier } = req.body;
+  const { UserIP } = req.body;
 
   if (!TrendID || isNaN(TrendID)) {
     return res.status(400).json({ success: false, message: "Invalid TrendID" });
   }
-  if (!userIdentifier || typeof userIdentifier !== "string") {
-    return res.status(400).json({ success: false, message: "Missing or invalid userIdentifier" });
+  if (!UserIP || typeof UserIP !== "string") {
+    return res.status(400).json({ success: false, message: "Missing or invalid UserIP" });
   }
 
   try {
@@ -307,8 +307,8 @@ router.post("/:id/likes", async (req, res) => {
     const alreadyLiked = await pool
       .request()
       .input("TrendID", sql.Int, TrendID)
-      .input("UserIdentifier", sql.NVarChar(255), userIdentifier)
-      .query("SELECT 1 FROM TrendLikes WHERE TrendID=@TrendID AND UserIdentifier=@UserIdentifier");
+      .input("UserIP", sql.NVarChar(255), UserIP)
+      .query("SELECT 1 FROM TrendLikes WHERE TrendID=@TrendID AND UserIP=@UserIP");
 
     if (alreadyLiked.recordset.length) {
       return res.json({ success: false, message: "You already liked this trend" });
@@ -318,8 +318,8 @@ router.post("/:id/likes", async (req, res) => {
     await pool
       .request()
       .input("TrendID", sql.Int, TrendID)
-      .input("UserIdentifier", sql.NVarChar(255), userIdentifier)
-      .query("INSERT INTO TrendLikes (TrendID, UserIdentifier, LikedOn) VALUES (@TrendID, @UserIdentifier, GETDATE())");
+      .input("UserIP", sql.NVarChar(255), UserIP)
+      .query("INSERT INTO TrendLikes (TrendID, UserIP, CreatedOn) VALUES (@TrendID, @UserIP, GETDATE())");
 
     // Return updated like count
     const likeCountResult = await pool
@@ -395,7 +395,7 @@ router.post("/comments", async (req, res) => {
       .input("Content", sql.NVarChar, Content)
       .query(`
         INSERT INTO TrendComments 
-        (TrendID, ParentCommentID, Name, Email, Content, IsApproved, CreatedOn,IsActive = 1)
+        (TrendID, ParentCommentID, Name, Email, Content, IsApproved, CreatedOn,IsActive)
         VALUES (@TrendID, @ParentCommentID, @Name, @Email, @Content, 0, GETDATE(),1)
       `);
 

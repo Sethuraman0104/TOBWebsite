@@ -140,7 +140,6 @@ window.addEventListener("click", e => {
   if (e.target === modal) modal.style.display = "none";
 });
 
-
 // --------------------
 // Apply filters
 // --------------------
@@ -1082,12 +1081,17 @@ async function deleteCategory(e) {
 // Initialize
 document.addEventListener('DOMContentLoaded', loadCategoriesList);
 
+// =============================
+// Admin Comments Management
+// =============================
 let pendingComments = [], approvedComments = [], rejectedComments = [];
 let currentPendingPage = 1, currentApprovedPage = 1, currentRejectedPage = 1;
 const commentsPageSize = 5;
 let filteredPending = [], filteredApproved = [], filteredRejected = [];
 
-// Load articles with comments
+// ---------------------------------
+// Load articles with comment stats
+// ---------------------------------
 async function loadArticlesWithComments() {
   try {
     const res = await fetch('/api/articles/with-comments');
@@ -1122,16 +1126,17 @@ async function loadArticlesWithComments() {
   }
 }
 
+// ---------------------------------
 // View comments modal
+// ---------------------------------
 async function viewComments(articleId, articleTitle) {
   try {
     const res = await fetch(`/api/admincomments/${articleId}`);
     const data = await res.json();
-    if (!data.success) throw new Error();
+    if (!data.success) throw new Error('Failed to load comments');
 
     document.getElementById('modalArticleTitle').textContent = articleTitle;
 
-    // Store comments
     pendingComments = data.pending || [];
     approvedComments = data.approved || [];
     rejectedComments = data.rejected || [];
@@ -1152,19 +1157,21 @@ async function viewComments(articleId, articleTitle) {
   }
 }
 
+// ---------------------------------
 // Render comments table with pagination
+// ---------------------------------
 function renderCommentsTable(list, tableId, type, currentPage, articleTitle, paginationId) {
   const tbody = document.querySelector(`#${tableId} tbody`);
   tbody.innerHTML = '';
 
   const start = (currentPage - 1) * commentsPageSize;
-  const end = start + commentsPageSize;
-  const pageItems = list.slice(start, end);
+  const pageItems = list.slice(start, start + commentsPageSize);
 
   if (!pageItems.length) {
     tbody.innerHTML = `<tr><td colspan="${type !== 'rejected' ? 6 : 5}" class="text-center text-muted">No comments.</td></tr>`;
   } else {
     pageItems.forEach((c, idx) => {
+      const escapedTitle = articleTitle.replace(/'/g, "\\'");
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${start + idx + 1}</td>
@@ -1173,9 +1180,9 @@ function renderCommentsTable(list, tableId, type, currentPage, articleTitle, pag
         <td>${c.Content}</td>
         <td>${moment(c.CreatedOn).fromNow()}</td>
         ${type !== 'rejected' ? `<td>
-          ${type === 'pending' ? `<button class="btn btn-success btn-sm me-1" onclick="updateCommentStatus(${c.CommentID},'approve',${c.ArticleID},'${articleTitle.replace(/'/g, "\\'")}')">Approve</button>
-          <button class="btn btn-danger btn-sm" onclick="updateCommentStatus(${c.CommentID},'reject',${c.ArticleID},'${articleTitle.replace(/'/g, "\\'")}')">Reject</button>` :
-            type === 'approved' ? `<button class="btn btn-danger btn-sm" onclick="updateCommentStatus(${c.CommentID},'reject',${c.ArticleID},'${articleTitle.replace(/'/g, "\\'")}')">Reject</button>` : ''}
+          ${type === 'pending' ? `<button class="btn btn-success btn-sm me-1" onclick="updateCommentStatus(${c.CommentID},'approve',${c.ArticleID},'${escapedTitle}')">Approve</button>
+          <button class="btn btn-danger btn-sm" onclick="updateCommentStatus(${c.CommentID},'reject',${c.ArticleID},'${escapedTitle}')">Reject</button>` :
+            type === 'approved' ? `<button class="btn btn-danger btn-sm" onclick="updateCommentStatus(${c.CommentID},'reject',${c.ArticleID},'${escapedTitle}')">Reject</button>` : '' }
         </td>`: ''}
       `;
       tbody.appendChild(tr);
@@ -1201,7 +1208,6 @@ function renderCommentsTable(list, tableId, type, currentPage, articleTitle, pag
   }
 }
 
-// Update comment status
 async function updateCommentStatus(commentId, status, articleId, articleTitle) {
   try {
     const res = await fetch(`/api/comments/${commentId}/status`, {
@@ -1210,17 +1216,34 @@ async function updateCommentStatus(commentId, status, articleId, articleTitle) {
       body: JSON.stringify({ status })
     });
     const data = await res.json();
-    if (data.success) await viewComments(articleId, articleTitle);
+    if (data.success) {
+      // Refresh modal comments
+      await viewComments(articleId, articleTitle);
+      // Refresh back page list
+      await loadArticlesWithComments();
+    } else {
+      alert(data.message || 'Failed to update comment status.');
+    }
   } catch (err) {
     console.error('❌ Error updating comment status:', err);
+    alert('Error updating comment status. Try again.');
   }
 }
 
+// ---------------------------------
 // Modal close
-document.getElementById('closeCommentsModal').onclick = () => { document.getElementById('commentsModalCustom').style.display = 'none'; };
-window.onclick = e => { if (e.target == document.getElementById('commentsModalCustom')) document.getElementById('commentsModalCustom').style.display = 'none'; };
+// ---------------------------------
+document.getElementById('closeCommentsModal').onclick = () => {
+  document.getElementById('commentsModalCustom').style.display = 'none';
+};
+window.onclick = e => {
+  if (e.target == document.getElementById('commentsModalCustom'))
+    document.getElementById('commentsModalCustom').style.display = 'none';
+};
 
+// ---------------------------------
 // Tabs
+// ---------------------------------
 document.querySelectorAll('.tablink').forEach(tab => {
   tab.addEventListener('click', function () {
     const target = this.dataset.tab;
@@ -1231,35 +1254,45 @@ document.querySelectorAll('.tablink').forEach(tab => {
   });
 });
 
-// Search
+// ---------------------------------
+// Search/filter
+// ---------------------------------
 document.getElementById('commentSearch').addEventListener('input', e => {
   const q = e.target.value.toLowerCase();
   const activeTab = document.querySelector('.tablink.active').dataset.tab;
+
   if (activeTab === 'pendingTab') {
-    filteredPending = pendingComments.filter(c => c.Name.toLowerCase().includes(q) || c.Email.toLowerCase().includes(q) || c.Content.toLowerCase().includes(q));
+    filteredPending = pendingComments.filter(c =>
+      c.Name.toLowerCase().includes(q) ||
+      c.Email.toLowerCase().includes(q) ||
+      c.Content.toLowerCase().includes(q)
+    );
     currentPendingPage = 1;
     renderCommentsTable(filteredPending, 'pendingCommentsTable', 'pending', currentPendingPage, document.getElementById('modalArticleTitle').textContent, 'pendingPagination');
   } else if (activeTab === 'approvedTab') {
-    filteredApproved = approvedComments.filter(c => c.Name.toLowerCase().includes(q) || c.Email.toLowerCase().includes(q) || c.Content.toLowerCase().includes(q));
+    filteredApproved = approvedComments.filter(c =>
+      c.Name.toLowerCase().includes(q) ||
+      c.Email.toLowerCase().includes(q) ||
+      c.Content.toLowerCase().includes(q)
+    );
     currentApprovedPage = 1;
     renderCommentsTable(filteredApproved, 'approvedCommentsTable', 'approved', currentApprovedPage, document.getElementById('modalArticleTitle').textContent, 'approvedPagination');
   } else if (activeTab === 'rejectedTab') {
-    filteredRejected = rejectedComments.filter(c => c.Name.toLowerCase().includes(q) || c.Email.toLowerCase().includes(q) || c.Content.toLowerCase().includes(q));
+    filteredRejected = rejectedComments.filter(c =>
+      c.Name.toLowerCase().includes(q) ||
+      c.Email.toLowerCase().includes(q) ||
+      c.Content.toLowerCase().includes(q)
+    );
     currentRejectedPage = 1;
     renderCommentsTable(filteredRejected, 'rejectedCommentsTable', 'rejected', currentRejectedPage, document.getElementById('modalArticleTitle').textContent, 'rejectedPagination');
   }
 });
 
+// ---------------------------------
 // Init
+// ---------------------------------
 document.addEventListener('DOMContentLoaded', loadArticlesWithComments);
 
-document.getElementById('commentsModalCustom').addEventListener('shown.bs.modal', function () {
-  const btns = this.querySelectorAll('.modal-content button');
-  btns.forEach(btn => {
-    btn.classList.remove('btn-primary', 'bg-danger', 'bg-warning');
-    btn.style.background = 'none'; // optional
-  });
-});
 
 // ==============================
 // Trends Comments Management
@@ -1421,9 +1454,6 @@ function renderTrendCommentsTable(list, tableId, type, currentPage, trendTitle, 
   }
 }
 
-// ---------------------------------
-// Update trend comment status
-// ---------------------------------
 async function updateTrendCommentStatus(commentId, status, trendId, trendTitle) {
   try {
     const res = await fetch(`/api/trendcomments/${commentId}/status`, {
@@ -1432,10 +1462,41 @@ async function updateTrendCommentStatus(commentId, status, trendId, trendTitle) 
       body: JSON.stringify({ status })
     });
     const data = await res.json();
-    if (data.success) await viewTrendComments(trendId, trendTitle);
+    if (data.success) {
+      // Refresh modal comments
+      await viewTrendComments(trendId, trendTitle);
+      await refreshTrendComments(trendId, trendTitle);
+      // Refresh trends list to update counts
+      await loadTrendsWithComments();
+    } else {
+      alert(data.message || 'Failed to update comment status.');
+    }
   } catch (err) {
     console.error('❌ Error updating trend comment status:', err);
+    alert('Error updating comment status. Try again.');
   }
+}
+
+async function refreshTrendComments(trendId, trendTitle) {
+  const res = await fetch(`/api/admintrendcomments/${trendId}?t=${Date.now()}`);
+  const data = await res.json();
+
+  // Replace ALL global arrays with fresh DB data
+  pendingTrendComments  = data.pending || [];
+  approvedTrendComments = data.approved || [];
+  rejectedTrendComments = data.rejected || [];
+
+  // Reset filters
+  filteredPendingTrendComments  = [...pendingTrendComments];
+  filteredApprovedTrendComments = [...approvedTrendComments];
+  filteredRejectedTrendComments = [...rejectedTrendComments];
+
+  currentPendingTrendPage = currentApprovedTrendPage = currentRejectedTrendPage = 1;
+
+  // Re-render all tables
+  renderTrendCommentsTable(filteredPendingTrendComments, 'trendsPendingCommentsTable', 'pending', 1, trendTitle, 'trendsPendingPagination');
+  renderTrendCommentsTable(filteredApprovedTrendComments, 'trendsApprovedCommentsTable', 'approved', 1, trendTitle, 'trendsApprovedPagination');
+  renderTrendCommentsTable(filteredRejectedTrendComments, 'trendsRejectedCommentsTable', 'rejected', 1, trendTitle, 'trendsRejectedPagination');
 }
 
 // ---------------------------------

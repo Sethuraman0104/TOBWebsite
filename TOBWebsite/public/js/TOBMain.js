@@ -198,85 +198,228 @@ async function loadTrends() {
   }
 }
 
+// // Load Trends + Ticker
+// async function loadTrendsTicker() {
+//     const tickerInner = document.getElementById('trendsTickerInner');
+//     const trendsContainer = document.getElementById('trendsSection');
+
+//     tickerInner.innerHTML = 'Loading trends...';
+//     trendsContainer.innerHTML = `
+//         <div class="text-center text-muted py-4">
+//             <i class="fa-solid fa-spinner fa-spin"></i> Loading trending articles...
+//         </div>
+//     `;
+
+//     try {
+//         const res = await fetch('/api/trends', { cache: 'no-store' });
+//         const data = await res.json();
+//         const trends = Array.isArray(data) ? data : (data.success ? data.data : []);
+
+//         if (!trends.length) {
+//             tickerInner.innerHTML = `<span>No active trends</span>`;
+//             trendsContainer.innerHTML = `
+//                 <div class="text-center text-muted py-4">
+//                     <i class="fa-regular fa-circle-xmark"></i> No active trending articles.
+//                 </div>`;
+//             return;
+//         }
+
+//         // 🟦 ----------------------
+//         // 1️⃣ Ticker Section
+//         // 🟦 ----------------------
+//         tickerInner.innerHTML = '';
+//         const tickerFragment = document.createDocumentFragment();
+
+//         trends.forEach(t => {
+//             const img = t.ImageURL || '/images/default-trend.jpg';
+//             const title = t.TrendTitle_EN || 'Trend';
+//             const link = t.TrendLink || '#';
+
+//             const a = document.createElement('a');
+//             a.className = 'trend-item';
+//             a.href = link;
+//             a.innerHTML = `
+//                 <img src="${img}" alt="${title}" 
+//                      onerror="this.src='/images/default-trend.jpg';" />
+//                 <div class="trend-label">
+//                     <i class="fa-solid fa-bolt"></i>
+//                     <small>${title}</small>
+//                 </div>
+//             `;
+//             tickerFragment.appendChild(a);
+//         });
+
+//         // Duplicate for seamless scrolling
+//         tickerInner.appendChild(tickerFragment);
+//         tickerInner.appendChild(tickerFragment.cloneNode(true));
+
+//         // 🟥 ----------------------
+//         // 2️⃣ Trending Cards Section
+//         // 🟥 ----------------------
+//         trendsContainer.innerHTML = trends.map(t => {
+//             const img = t.ImageURL || '/images/default-trend.jpg';
+//             const title = t.TrendTitle_EN || 'Untitled Trend';
+//             const content = t.TrendDescription_EN || 'No description available.';
+//             const link = t.TrendLink || '#';
+
+//             const date = t.CreatedOn
+//                 ? formatDate(t.CreatedOn)
+//                 : '';
+
+//             return `
+//                 <div class="col-md-6 col-lg-4 col-xl-3" data-aos="fade-up" data-aos-duration="900">
+//                     <div class="trend-card h-100 shadow-sm">
+//                         <div class="trend-img-wrapper">
+//                             <img src="${img}" alt="${title}"
+//                                  onerror="this.src='/images/default-trend.jpg';" />
+//                         </div>
+
+//                         <div class="trend-card-body">
+//                             <h5 class="trend-card-title">
+//                                 <i class="fa-solid fa-fire-flame-curved"></i> ${title}
+//                             </h5>
+
+//                             <p class="trend-card-text">${content}</p>
+
+//                             <div class="trend-card-footer">
+//                                 <span class="trend-date">
+//                                     <i class="fa-regular fa-calendar"></i> ${date}
+//                                 </span>
+
+//                                 <button class="btn read-more-btn"
+//                                         onclick="openTrendArticle(${t.TrendID})">
+//                                     <i class="fa-solid fa-book-open"></i> Read More
+//                                 </button>
+//                             </div>
+//                         </div>
+//                     </div>
+//                 </div>
+//             `;
+//         }).join('');
+
+//     } catch (err) {
+//         console.error(err);
+//         tickerInner.innerHTML = 'Error loading trends';
+//         trendsContainer.innerHTML = `
+//             <div class="text-center text-danger py-4">
+//                 <i class="fa-solid fa-triangle-exclamation"></i> Failed to load trending articles.
+//             </div>`;
+//     }
+// }
+
+// Load Trends + Ticker
 async function loadTrendsTicker() {
-  const tickerInner = document.getElementById('trendsTickerInner');
-  const trendsContainer = document.getElementById('trendsSection');
+    const tickerInner = document.getElementById('trendsTickerInner');
+    const trendsContainer = document.getElementById('trendsSection');
 
-  tickerInner.innerHTML = 'Loading trends...';
-  trendsContainer.innerHTML = `<div class="text-center text-muted py-4">Loading trending articles...</div>`;
-
-  try {
-    const res = await fetch('/api/trends', { cache: 'no-store' });
-    const data = await res.json();
-    const trends = Array.isArray(data) ? data : (data.success ? data.data : []);
-
-    if (!trends.length) {
-      tickerInner.innerHTML = 'No active trends';
-      trendsContainer.innerHTML = `<div class="text-center text-muted py-4">No active trending articles</div>`;
-      return;
-    }
-
-    // ----------------------
-    // 1️⃣ Ticker
-    // ----------------------
-    tickerInner.innerHTML = '';
-    const tickerFragment = document.createDocumentFragment();
-
-    trends.forEach(t => {
-      const img = t.ImageURL || '/images/default-trend.jpg';
-      const title = t.TrendTitle_EN || 'Trend';
-      const link = t.TrendLink || '#';
-
-      const a = document.createElement('a');
-      a.className = 'trend-item';
-      a.href = link;
-      a.innerHTML = `
-        <img src="${img}" alt="${title}" style='margin-left:10px;' onerror="this.src='/images/default-trend.jpg';" />
-        <div><small>${title}</small></div>
-      `;
-      tickerFragment.appendChild(a);
-    });
-
-    tickerInner.appendChild(tickerFragment);
-    tickerInner.appendChild(tickerFragment.cloneNode(true)); // seamless scroll
-
-    // ----------------------
-    // 2️⃣ Trending Cards Section
-    // ----------------------
-    trendsContainer.innerHTML = trends.map(t => {
-      const img = t.ImageURL || '/images/default-trend.jpg';
-      const title = t.TrendTitle_EN || 'Untitled Trend';
-      const content = t.TrendDescription_EN || 'No description available.';
-      const date = t.PublishedOn
-        ? new Date(t.PublishedOn).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-        : '';
-      const link = t.TrendLink || '#';
-
-      return `
-        <div class="col-md-6 col-lg-4 col-xl-3" data-aos="fade-up" data-aos-duration="800">
-          <div class="trend-card h-100">
-            <img src="${img}" alt="${title}" onerror="this.src='/images/default-trend.jpg';" />
-            <div class="trend-card-body">
-              <div>
-                <h5 class="trend-card-title">${title}</h5>
-                <p class="trend-card-text">${content}</p>
-              </div>
-              <div class="trend-card-footer">
-                <span class="trend-date">${date}</span>
-                <button class="btn read-more-btn" onclick="openTrendArticle(${t.TrendID})">Read More</button>
-              </div>
-            </div>
-          </div>
+    tickerInner.innerHTML = 'Loading trends...';
+    trendsContainer.innerHTML = `
+        <div class="text-center text-muted py-4">
+            <i class="fa-solid fa-spinner fa-spin"></i> Loading trending articles...
         </div>
-      `;
-    }).join('');
+    `;
 
-  } catch (err) {
-    tickerInner.innerHTML = 'Error loading trends';
-    trendsContainer.innerHTML = `<div class="text-center text-danger py-4">Failed to load trending articles.</div>`;
-    console.error(err);
-  }
+    try {
+        const res = await fetch('/api/trends', { cache: 'no-store' });
+        const data = await res.json();
+        const trends = Array.isArray(data) ? data : (data.success ? data.data : []);
+
+        if (!trends.length) {
+            tickerInner.innerHTML = `<span>No active trends</span>`;
+            trendsContainer.innerHTML = `
+                <div class="text-center text-muted py-4">
+                    <i class="fa-regular fa-circle-xmark"></i> No active trending articles.
+                </div>`;
+            return;
+        }
+
+        // 🟦 ----------------------
+        // 1️⃣ Ticker Section
+        // 🟦 ----------------------
+        tickerInner.innerHTML = '';
+        const tickerFragment = document.createDocumentFragment();
+
+        trends.forEach(t => {
+            const img = t.ImageURL || '/images/default-trend.jpg';
+            const title = t.TrendTitle_EN || 'Trend';
+            const link = t.TrendLink || '#';
+
+            const a = document.createElement('a');
+            a.className = 'trend-item';
+            a.href = link;
+            a.innerHTML = `
+                <img src="${img}" alt="${title}"
+                     onerror="this.src='/images/default-trend.jpg';" />
+                <div class="trend-label">
+                    <i class="fa-solid fa-bolt"></i>
+                    <small>${title}</small>
+                </div>
+            `;
+            tickerFragment.appendChild(a);
+        });
+
+        // Duplicate for seamless scrolling
+        tickerInner.appendChild(tickerFragment);
+        tickerInner.appendChild(tickerFragment.cloneNode(true));
+
+        // Restart the animation to avoid flicker / ensure seamless loop
+        tickerInner.style.animation = 'none';
+        void tickerInner.offsetWidth; // Force reflow
+        tickerInner.style.animation = ''; // Reapply CSS animation
+
+        // 🟥 ----------------------
+        // 2️⃣ Trending Cards Section
+        // 🟥 ----------------------
+        trendsContainer.innerHTML = trends.map(t => {
+            const img = t.ImageURL || '/images/default-trend.jpg';
+            const title = t.TrendTitle_EN || 'Untitled Trend';
+            const content = t.TrendDescription_EN || 'No description available.';
+            const link = t.TrendLink || '#';
+
+            const date = t.CreatedOn ? formatDate(t.CreatedOn) : '';
+
+            return `
+                <div class="col-md-6 col-lg-4 col-xl-3" data-aos="fade-up" data-aos-duration="900">
+                    <div class="trend-card h-100 shadow-sm">
+                        <div class="trend-img-wrapper">
+                            <img src="${img}" alt="${title}"
+                                 onerror="this.src='/images/default-trend.jpg';" />
+                        </div>
+
+                        <div class="trend-card-body">
+                            <h5 class="trend-card-title">
+                                <i class="fa-solid fa-fire-flame-curved"></i> ${title}
+                            </h5>
+
+                            <p class="trend-card-text">${content}</p>
+
+                            <div class="trend-card-footer">
+                                <span class="trend-date">
+                                    <i class="fa-regular fa-calendar"></i> ${date}
+                                </span>
+
+                                <button class="btn read-more-btn"
+                                        onclick="openTrendArticle(${t.TrendID})">
+                                    <i class="fa-solid fa-book-open"></i> Read More
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (err) {
+        console.error(err);
+        tickerInner.innerHTML = 'Error loading trends';
+        trendsContainer.innerHTML = `
+            <div class="text-center text-danger py-4">
+                <i class="fa-solid fa-triangle-exclamation"></i> Failed to load trending articles.
+            </div>`;
+    }
 }
+
+
 // Initialize
 document.addEventListener('DOMContentLoaded', loadTrendsTicker);
 
@@ -678,6 +821,12 @@ function openTrendArticle(trendId) {
 function formatDateTime(dateStr) {
   const d = new Date(dateStr);
   const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true };
+  return d.toLocaleString('en-US', options);
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  const options = { day: '2-digit', month: 'short', year: 'numeric' };
   return d.toLocaleString('en-US', options);
 }
 

@@ -135,36 +135,57 @@ document.addEventListener('DOMContentLoaded', loadTrendsTicker);
 // Load Other Trends
 // -----------------------------------------
 async function loadOtherTrends() {
+  const container = document.getElementById("otherTrendsList");
+  if (!container) {
+    console.warn("❌ otherTrendsList container not found");
+    return;
+  }
+
+  if (typeof trendId === "undefined" || !trendId) {
+    console.warn("❌ trendId is undefined, cannot load other trends");
+    container.innerHTML = `<div class="text-muted py-3 text-center">No other trends available.</div>`;
+    return;
+  }
+
   try {
     console.log("🔄 Loading other trends...");
+    container.innerHTML = `<div class="text-center text-muted py-4">Loading other trending articles...</div>`;
 
     const res = await fetch(`/api/trends/other/${trendId}`, {
       method: "GET",
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store"
     });
-
     const json = await res.json();
     console.log("OTHER TRENDS RESULT:", json);
 
     if (!json.success || !Array.isArray(json.data)) {
       console.warn("⚠ Invalid other trends result");
+      container.innerHTML = `<div class="text-center text-muted py-4">No other trends available.</div>`;
       return;
     }
 
     const trends = json.data;
-    console.log("TRENDS ARRAY:", trends);
+    if (!trends.length) {
+      container.innerHTML = `<div class="text-center text-muted py-4">No other trends found.</div>`;
+      return;
+    }
 
     renderOtherTrends(trends);
 
   } catch (err) {
     console.error("❌ Error loading other trends", err);
+    container.innerHTML = `<div class="text-center text-danger py-4">Failed to load other trends.</div>`;
   }
 }
 
+// -----------------------------------------
+// Render Other Trends Cards
+// -----------------------------------------
 function renderOtherTrends(trends) {
   const container = document.getElementById("otherTrendsList");
   if (!container) return;
-  
+
   container.innerHTML = "";
 
   trends.forEach(t => {
@@ -176,11 +197,11 @@ function renderOtherTrends(trends) {
     card.className = "othertrends-card";
 
     card.innerHTML = `
-      <img src="${img}" class="othertrends-image" />
+      <img src="${img}" class="othertrends-image" alt="${escapeAttr(t.TrendTitle_EN)}" onerror="this.src='/images/default-trend.jpg';" />
 
       <div class="othertrends-body">
-        <h5 class="othertrends-title">${t.TrendTitle_EN}</h5>
-        <p class="othertrends-desc">${t.TrendDescription_EN || ""}</p>
+        <h5 class="othertrends-title">${escapeHtml(t.TrendTitle_EN)}</h5>
+        <p class="othertrends-desc">${escapeHtml(t.TrendDescription_EN || "")}</p>
       </div>
 
       <div class="othertrends-footer">
@@ -188,7 +209,9 @@ function renderOtherTrends(trends) {
           <span><i class="fa fa-heart"></i> ${likes}</span>
           <span><i class="fa fa-comment"></i> ${comments}</span>
         </div>
-        <a href="trendsarticle_en.html?id=${t.TrendID}" class="othertrends-view-btn">View</a>
+        <a href="trendsarticle_en.html?id=${t.TrendID}" class="othertrends-view-btn">
+          <i class="fa fa-eye"></i> View
+        </a>
       </div>
     `;
 
@@ -197,7 +220,7 @@ function renderOtherTrends(trends) {
 }
 
 // -----------------------------------------
-// Utilities
+// Utility functions
 // -----------------------------------------
 function escapeHtml(text = "") {
   return String(text)
@@ -205,11 +228,25 @@ function escapeHtml(text = "") {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
+
 function escapeAttr(text = "") {
   return String(text).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
+
 function safeJSON(res) {
   return res.json().catch(() => null);
+}
+
+function formatDateTime(dateStr) {
+  const d = new Date(dateStr);
+  const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true };
+  return d.toLocaleString('en-US', options);
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  const options = { day: '2-digit', month: 'short', year: 'numeric' };
+  return d.toLocaleString('en-US', options);
 }
 
 // -------------------------------------------------
@@ -224,9 +261,8 @@ function getUserIdentifier() {
   return uid;
 }
 
-
 // -----------------------------------------
-// Load Trend Details (English Page Only)
+// Load Trend Details (English Page Only) — Improved UI
 // -----------------------------------------
 async function loadTrend() {
   if (!trendId) return;
@@ -239,37 +275,63 @@ async function loadTrend() {
     const result = await safeJSON(res);
 
     if (!result || !result.success || !result.data) {
-      container.innerHTML = `<p class="text-muted">Trend not found.</p>`;
+      container.innerHTML = `<p class="text-muted text-center py-5">Trend not found.</p>`;
       return;
     }
 
     const t = result.data;
-    const displayDate = t.UpdatedOn && t.UpdatedOn !== ""
-      ? new Date(t.UpdatedOn).toLocaleString()
-      : (t.CreatedOn ? new Date(t.CreatedOn).toLocaleString() : "—");
 
+    const displayDate =
+      t.UpdatedOn && t.UpdatedOn !== ""
+        ? formatDateTime(t.UpdatedOn)
+        : t.CreatedOn
+        ? formatDateTime(t.CreatedOn)
+        : "—";
+
+    // --------------------------
+    // Improved UI & Layout
+    // --------------------------
     container.innerHTML = `
-  <h1>${escapeHtml(t.TrendTitle_EN)}</h1>
-  <p class="text-muted">Updated ${displayDate}</p>
+      <div class="trend-detail-wrapper" style="animation: fadeIn 0.6s ease;">
+        
+        <!-- Title -->
+        <h1 class="trend-title">
+          ${escapeHtml(t.TrendTitle_EN)}
+        </h1>
 
-  <div class="text-center my-3">
-    <img src="${t.ImageURL || "/images/default-trend.jpg"}"
-         alt="${escapeAttr(t.TrendTitle_EN)}"
-         style="width:500px;height:500px;object-fit:cover;border-radius:8px;max-width:100%;" />
-  </div>
+        <!-- Date -->
+        <div class="trend-date-badge">
+          <i class="fa-solid fa-calendar-day"></i> Updated ${displayDate}
+        </div>
 
-  <div>
-    <h4>Description</h4>
-    <div id="trendDescriptionEn">${t.TrendDescription_EN || ""}</div>
-  </div>
+        <!-- Image -->
+        <div class="trend-image-box">
+          <img 
+            src="${t.ImageURL || "/images/default-trend.jpg"}"
+            alt="${escapeAttr(t.TrendTitle_EN)}"
+            class="trend-main-image"
+            onerror="this.src='/images/default-trend.jpg';"
+          />
+        </div>
 
-  <div class="mt-4 d-flex align-items-center gap-3">
-    <button id="likeTrendBtn" class="btn btn-outline-danger">
-      <i class="fa-solid fa-heart"></i> Like
-    </button>
-    <span id="trendLikeCount" class="text-muted small">Loading likes...</span>
-  </div>
-`;
+        <!-- Description Section -->
+        <div class="trend-section mt-4">
+          <h3><i class="fa-solid fa-align-left"></i> Description</h3>
+          <div id="trendDescriptionEn" class="trend-description">
+            ${t.TrendDescription_EN || ""}
+          </div>
+        </div>
+
+        <!-- Like Section -->
+        <div class="mt-4 d-flex align-items-center gap-3">
+          <button id="likeTrendBtn" class="btn like-btn">
+            <i class="fa-solid fa-heart"></i> Like
+          </button>
+          <span id="trendLikeCount" class="like-count-text">Loading likes...</span>
+        </div>
+
+      </div>
+    `;
 
     // Attach Like Event
     const likeBtn = document.getElementById("likeTrendBtn");
@@ -280,9 +342,69 @@ async function loadTrend() {
 
   } catch (err) {
     console.error("loadTrend error:", err);
-    container.innerHTML = `<p class="text-danger">Failed to load trend.</p>`;
+    container.innerHTML = `<p class="text-danger text-center py-4">Failed to load trend.</p>`;
   }
 }
+
+
+// // -----------------------------------------
+// // Load Trend Details (English Page Only)
+// // -----------------------------------------
+// async function loadTrend() {
+//   if (!trendId) return;
+
+//   const container = document.getElementById("trendContainer");
+//   if (!container) return;
+
+//   try {
+//     const res = await fetch(`/api/trends/gettrend/${trendId}`, { cache: "no-store" });
+//     const result = await safeJSON(res);
+
+//     if (!result || !result.success || !result.data) {
+//       container.innerHTML = `<p class="text-muted">Trend not found.</p>`;
+//       return;
+//     }
+
+//     const t = result.data;
+//     const displayDate = t.UpdatedOn && t.UpdatedOn !== ""
+//       ? new Date(t.UpdatedOn).toLocaleString()
+//       : (t.CreatedOn ? new Date(t.CreatedOn).toLocaleString() : "—");
+
+//     container.innerHTML = `
+//   <h1>${escapeHtml(t.TrendTitle_EN)}</h1>
+//   <p class="text-muted">Updated ${displayDate}</p>
+
+//   <div class="text-center my-3">
+//     <img src="${t.ImageURL || "/images/default-trend.jpg"}"
+//          alt="${escapeAttr(t.TrendTitle_EN)}"
+//          style="width:500px;height:500px;object-fit:cover;border-radius:8px;max-width:100%;" />
+//   </div>
+
+//   <div>
+//     <h4>Description</h4>
+//     <div id="trendDescriptionEn">${t.TrendDescription_EN || ""}</div>
+//   </div>
+
+//   <div class="mt-4 d-flex align-items-center gap-3">
+//     <button id="likeTrendBtn" class="btn btn-outline-danger">
+//       <i class="fa-solid fa-heart"></i> Like
+//     </button>
+//     <span id="trendLikeCount" class="text-muted small">Loading likes...</span>
+//   </div>
+// `;
+
+//     // Attach Like Event
+//     const likeBtn = document.getElementById("likeTrendBtn");
+//     if (likeBtn) likeBtn.addEventListener("click", postTrendLike);
+
+//     // Load Likes Count
+//     await loadTrendLikes();
+
+//   } catch (err) {
+//     console.error("loadTrend error:", err);
+//     container.innerHTML = `<p class="text-danger">Failed to load trend.</p>`;
+//   }
+// }
 
 // -----------------------------------------
 // Likes
@@ -306,14 +428,14 @@ async function loadTrendLikes() {
 async function postTrendLike() {
   if (!trendId) return;
   const likeBtn = document.getElementById("likeTrendBtn");
-  const userIdentifier = getUserIdentifier();
+  const UserIP = getUserIdentifier();
   if (likeBtn) likeBtn.disabled = true;
 
   try {
     const res = await fetch(`/api/trends/${trendId}/likes`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userIdentifier })
+      body: JSON.stringify({ UserIP })
     });
     const json = await safeJSON(res);
     if (!json?.success) return alert(json?.message || "Already liked");
