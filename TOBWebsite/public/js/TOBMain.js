@@ -132,28 +132,27 @@ async function getUserLocation() {
 }
 getUserLocation();
 
-// 🌤️ Free Weather API (Open-Meteo)
+// ---------------- Live Weather ----------------
 async function fetchWeather() {
   try {
-    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=26.22&longitude=50.58&current=temperature_2m,weathercode');
+    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=26.22&longitude=50.58&current_weather=true');
     const data = await res.json();
-    const temp = data?.current?.temperature_2m ?? '--';
-    document.getElementById('weatherTemp').textContent = `${temp}°C`;
-
-    // Basic condition mapping
+    const temp = data?.current_weather?.temperature ?? '--';
+    const code = data?.current_weather?.weathercode ?? 0;
     const weatherCodes = {
-      0: 'Clear Sky ☀️',
-      1: 'Mainly Clear 🌤️',
-      2: 'Partly Cloudy ⛅',
-      3: 'Cloudy ☁️',
-      45: 'Fog 🌫️',
-      61: 'Light Rain 🌦️',
-      63: 'Moderate Rain 🌧️',
-      80: 'Showers 🌦️',
+      0: 'Clear ☀️', 1: 'Mainly Clear 🌤️', 2: 'Partly Cloudy ⛅', 3: 'Cloudy ☁️', 45: 'Fog 🌫️', 61: 'Light Rain 🌦️', 63: 'Moderate Rain 🌧️', 80: 'Showers 🌦️'
     };
-    const code = data?.current?.weathercode ?? 0;
+    document.getElementById('weatherTemp').textContent = `${temp}°C`;
     document.getElementById('weatherText').textContent = weatherCodes[code] || 'Clear';
-  } catch (err) {
+    // change icon dynamically
+    const iconEl = document.getElementById('weatherIcon');
+    if (code === 0) { iconEl.innerHTML = '<i class="fa-solid fa-sun text-warning fs-4"></i>'; }
+    else if (code === 1) { iconEl.innerHTML = '<i class="fa-solid fa-cloud-sun text-warning fs-4"></i>'; }
+    else if (code === 2) { iconEl.innerHTML = '<i class="fa-solid fa-cloud-sun text-secondary fs-4"></i>'; }
+    else if (code === 3) { iconEl.innerHTML = '<i class="fa-solid fa-cloud text-secondary fs-4"></i>'; }
+    else if (code === 45) { iconEl.innerHTML = '<i class="fa-solid fa-smog text-secondary fs-4"></i>'; }
+    else if ([61, 63, 80].includes(code)) { iconEl.innerHTML = '<i class="fa-solid fa-cloud-rain text-primary fs-4"></i>'; }
+  } catch {
     document.getElementById('weatherText').textContent = 'Unavailable';
   }
 }
@@ -198,156 +197,47 @@ async function loadTrends() {
   }
 }
 
-// // Load Trends + Ticker
-// async function loadTrendsTicker() {
-//     const tickerInner = document.getElementById('trendsTickerInner');
-//     const trendsContainer = document.getElementById('trendsSection');
-
-//     tickerInner.innerHTML = 'Loading trends...';
-//     trendsContainer.innerHTML = `
-//         <div class="text-center text-muted py-4">
-//             <i class="fa-solid fa-spinner fa-spin"></i> Loading trending articles...
-//         </div>
-//     `;
-
-//     try {
-//         const res = await fetch('/api/trends', { cache: 'no-store' });
-//         const data = await res.json();
-//         const trends = Array.isArray(data) ? data : (data.success ? data.data : []);
-
-//         if (!trends.length) {
-//             tickerInner.innerHTML = `<span>No active trends</span>`;
-//             trendsContainer.innerHTML = `
-//                 <div class="text-center text-muted py-4">
-//                     <i class="fa-regular fa-circle-xmark"></i> No active trending articles.
-//                 </div>`;
-//             return;
-//         }
-
-//         // 🟦 ----------------------
-//         // 1️⃣ Ticker Section
-//         // 🟦 ----------------------
-//         tickerInner.innerHTML = '';
-//         const tickerFragment = document.createDocumentFragment();
-
-//         trends.forEach(t => {
-//             const img = t.ImageURL || '/images/default-trend.jpg';
-//             const title = t.TrendTitle_EN || 'Trend';
-//             const link = t.TrendLink || '#';
-
-//             const a = document.createElement('a');
-//             a.className = 'trend-item';
-//             a.href = link;
-//             a.innerHTML = `
-//                 <img src="${img}" alt="${title}" 
-//                      onerror="this.src='/images/default-trend.jpg';" />
-//                 <div class="trend-label">
-//                     <i class="fa-solid fa-bolt"></i>
-//                     <small>${title}</small>
-//                 </div>
-//             `;
-//             tickerFragment.appendChild(a);
-//         });
-
-//         // Duplicate for seamless scrolling
-//         tickerInner.appendChild(tickerFragment);
-//         tickerInner.appendChild(tickerFragment.cloneNode(true));
-
-//         // 🟥 ----------------------
-//         // 2️⃣ Trending Cards Section
-//         // 🟥 ----------------------
-//         trendsContainer.innerHTML = trends.map(t => {
-//             const img = t.ImageURL || '/images/default-trend.jpg';
-//             const title = t.TrendTitle_EN || 'Untitled Trend';
-//             const content = t.TrendDescription_EN || 'No description available.';
-//             const link = t.TrendLink || '#';
-
-//             const date = t.CreatedOn
-//                 ? formatDate(t.CreatedOn)
-//                 : '';
-
-//             return `
-//                 <div class="col-md-6 col-lg-4 col-xl-3" data-aos="fade-up" data-aos-duration="900">
-//                     <div class="trend-card h-100 shadow-sm">
-//                         <div class="trend-img-wrapper">
-//                             <img src="${img}" alt="${title}"
-//                                  onerror="this.src='/images/default-trend.jpg';" />
-//                         </div>
-
-//                         <div class="trend-card-body">
-//                             <h5 class="trend-card-title">
-//                                 <i class="fa-solid fa-fire-flame-curved"></i> ${title}
-//                             </h5>
-
-//                             <p class="trend-card-text">${content}</p>
-
-//                             <div class="trend-card-footer">
-//                                 <span class="trend-date">
-//                                     <i class="fa-regular fa-calendar"></i> ${date}
-//                                 </span>
-
-//                                 <button class="btn read-more-btn"
-//                                         onclick="openTrendArticle(${t.TrendID})">
-//                                     <i class="fa-solid fa-book-open"></i> Read More
-//                                 </button>
-//                             </div>
-//                         </div>
-//                     </div>
-//                 </div>
-//             `;
-//         }).join('');
-
-//     } catch (err) {
-//         console.error(err);
-//         tickerInner.innerHTML = 'Error loading trends';
-//         trendsContainer.innerHTML = `
-//             <div class="text-center text-danger py-4">
-//                 <i class="fa-solid fa-triangle-exclamation"></i> Failed to load trending articles.
-//             </div>`;
-//     }
-// }
-
 // Load Trends + Ticker
 async function loadTrendsTicker() {
-    const tickerInner = document.getElementById('trendsTickerInner');
-    const trendsContainer = document.getElementById('trendsSection');
+  const tickerInner = document.getElementById('trendsTickerInner');
+  const trendsContainer = document.getElementById('trendsSection');
 
-    tickerInner.innerHTML = 'Loading trends...';
-    trendsContainer.innerHTML = `
+  tickerInner.innerHTML = 'Loading trends...';
+  trendsContainer.innerHTML = `
         <div class="text-center text-muted py-4">
             <i class="fa-solid fa-spinner fa-spin"></i> Loading trending articles...
         </div>
     `;
 
-    try {
-        const res = await fetch('/api/trends', { cache: 'no-store' });
-        const data = await res.json();
-        const trends = Array.isArray(data) ? data : (data.success ? data.data : []);
+  try {
+    const res = await fetch('/api/trends', { cache: 'no-store' });
+    const data = await res.json();
+    const trends = Array.isArray(data) ? data : (data.success ? data.data : []);
 
-        if (!trends.length) {
-            tickerInner.innerHTML = `<span>No active trends</span>`;
-            trendsContainer.innerHTML = `
+    if (!trends.length) {
+      tickerInner.innerHTML = `<span>No active trends</span>`;
+      trendsContainer.innerHTML = `
                 <div class="text-center text-muted py-4">
                     <i class="fa-regular fa-circle-xmark"></i> No active trending articles.
                 </div>`;
-            return;
-        }
+      return;
+    }
 
-        // 🟦 ----------------------
-        // 1️⃣ Ticker Section
-        // 🟦 ----------------------
-        tickerInner.innerHTML = '';
-        const tickerFragment = document.createDocumentFragment();
+    // 🟦 ----------------------
+    // 1️⃣ Ticker Section
+    // 🟦 ----------------------
+    tickerInner.innerHTML = '';
+    const tickerFragment = document.createDocumentFragment();
 
-        trends.forEach(t => {
-            const img = t.ImageURL || '/images/default-trend.jpg';
-            const title = t.TrendTitle_EN || 'Trend';
-            const link = t.TrendLink || '#';
+    trends.forEach(t => {
+      const img = t.ImageURL || '/images/default-trend.jpg';
+      const title = t.TrendTitle_EN || 'Trend';
+      const link = t.TrendLink || '#';
 
-            const a = document.createElement('a');
-            a.className = 'trend-item';
-            a.href = link;
-            a.innerHTML = `
+      const a = document.createElement('a');
+      a.className = 'trend-item';
+      a.href = link;
+      a.innerHTML = `
                 <img src="${img}" alt="${title}"
                      onerror="this.src='/images/default-trend.jpg';" />
                 <div class="trend-label">
@@ -355,30 +245,30 @@ async function loadTrendsTicker() {
                     <small>${title}</small>
                 </div>
             `;
-            tickerFragment.appendChild(a);
-        });
+      tickerFragment.appendChild(a);
+    });
 
-        // Duplicate for seamless scrolling
-        tickerInner.appendChild(tickerFragment);
-        tickerInner.appendChild(tickerFragment.cloneNode(true));
+    // Duplicate for seamless scrolling
+    tickerInner.appendChild(tickerFragment);
+    tickerInner.appendChild(tickerFragment.cloneNode(true));
 
-        // Restart the animation to avoid flicker / ensure seamless loop
-        tickerInner.style.animation = 'none';
-        void tickerInner.offsetWidth; // Force reflow
-        tickerInner.style.animation = ''; // Reapply CSS animation
+    // Restart the animation to avoid flicker / ensure seamless loop
+    tickerInner.style.animation = 'none';
+    void tickerInner.offsetWidth; // Force reflow
+    tickerInner.style.animation = ''; // Reapply CSS animation
 
-        // 🟥 ----------------------
-        // 2️⃣ Trending Cards Section
-        // 🟥 ----------------------
-        trendsContainer.innerHTML = trends.map(t => {
-            const img = t.ImageURL || '/images/default-trend.jpg';
-            const title = t.TrendTitle_EN || 'Untitled Trend';
-            const content = t.TrendDescription_EN || 'No description available.';
-            const link = t.TrendLink || '#';
+    // 🟥 ----------------------
+    // 2️⃣ Trending Cards Section
+    // 🟥 ----------------------
+    trendsContainer.innerHTML = trends.map(t => {
+      const img = t.ImageURL || '/images/default-trend.jpg';
+      const title = t.TrendTitle_EN || 'Untitled Trend';
+      const content = t.TrendDescription_EN || 'No description available.';
+      const link = t.TrendLink || '#';
 
-            const date = t.CreatedOn ? formatDate(t.CreatedOn) : '';
+      const date = t.CreatedOn ? formatDate(t.CreatedOn) : '';
 
-            return `
+      return `
                 <div class="col-md-6 col-lg-4 col-xl-3" data-aos="fade-up" data-aos-duration="900">
                     <div class="trend-card h-100 shadow-sm">
                         <div class="trend-img-wrapper">
@@ -407,124 +297,252 @@ async function loadTrendsTicker() {
                     </div>
                 </div>
             `;
-        }).join('');
-
-    } catch (err) {
-        console.error(err);
-        tickerInner.innerHTML = 'Error loading trends';
-        trendsContainer.innerHTML = `
+    }).join('');
+  } catch (err) {
+    console.error(err);
+    tickerInner.innerHTML = 'Error loading trends';
+    trendsContainer.innerHTML = `
             <div class="text-center text-danger py-4">
                 <i class="fa-solid fa-triangle-exclamation"></i> Failed to load trending articles.
             </div>`;
+  }
+}
+// Initialize
+document.addEventListener('DOMContentLoaded', loadTrendsTicker);
+
+// ---------------- Breaking News ----------------
+const breakingNews = [
+  "Government announces new economic reforms",
+  "Local football team wins championship",
+  "Heavy rains expected tomorrow across the region",
+  "Stock market hits all-time high",
+  "New technology park to open downtown"
+];
+let newsIndex = 0;
+function updateBreakingNews() {
+  const ticker = document.getElementById('breakingNewsInner');
+  ticker.textContent = breakingNews[newsIndex];
+  newsIndex = (newsIndex + 1) % breakingNews.length;
+}
+setInterval(updateBreakingNews, 5000);
+updateBreakingNews();
+
+async function loadAdvertisements() {
+    try {
+        const res = await fetch('/api/advertisements/list?active=1', { cache: 'no-store' });
+        const json = await res.json();
+
+        if (!json.success || !Array.isArray(json.data)) {
+            console.error("Invalid advertisement response:", json);
+            return;
+        }
+
+        const ads = json.data;
+        if (!ads.length) return;
+
+        const positions = {
+            top: ['adTopBanner'],
+            sidebar: ['adSidebar'],
+            middle: ['adMiddleContent1', 'adMiddleContent2', 'adMiddleContent3'],
+            footer: ['adFooter']
+        };
+
+        Object.values(positions).flat().forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.innerHTML = '';
+                el.style.display = 'none';
+                if (el.carouselInterval) clearInterval(el.carouselInterval);
+            }
+        });
+
+        Object.entries(positions).forEach(([posKey, containerIds]) => {
+            containerIds.forEach(containerId => {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+
+                const filteredAds = ads.filter(ad => ad.Position && ad.Position.toLowerCase() === posKey);
+                if (!filteredAds.length) return;
+
+                container.style.display = 'block';
+                container.style.position = 'relative';
+                container.style.overflow = 'hidden';
+                container.style.padding = '10px 0';
+
+                // Determine wrapper height: largest ad in this set
+                const maxHeight = filteredAds.reduce((max, ad) => {
+                    switch ((ad.Size || '').toLowerCase()) {
+                        case 'small': return Math.max(max, 150);
+                        case 'medium': return Math.max(max, 250);
+                        case 'large': return Math.max(max, 350);
+                        default: return Math.max(max, 250);
+                    }
+                }, 0);
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'ad-carousel-wrapper';
+                wrapper.style.position = 'relative';
+                wrapper.style.width = '100%';
+                wrapper.style.height = `${maxHeight}px`;
+
+                filteredAds.forEach((ad, index) => {
+                    const sizeClass = ad.Size ? `ad-${ad.Size.toLowerCase()}` : 'ad-medium';
+
+                    const adDiv = document.createElement('div');
+                    adDiv.className = `ad-card ${sizeClass}`;
+                    adDiv.style.position = 'absolute';
+                    adDiv.style.top = '0';
+                    adDiv.style.left = '0';
+                    adDiv.style.width = '100%';
+                    adDiv.style.height = '100%';  // now fills the wrapper fully
+                    adDiv.style.opacity = index === 0 ? '1' : '0';
+                    adDiv.style.transition = 'opacity 1s ease-in-out';
+
+                    const adLink = document.createElement('a');
+                    adLink.href = ad.LinkURL || '#';
+                    adLink.target = '_blank';
+                    adLink.rel = 'noopener noreferrer';
+
+                    const adImg = document.createElement('img');
+                    adImg.src = ad.ImageURL;
+                    adImg.alt = ad.Title;
+                    adImg.onerror = () => { adImg.src = '/images/default-ad.jpg'; };
+
+                    adLink.appendChild(adImg);
+                    adDiv.appendChild(adLink);
+                    wrapper.appendChild(adDiv);
+                });
+
+                container.appendChild(wrapper);
+
+                // Auto-scroll carousel
+                let currentIndex = 0;
+                const total = filteredAds.length;
+                container.carouselInterval = setInterval(() => {
+                    const adCards = wrapper.querySelectorAll('.ad-card');
+                    adCards.forEach((card, idx) => {
+                        card.style.opacity = idx === currentIndex ? '1' : '0';
+                    });
+                    currentIndex = (currentIndex + 1) % total;
+                }, 4000);
+            });
+        });
+
+    } catch (err) {
+        console.error('❌ Error loading advertisements:', err);
     }
 }
 
-
-// Initialize
-document.addEventListener('DOMContentLoaded', loadTrendsTicker);
+window.addEventListener('load', loadAdvertisements);
 
 async function loadTopStories() {
   try {
     const res = await fetch('/api/news/admin', { cache: 'no-store' });
     const news = await res.json();
-
-    // ✅ Only Active, Approved, and Top Stories
-    const activeNews = (Array.isArray(news) ? news : []).filter(
-      n => n.IsActive && n.IsApproved && (n.IsTopStory == 1)
-    );
-
+    const activeNews = (Array.isArray(news) ? news : [])
+      .filter(n => n.IsActive && n.IsApproved && n.IsTopStory == 1);
     if (!activeNews.length) return;
 
-    // --- 📰 LEFT CAROUSEL: show all top stories ---
     const carousel = document.getElementById('topStoriesCarousel');
     carousel.innerHTML = '';
 
     activeNews.forEach(n => {
-      const img = n.ImageURL || '/images/default-news.jpg';
+      let images = Array.isArray(n.ImagesURLs) ? n.ImagesURLs : [];
+      if (n.ImageURL && !images.includes(n.ImageURL)) images.unshift(n.ImageURL);
+      images = images.filter(Boolean).slice(0, 5); // 1-5 images
+
+      // Dynamically assign grid layout based on image count
+      let gridTemplate;
+      switch (images.length) {
+        case 1: gridTemplate = 'grid-template-columns:1fr; grid-template-rows:1fr;'; break;
+        case 2: gridTemplate = 'grid-template-columns:1fr 1fr; grid-template-rows:1fr;'; break;
+        case 3: gridTemplate = 'grid-template-columns:2fr 1fr; grid-template-rows:1fr 1fr;'; break;
+        case 4: gridTemplate = 'grid-template-columns:2fr 1fr; grid-template-rows:1fr 1fr;'; break;
+        default: gridTemplate = 'grid-template-columns:2fr 1fr 1fr; grid-template-rows:2fr 1fr;'; break;
+      }
+
+      let collageHtml = `<div class="collage-grid" style="${gridTemplate}">`;
+      images.forEach((img, index) => {
+        collageHtml += `<div class="collage-item collage-item-${index + 1}">
+                    <img src="${img}" alt="${n.Title}" onerror="this.src='/images/default-news.jpg'">
+                </div>`;
+      });
+      collageHtml += `</div>`;
+
+      const category = n.CategoryName || 'General';
+      const published = formatDateTime(n.PublishedOn);
+
       carousel.innerHTML += `
-        <div class="item">
-          <img src="${img}" alt="${n.Title}" onerror="this.src='/images/default-news.jpg'">
-          <div class="carousel-overlay">
-            <div class="carousel-date">📅 ${formatDateTime(n.PublishedOn)}</div>
-            <h3>${n.Title}</h3>
-            <p>${n.Summary || ''}</p>
-            <button class="btn read-more-btn" onclick="openArticle(${n.ArticleID})">Read More</button>
-          </div>
-        </div>
-      `;
+            <div class="item">
+                ${collageHtml}
+                <div class="carousel-category">${category}</div>
+                <div class="carousel-overlay">
+                    <div class="carousel-date">📅 ${published}</div>
+                    <h3 class="carousel-title">${n.Title}</h3>
+                    <p>${n.Summary || ''}</p>
+                    <button class="btn read-more-btn" onclick="openArticle(${n.ArticleID})">Read More</button>
+                </div>
+            </div>
+            `;
     });
 
-    // Re-init Owl Carousel safely
+    // Destroy previous carousel if exists
     try { $('#topStoriesCarousel').owlCarousel('destroy'); } catch (e) { }
+    // Initialize Owl Carousel
     $('#topStoriesCarousel').owlCarousel({
       items: 1,
       loop: true,
       autoplay: true,
       autoplayTimeout: 5000,
-      smartSpeed: 1200,
+      smartSpeed: 800,
       dots: true,
-      nav: false,
-      animateIn: 'fadeIn',
-      animateOut: 'fadeOut',
-      onInitialized: adjustSideStoriesHeight,
-      onResized: adjustSideStoriesHeight
+      nav: false
     });
 
-    // --- 🗞️ RIGHT SIDE STORIES: Always two cards ---
-    const sideStories = activeNews.slice(0, 2); // take first two top stories
-    const containerIds = ['sideTopStory1', 'sideTopStory2'];
+    adjustCarouselHeight();
+    loadLatestNews(activeNews);
 
-    containerIds.forEach((id, idx) => {
-      const s = sideStories[idx];
-      const container = document.getElementById(id);
-
-      if (!s) {
-        // 🧩 Dummy placeholder if no story
-        container.innerHTML = `
-          <div class="side-story-dummy d-flex flex-column justify-content-center text-center p-3">
-            <i class="fa-regular fa-newspaper text-muted fs-2 mb-2"></i>
-            <h5 class="text-muted mb-1">No Story Available</h5>
-            <p class="small text-secondary">Stay tuned for upcoming highlights.</p>
-            <button class="btn btn-secondary btn-sm mt-auto" disabled>Read More</button>
-          </div>
-        `;
-        return;
-      }
-
-      const img = s.ImageURL || '/images/default-news.jpg';
-      const formattedDate = formatDateTime(s.PublishedOn);
-
-      container.innerHTML = `
-        <img src="${img}" alt="${s.Title}" onerror="this.src='/images/default-news.jpg'">
-        <div class="side-story-body">
-          <div class="side-story-title">${s.Title}</div>
-          <div class="side-story-content text-truncate-3">${s.Content || s.Content || ''}</div>
-          <div class="side-story-footer">
-            <span>📅 ${formattedDate}</span>
-            <button class="btn side-read-btn" onclick="openArticle(${s.ArticleID})">Read More</button>
-          </div>
-        </div>
-      `;
-    });
-
-  } catch (err) {
-    console.error('loadTopStories error:', err);
-  }
+  } catch (err) { console.error('Error loading top stories:', err); }
 }
-// 🧭 Adjust height dynamically
-function adjustSideStoriesHeight() {
+
+function adjustCarouselHeight() {
   const carousel = document.getElementById('topStoriesCarousel');
-  const sideContainer = document.querySelector('.side-stories-container');
-  if (!carousel || !sideContainer) return;
-
-  const carouselHeight = carousel.offsetHeight || 400;
-  sideContainer.style.height = carouselHeight + 'px';
-
-  const stories = sideContainer.querySelectorAll('.side-story');
-  stories.forEach(s => s.style.height = (carouselHeight / stories.length - 6) + 'px');
+  const latest = document.querySelector('.latest-news-container');
+  if (!carousel || !latest) return;
+  const latestHeight = latest.offsetHeight;
+  carousel.querySelectorAll('.item').forEach(item => { item.style.height = latestHeight + 'px'; });
+  carousel.style.height = latestHeight + 'px';
 }
-window.addEventListener('load', loadTopStories);
-window.addEventListener('resize', adjustSideStoriesHeight);
+
+function loadLatestNews(news) {
+  const latestContainer = document.getElementById('latestNewsCards');
+  latestContainer.innerHTML = '<div class="scroll-wrapper"></div>';
+  const wrapper = latestContainer.querySelector('.scroll-wrapper');
+
+  const topStories = news.slice(0, 10);
+  topStories.forEach(n => {
+    const img = n.ImageURL || '/images/default-news.jpg';
+    wrapper.innerHTML += `
+      <div class="side-news-card">
+        <img src="${img}" alt="${n.Title}" onerror="this.src='/images/default-news.jpg'">
+       <div class="side-news-card-body">
+  <h5>${n.Title}</h5>
+  <p>${n.Summary || ''}</p>
+  <div class="card-footer">
+    <small>📅 ${formatDateTime(n.PublishedOn)}</small>
+    <button class="read-more-btn" onclick="openArticle(${n.ArticleID})">Read More <i class="fa-solid fa-arrow-right"></i></button>
+  </div>
+</div>
+
+      </div>`;
+  });
+
+  // Duplicate content for smooth scrolling if more than 3 cards
+  if (topStories.length > 3) wrapper.innerHTML += wrapper.innerHTML;
+}
+window.addEventListener('load', () => { loadTopStories(); setTimeout(adjustCarouselHeight, 500); }); //setTimeout(adjustCarouselHeight,500);
+window.addEventListener('resize', adjustCarouselHeight);
+
 
 async function loadHighlightsFeatured() {
   try {
@@ -746,7 +764,6 @@ async function loadFooterCategories() {
     container.innerHTML = '<li>Error loading</li>';
   }
 }
-
 document.getElementById('year').textContent = new Date().getFullYear();
 loadFooterCategories();
 
@@ -933,9 +950,7 @@ async function loadSpotlightCollage() {
     console.error('loadSpotlightCollage error:', err);
   }
 }
-
 loadSpotlightCollage();
-
 // ---------- INIT ----------
 document.getElementById('siteLogo').addEventListener('error', () => { document.getElementById('siteLogo').src = SITE.logoPath; });
 

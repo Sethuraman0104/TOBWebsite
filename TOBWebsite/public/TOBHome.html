@@ -8,6 +8,9 @@
   <title>TOB News Portal</title>
   <link rel="icon" type="image/png" href="images/TOBLogoHeader.png">
 
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Montserrat:wght@400;700&display=swap"
+    rel="stylesheet">
 
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -24,121 +27,140 @@
 </head>
 
 <body>
-  <!-- 🌤️ Topbar -->
-  <div class="topbar py-2 shadow-sm">
+  <!-- ===================== Breaking News Ticker ===================== -->
+  <div class="breaking-news-banner py-1 shadow-sm">
+    <div class="container d-flex align-items-center">
+      <strong class="text-light me-3">Breaking News:</strong>
+      <div class="breaking-ticker">
+        <div id="breakingNewsInner">
+          Loading latest news...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🌤️ TOB Top Header -->
+  <div class="TOBTopheader py-2 shadow-sm">
     <div class="container d-flex align-items-center justify-content-between flex-wrap gap-3">
 
-      <!-- 🔹 Logo & Branding -->
-      <div class="d-flex align-items-center gap-2 brand-box">
-        <a href="TOBHome.html#home"><img src="images/TOBTransparent.png" class="logo" alt="TOB Logo" id="siteLogo"></a>
-        <div>
+      <!-- 🔹 Logo -->
+      <div class="brand-box d-flex align-items-center gap-3">
+        <div class="logo-card">
+          <img src="images/TOBDownTransparent.png" class="logo" alt="TOB Logo" id="siteLogo">
+        </div>
+        <div class="brand-text">
           <div id="brandTitle">TOB News</div>
-          <div class="muted-small">Reliable local & global news</div>
+          <div class="muted-small text-light fs-6">Reliable local & global news</div>
         </div>
       </div>
 
-      <!-- 🔹 Live Info Section -->
-      <div class="d-flex align-items-center gap-4 info-area">
-
-        <!-- 🌍 Location + Phone Numbers -->
-        <div class="location-box d-flex align-items-center gap-3 px-3 py-1 rounded-4 bg-white bg-opacity-75 shadow-sm">
-          <!-- Country / Location -->
-          <div class="d-flex align-items-center gap-2">
-            <i class="fa-solid fa-location-dot text-danger fs-5"></i>
-            <div id="userLocation" class="fw-semibold small text-muted">Detecting...</div>
+      <!-- 🔹 Live Info Card -->
+      <div class="live-info-card d-flex align-items-center gap-4 flex-wrap">
+        <!-- Location -->
+        <div class="info-item d-flex align-items-center gap-2">
+          <i class="fa-solid fa-location-dot text-danger fs-5"></i>
+          <span id="userLocation" class="fw-semibold small text-light">Detecting...</span>
+        </div>
+        <!-- Weather -->
+        <div class="info-item d-flex align-items-center gap-2">
+          <div id="weatherIcon"><i class="fa-solid fa-sun text-warning fs-5"></i></div>
+          <div class="small text-light">
+            <div id="weatherText">Loading...</div>
+            <div id="weatherTemp" class="fw-bold">--°C</div>
           </div>
         </div>
-
-        <!-- 🌤️ Weather Info -->
-        <div class="climate-box d-flex align-items-center gap-2 px-3 py-1 rounded-4 bg-white bg-opacity-75 shadow-sm">
-          <i class="fa-solid fa-cloud-sun text-warning fs-5"></i>
-          <div class="text-end small">
-            <div id="weatherText" class="text-secondary">Loading...</div>
-            <div id="weatherTemp" class="fw-bold text-dark">--°C</div>
-          </div>
+        <!-- Date/Time -->
+        <div class="info-item d-flex align-items-center gap-2">
+          <i class="fa-regular fa-calendar-days text-light fs-5"></i>
+          <span id="currentDateTime" class="fw-bold text-light"></span>
+          <i class="fa-regular fa-clock text-light fs-5 ms-3"></i>
+          <span id="currentTimeSmall" class="fw-semibold text-light"></span>
         </div>
-
-        <!-- 🕒 Date & Time -->
-        <div class="datetime text-end px-3 py-1 rounded-4 bg-white bg-opacity-75 shadow-sm">
-          <div><i class="fa-regular fa-calendar-days me-1 text-danger"></i> <span id="currentDateTime"
-              class="fw-bold"></span></div>
-          <div><i class="fa-regular fa-clock me-1 text-danger"></i> <span id="currentTimeSmall"
-              class="fw-semibold"></span></div>
-        </div>
-
-        <!-- 🌐 Language Switch -->
-        <div class="lang-switch">
+        <!-- Language -->
+        <div class="info-item">
           <button id="langToggle" class="btn btn-sm lang-btn px-3 py-1">
             <i class="fa-solid fa-globe"></i> <span id="langLabel">العربية</span>
           </button>
         </div>
       </div>
     </div>
+    <div id="adTopBanner" class="container my-6"></div>
   </div>
 
-  <!-- 🌐 Second Top Bar (Navbar + Centered Trends) -->
-  <nav class="navbar site-navbar shadow-sm py-2">
-    <!-- 🔹 Left: Brand -->
-    <div class="navbar-left d-flex align-items-center gap-2 flex-shrink-0">
-      <i class="fa-solid fa-newspaper text-danger fs-4"></i>
-      <strong class="fs-5">TOB News</strong>
-    </div>
+  <!-- 🌐 TOB Navbar -->
+  <nav class="TOBNavbar shadow-sm py-2">
+    <div class="container d-flex align-items-center justify-content-between">
 
-    <!-- 🔹 Center: Scrolling Trends -->
-    <div class="navbar-center">
-      <div class="trends-strip-container rounded-pill px-2">
-        <div class="trends-ticker">
-          <div id="trendsTickerInner">
-            Loading trends...
+      <!-- 🔹 Left: Brand -->
+      <div class="navbar-left d-flex align-items-center gap-2">
+        <i class="fa-solid fa-newspaper text-danger fs-4"></i>
+        <strong class="fs-8">TOB News</strong>
+      </div>
+
+      <!-- 🔹 Center: Scrolling Trends -->
+      <div class="navbar-center flex-fill px-2">
+        <div class="trends-strip-container rounded-pill px-2 py-1 bg-light shadow-sm">
+          <div class="trends-ticker">
+            <div id="trendsTickerInner">Loading trends...</div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- 🔹 Right: Menu Links -->
-    <div class="navbar-right d-flex align-items-center gap-2 flex-shrink-0">
-      <button class="hamburger-btn d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNav">
-        <i class="fa-solid fa-bars fs-4"></i>
-      </button>
-      <div class="collapse d-lg-flex flex-column flex-lg-row gap-3" id="mobileNav">
-        <a class="nav-link" href="#"><i class="fa-solid fa-house"></i> Home</a>
-        <a class="nav-link" href="#newsSection"><i class="fa-solid fa-thumbtack"></i> Top Stories</a>
-        <a class="nav-link" href="#trendsSection"><i class="fa-solid fa-chart-line"></i> Trending</a>
-        <a class="nav-link" href="#contact"><i class="fa-solid fa-envelope"></i> Contact</a>
+      <!-- 🔹 Right: Menu Links -->
+      <div class="navbar-right d-flex align-items-center gap-2">
+        <button class="hamburger-btn d-lg-none btn btn-outline-secondary" type="button" data-bs-toggle="collapse"
+          data-bs-target="#mobileNav">
+          <i class="fa-solid fa-bars fs-4"></i>
+        </button>
+        <div class="collapse d-lg-flex flex-column flex-lg-row gap-3" id="mobileNav">
+          <a class="nav-link" href="#"><i class="fa-solid fa-house"></i> Home</a>
+          <a class="nav-link" href="#newsSection"><i class="fa-solid fa-thumbtack"></i> Top Stories</a>
+          <a class="nav-link" href="#trendsSection"><i class="fa-solid fa-chart-line"></i> Trending</a>
+          <a class="nav-link" href="#contact"><i class="fa-solid fa-envelope"></i> Contact</a>
+        </div>
       </div>
+
     </div>
   </nav>
 
-  <!-- 📰 News Section Wrapper -->
-  <div id="newsSectionWrapper" class="container my-4">
-    <!-- News Section Header - Modern Animated Design -->
-    <div class="news-section-header-modern mb-4" data-aos="fade-up" data-aos-duration="1000">
-      <i class="fa-solid fa-thumbtack text-danger fs-3 me-2"></i>
-      <div>
-        <h2 class="news-section-title mb-1">Top Stories</h2>
-        <div class="news-section-underline"></div>
-        <p class="news-section-subtitle mb-0">
+  <div id="adMiddleContent1" class="container my-5"></div>
+  <!-- TOB News Section Header -->
+  <div class="container my-5" style="margin-bottom: 0px;">
+    <div class="TOB-news-section-header mb-4" style="margin-bottom: 0px;" data-aos="fade-up" data-aos-duration="1000">
+      <div class="TOB-header-icon">
+        <i class="fa-solid fa-thumbtack"></i>
+      </div>
+      <div class="TOB-header-text">
+        <h2 class="TOB-news-section-title">Top Stories</h2>
+        <div class="TOB-news-section-underline"></div>
+        <p class="TOB-news-section-subtitle">
           Stay updated with the latest news from around the world and your city
         </p>
       </div>
     </div>
+  </div>
 
-    <!-- News Section Content -->
-    <section id="newsSection">
+  <!-- News Section -->
+  <section id="newsSection" class="TOB-news-section py-4">
+    <div class="container">
       <div class="row g-3">
-        <!-- Left: Main Carousel -->
+        <!-- Left: Top Stories Carousel -->
         <div class="col-lg-8">
-          <div id="topStoriesCarousel" class="owl-carousel owl-theme h-100"></div>
+          <div id="topStoriesCarousel" class="owl-carousel owl-theme"></div>
         </div>
-
-        <!-- Right: Two Side Stories -->
-        <div class="col-lg-4 d-flex flex-column gap-3 side-stories-container">
-          <div id="sideTopStory1" class="side-story"></div>
-          <div id="sideTopStory2" class="side-story"></div>
+        <!-- Right: Latest News -->
+        <div class="col-lg-4">
+          <div class="latest-news-container shadow-sm rounded-3 p-3 bg-white">
+            <h4 class="latest-news-header mb-3">
+              <i class="fa-solid fa-newspaper me-2"></i> Latest News
+              <i class="fa-solid fa-bolt ms-2 text-warning"></i>
+            </h4>
+            <div class="latest-news-scroll" id="latestNewsCards"></div>
+          </div>
         </div>
       </div>
-    </section>
-  </div>
+    </div>
+  </section>
 
   <!-- 📰 TOB Individual Section Header -->
   <div id="highlightsWrapper" class="container my-5">
@@ -157,7 +179,8 @@
       <!-- Your dynamic cards go here -->
     </section>
   </div>
-
+  
+  <div id="adMiddleContent2" class="container my-5"></div>
   <!-- 🌟 Trending Articles Section -->
   <div id="trendsWrapper" class="container my-5">
     <div class="TOBIndividualSectionHeader" data-aos="fade-up">
@@ -204,8 +227,7 @@
 
     <div id="spotlightCollage" class="spotlight-collage-grid"></div>
   </div>
-
-
+  <div id="adMiddleContent3" class="container my-5"></div>
   <div id="newsWrapper" class="container my-5">
     <div class="news-section-header-modern mb-4" data-aos="fade-up" data-aos-duration="1000">
       <i class="fa-solid fa-bullhorn text-danger fs-3 me-2"></i>
@@ -307,6 +329,7 @@
         <small>© <span id="year"></span> TOB News Portal. All rights reserved.</small>
       </div>
     </div>
+    <div id="adFooter" class="container my-5"></div>
   </footer>
 
   <!-- Scripts -->

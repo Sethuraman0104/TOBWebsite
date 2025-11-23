@@ -1251,6 +1251,48 @@ router.get('/newsletter/list', async (req, res) => {
   }
 });
 
+// GET advertisements
+router.get('/advertisements/list', async (req, res) => {
+  try {
+    const isActive = req.query.active === "1" ? 1 : 0;
+
+    const pool = await sql.connect(sqlConfig);
+
+    const result = await pool.request()
+      .input("IsActive", sql.Bit, isActive)
+      .query(`
+        SELECT
+          AdvertisementID,
+          Title,
+          ImageURL,
+          LinkURL,
+          Position,
+          Size,
+          IsActive,
+          StartDate,
+          EndDate,
+          CreatedOn
+        FROM Advertisements
+        WHERE IsActive = @IsActive
+          AND (StartDate IS NULL OR StartDate <= GETDATE())
+          AND (EndDate IS NULL OR EndDate >= GETDATE())
+        ORDER BY CreatedOn DESC
+      `);
+
+    return res.json({
+      success: true,
+      data: result.recordset
+    });
+
+  } catch (err) {
+    console.error("❌ /advertisements ERROR:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: err.message
+    });
+  }
+});
 
 // -------------------------
 // Login
