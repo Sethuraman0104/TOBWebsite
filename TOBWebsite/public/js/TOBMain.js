@@ -328,109 +328,109 @@ setInterval(updateBreakingNews, 5000);
 updateBreakingNews();
 
 async function loadAdvertisements() {
-    try {
-        const res = await fetch('/api/advertisements/list?active=1', { cache: 'no-store' });
-        const json = await res.json();
+  try {
+    const res = await fetch('/api/advertisements/list?active=1', { cache: 'no-store' });
+    const json = await res.json();
 
-        if (!json.success || !Array.isArray(json.data)) {
-            console.error("Invalid advertisement response:", json);
-            return;
-        }
-
-        const ads = json.data;
-        if (!ads.length) return;
-
-        const positions = {
-            top: ['adTopBanner'],
-            sidebar: ['adSidebar'],
-            middle: ['adMiddleContent1', 'adMiddleContent2', 'adMiddleContent3'],
-            footer: ['adFooter']
-        };
-
-        Object.values(positions).flat().forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.innerHTML = '';
-                el.style.display = 'none';
-                if (el.carouselInterval) clearInterval(el.carouselInterval);
-            }
-        });
-
-        Object.entries(positions).forEach(([posKey, containerIds]) => {
-            containerIds.forEach(containerId => {
-                const container = document.getElementById(containerId);
-                if (!container) return;
-
-                const filteredAds = ads.filter(ad => ad.Position && ad.Position.toLowerCase() === posKey);
-                if (!filteredAds.length) return;
-
-                container.style.display = 'block';
-                container.style.position = 'relative';
-                container.style.overflow = 'hidden';
-                container.style.padding = '10px 0';
-
-                // Determine wrapper height: largest ad in this set
-                const maxHeight = filteredAds.reduce((max, ad) => {
-                    switch ((ad.Size || '').toLowerCase()) {
-                        case 'small': return Math.max(max, 150);
-                        case 'medium': return Math.max(max, 250);
-                        case 'large': return Math.max(max, 350);
-                        default: return Math.max(max, 250);
-                    }
-                }, 0);
-
-                const wrapper = document.createElement('div');
-                wrapper.className = 'ad-carousel-wrapper';
-                wrapper.style.position = 'relative';
-                wrapper.style.width = '100%';
-                wrapper.style.height = `${maxHeight}px`;
-
-                filteredAds.forEach((ad, index) => {
-                    const sizeClass = ad.Size ? `ad-${ad.Size.toLowerCase()}` : 'ad-medium';
-
-                    const adDiv = document.createElement('div');
-                    adDiv.className = `ad-card ${sizeClass}`;
-                    adDiv.style.position = 'absolute';
-                    adDiv.style.top = '0';
-                    adDiv.style.left = '0';
-                    adDiv.style.width = '100%';
-                    adDiv.style.height = '100%';  // now fills the wrapper fully
-                    adDiv.style.opacity = index === 0 ? '1' : '0';
-                    adDiv.style.transition = 'opacity 1s ease-in-out';
-
-                    const adLink = document.createElement('a');
-                    adLink.href = ad.LinkURL || '#';
-                    adLink.target = '_blank';
-                    adLink.rel = 'noopener noreferrer';
-
-                    const adImg = document.createElement('img');
-                    adImg.src = ad.ImageURL;
-                    adImg.alt = ad.Title;
-                    adImg.onerror = () => { adImg.src = '/images/default-ad.jpg'; };
-
-                    adLink.appendChild(adImg);
-                    adDiv.appendChild(adLink);
-                    wrapper.appendChild(adDiv);
-                });
-
-                container.appendChild(wrapper);
-
-                // Auto-scroll carousel
-                let currentIndex = 0;
-                const total = filteredAds.length;
-                container.carouselInterval = setInterval(() => {
-                    const adCards = wrapper.querySelectorAll('.ad-card');
-                    adCards.forEach((card, idx) => {
-                        card.style.opacity = idx === currentIndex ? '1' : '0';
-                    });
-                    currentIndex = (currentIndex + 1) % total;
-                }, 4000);
-            });
-        });
-
-    } catch (err) {
-        console.error('❌ Error loading advertisements:', err);
+    if (!json.success || !Array.isArray(json.data)) {
+      console.error("Invalid advertisement response:", json);
+      return;
     }
+
+    const ads = json.data;
+    if (!ads.length) return;
+
+    const positions = {
+      top: ['adTopBanner'],
+      sidebar: ['adSidebar'],
+      middle: ['adMiddleContent1', 'adMiddleContent2', 'adMiddleContent3'],
+      footer: ['adFooter']
+    };
+
+    Object.values(positions).flat().forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.innerHTML = '';
+        el.style.display = 'none';
+        if (el.carouselInterval) clearInterval(el.carouselInterval);
+      }
+    });
+
+    Object.entries(positions).forEach(([posKey, containerIds]) => {
+      containerIds.forEach(containerId => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        const filteredAds = ads.filter(ad => ad.Position && ad.Position.toLowerCase() === posKey);
+        if (!filteredAds.length) return;
+
+        container.style.display = 'block';
+        container.style.position = 'relative';
+        container.style.overflow = 'hidden';
+        container.style.padding = '10px 0';
+
+        // Determine wrapper height: largest ad in this set
+        const maxHeight = filteredAds.reduce((max, ad) => {
+          switch ((ad.Size || '').toLowerCase()) {
+            case 'small': return Math.max(max, 150);
+            case 'medium': return Math.max(max, 250);
+            case 'large': return Math.max(max, 350);
+            default: return Math.max(max, 250);
+          }
+        }, 0);
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'ad-carousel-wrapper';
+        wrapper.style.position = 'relative';
+        wrapper.style.width = '100%';
+        wrapper.style.height = `${maxHeight}px`;
+
+        filteredAds.forEach((ad, index) => {
+          const sizeClass = ad.Size ? `ad-${ad.Size.toLowerCase()}` : 'ad-medium';
+
+          const adDiv = document.createElement('div');
+          adDiv.className = `ad-card ${sizeClass}`;
+          adDiv.style.position = 'absolute';
+          adDiv.style.top = '0';
+          adDiv.style.left = '0';
+          adDiv.style.width = '100%';
+          adDiv.style.height = '100%';  // now fills the wrapper fully
+          adDiv.style.opacity = index === 0 ? '1' : '0';
+          adDiv.style.transition = 'opacity 1s ease-in-out';
+
+          const adLink = document.createElement('a');
+          adLink.href = ad.LinkURL || '#';
+          adLink.target = '_blank';
+          adLink.rel = 'noopener noreferrer';
+
+          const adImg = document.createElement('img');
+          adImg.src = ad.ImageURL;
+          adImg.alt = ad.Title;
+          adImg.onerror = () => { adImg.src = '/images/default-ad.jpg'; };
+
+          adLink.appendChild(adImg);
+          adDiv.appendChild(adLink);
+          wrapper.appendChild(adDiv);
+        });
+
+        container.appendChild(wrapper);
+
+        // Auto-scroll carousel
+        let currentIndex = 0;
+        const total = filteredAds.length;
+        container.carouselInterval = setInterval(() => {
+          const adCards = wrapper.querySelectorAll('.ad-card');
+          adCards.forEach((card, idx) => {
+            card.style.opacity = idx === currentIndex ? '1' : '0';
+          });
+          currentIndex = (currentIndex + 1) % total;
+        }, 4000);
+      });
+    });
+
+  } catch (err) {
+    console.error('❌ Error loading advertisements:', err);
+  }
 }
 
 window.addEventListener('load', loadAdvertisements);
@@ -480,7 +480,7 @@ async function loadTopStories() {
                     <div class="carousel-date">📅 ${published}</div>
                     <h3 class="carousel-title">${n.Title}</h3>
                     <p>${n.Summary || ''}</p>
-                    <button class="btn read-more-btn" onclick="openArticle(${n.ArticleID})">Read More</button>
+                    <button class="btn read-more-btn" onclick="openArticle(${n.ArticleID})"><i class="fa-solid fa-book-open"></i> Read More</button>
                 </div>
             </div>
             `;
@@ -581,7 +581,7 @@ async function loadHighlightsFeatured() {
         <div class="featured-content">${n.Content || ''}</div>
         <div class="featured-footer">
           <span>📅 ${date}</span>
-          <button class="featured-read-btn" onclick="openArticle(${n.ArticleID})">Read More</button>
+          <button class="featured-read-btn" onclick="openArticle(${n.ArticleID})"><i class="fa-solid fa-book-open"></i> Read More</button>
         </div>
       </div>
     </div>
@@ -674,6 +674,88 @@ function showToast(message, type = 'info') {
   }, 4000);
 }
 
+// async function loadNewsArticles() {
+//   const container = document.getElementById('newsCategoriesSection');
+//   container.innerHTML = '<p>Loading news...</p>';
+
+//   try {
+//     const res = await fetch('/api/news/categories/admin', { cache: 'no-store' });
+//     const categories = await res.json();
+
+//     if (!categories.length) {
+//       container.innerHTML = '<p>No news available</p>';
+//       return;
+//     }
+
+//     container.innerHTML = '';
+
+//     categories.forEach(cat => {
+//       if (!cat.Articles || cat.Articles.length === 0) return;
+
+//       // Category Section Wrapper
+//       const safeId = encodeURIComponent(cat.CategoryName);
+//       const catDiv = document.createElement('div');
+//       catDiv.className = 'mb-5';
+//       catDiv.innerHTML = `
+//   <h3 class="category-header mb-3" id="${safeId}">${cat.CategoryName}</h3>
+//   <div class="news-grid"></div>
+// `;
+
+//       const gridDiv = catDiv.querySelector('.news-grid');
+
+//       // Article Cards
+//       cat.Articles.forEach(article => {
+//         const cardDiv = document.createElement('div');
+//         cardDiv.className = 'news-item';
+//         cardDiv.innerHTML = `
+//           <div class="card news-card h-100 shadow-sm border-0" data-aos="fade-up">
+//             <div class="card-img-container">
+//               <img src="${article.ImageURL}" class="card-img-top" alt="${article.Title}" onerror="this.src='/images/default-news.jpg';">
+//             </div>
+//             <div class="card-body d-flex flex-column">
+//               <h5 class="card-title fw-bold mb-2">${article.Title}</h5>
+//               <p class="card-text text-truncate mb-3">${article.Content}</p>
+//               <div class="mt-auto d-flex justify-content-between align-items-center">
+//                 <small class="text-muted">${formatDateTime(article.PublishedOn)}</small>
+//                 <div>
+//                   <i class="fa-solid fa-heart text-danger me-1"></i> ${article.LikesCount}
+//                   <i class="fa-solid fa-comment text-secondary ms-3 me-1"></i> ${article.CommentsCount}
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
+//         `;
+//         gridDiv.appendChild(cardDiv);
+//       });
+
+//       container.appendChild(catDiv);
+//     });
+
+//   } catch (err) {
+//     container.innerHTML = '<p>Error loading news</p>';
+//     console.error(err);
+//   }
+// }
+// loadNewsArticles();
+
+// ------------------
+// Category → Icon Map
+// ------------------
+const CATEGORY_ICONS = {
+  "Politics": "fa-landmark",
+  "Sports": "fa-football-ball",
+  "Technology": "fa-microchip",
+  "Business": "fa-chart-line",
+  "World": "fa-globe",
+  "Health": "fa-heartbeat",
+  "Entertainment": "fa-film",
+  "Local": "fa-location-dot",
+  "Weather": "fa-cloud-sun",
+  "Science": "fa-flask",
+  "Default": "fa-newspaper"
+};
+
+
 async function loadNewsArticles() {
   const container = document.getElementById('newsCategoriesSection');
   container.innerHTML = '<p>Loading news...</p>';
@@ -692,43 +774,69 @@ async function loadNewsArticles() {
     categories.forEach(cat => {
       if (!cat.Articles || cat.Articles.length === 0) return;
 
-      // Category Section Wrapper
       const safeId = encodeURIComponent(cat.CategoryName);
-      const catDiv = document.createElement('div');
-      catDiv.className = 'mb-5';
-      catDiv.innerHTML = `
-  <h3 class="category-header mb-3" id="${safeId}">${cat.CategoryName}</h3>
-  <div class="news-grid"></div>
-`;
+      const icon = CATEGORY_ICONS[cat.CategoryName] || CATEGORY_ICONS["Default"];
 
-      const gridDiv = catDiv.querySelector('.news-grid');
+      // Breaking if any article is flagged as Breaking
+      const hasBreaking = cat.Articles.some(a => a.IsBreaking === true);
 
-      // Article Cards
-      cat.Articles.forEach(article => {
-        const cardDiv = document.createElement('div');
-        cardDiv.className = 'news-item';
-        cardDiv.innerHTML = `
-          <div class="card news-card h-100 shadow-sm border-0" data-aos="fade-up">
-            <div class="card-img-container">
-              <img src="${article.ImageURL}" class="card-img-top" alt="${article.Title}" onerror="this.src='/images/default-news.jpg';">
-            </div>
-            <div class="card-body d-flex flex-column">
-              <h5 class="card-title fw-bold mb-2">${article.Title}</h5>
-              <p class="card-text text-truncate mb-3">${article.Content}</p>
-              <div class="mt-auto d-flex justify-content-between align-items-center">
-                <small class="text-muted">${formatDateTime(article.PublishedOn)}</small>
-                <div>
-                  <i class="fa-solid fa-heart text-danger me-1"></i> ${article.LikesCount}
-                  <i class="fa-solid fa-comment text-secondary ms-3 me-1"></i> ${article.CommentsCount}
+      // left big + right small
+      const [bigStory, ...smallStories] = cat.Articles;
+
+      const html = `
+        <div class="category-block mb-5">
+
+          <h3 class="category-header" id="${safeId}">
+            <i class="fa-solid ${icon}"></i>
+            ${cat.CategoryName}
+
+            ${hasBreaking ? `<span class="breaking-ribbon">BREAKING</span>` : ""}
+          </h3>
+
+          <div class="category-grid">
+
+            <!-- LEFT BIG STORY -->
+            <div class="category-big-box" onclick="openArticle(${bigStory.ArticleID})">
+              <img src="${bigStory.ImageURL || "/images/default-news.jpg"}">
+
+              <div class="category-big-overlay">
+                <div class="d-flex align-items-center mb-1">
+                  ${bigStory.IsLive ? `<span class="live-badge">LIVE</span>` : ""}
+                  <span class="category-big-title">${bigStory.Title}</span>
                 </div>
+                <div class="category-big-meta">${formatDateTime(bigStory.PublishedOn)}</div>
               </div>
             </div>
-          </div>
-        `;
-        gridDiv.appendChild(cardDiv);
-      });
 
-      container.appendChild(catDiv);
+            <!-- RIGHT SMALL STORIES -->
+            <div class="category-list-box">
+              ${smallStories.slice(0, 5).map(a => `
+                <div class="category-list-item" onclick="openArticle(${a.ArticleID})">
+                  <img class="category-list-thumb" src="${a.ImageURL || '/images/default-news.jpg'}">
+                  <div>
+                    <div class="category-list-title">
+                      ${a.IsLive ? `<span class="live-badge">LIVE</span>` : ""} 
+                      ${a.Title}
+                    </div>
+                    <div class="category-list-meta">${formatDateTime(a.PublishedOn)}</div>
+                  </div>
+                </div>
+              `).join("")}
+
+              <div class="category-more-btn">
+                <a href="/category/${safeId}">
+                  More in ${cat.CategoryName} → 
+                </a>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      `;
+
+      container.insertAdjacentHTML('beforeend', html);
     });
 
   } catch (err) {
@@ -736,6 +844,7 @@ async function loadNewsArticles() {
     console.error(err);
   }
 }
+
 loadNewsArticles();
 
 async function loadFooterCategories() {
@@ -813,7 +922,7 @@ async function loadMostReadNews() {
             <div class="most-read-footer">
               <span><i class="fa-solid fa-eye"></i> ${n.ViewCount || 0} views</span>
               <span><i class="fa-regular fa-calendar"></i> ${date}</span>
-              <button class="most-read-btn" onclick="openArticle(${n.ArticleID})">Read More</button>
+              <button class="most-read-btn" onclick="openArticle(${n.ArticleID})"><i class="fa-solid fa-book-open"></i> Read More</button>
             </div>
           </div>
         </div>`;
@@ -905,6 +1014,53 @@ async function subscribeNewsletter() {
   }
 }
 
+// async function loadSpotlightCollage() {
+//   try {
+//     const res = await fetch('/api/news/admin', { cache: 'no-store' });
+//     const news = await res.json();
+
+//     const validNews = (Array.isArray(news) ? news : []).filter(
+//       n => n.IsActive && n.IsApproved
+//     );
+
+//     const spotlight = validNews
+//       .sort((a, b) => new Date(b.PublishedOn) - new Date(a.PublishedOn))
+//       .slice(0, 12); // max 12 for collage
+
+//     const container = document.getElementById('spotlightCollage');
+//     container.innerHTML = '';
+
+//     if (!spotlight.length) {
+//       container.innerHTML = `<div class="text-center text-muted py-5">
+//         <i class="fa-regular fa-eye-slash fs-2"></i>
+//         <p class="mt-2">No Spotlight News available right now.</p>
+//       </div>`;
+//       return;
+//     }
+
+//     spotlight.forEach(n => {
+//       const img = n.ImageURL || '/images/default-news.jpg';
+//       const date = new Date(n.PublishedOn).toLocaleDateString();
+//       const card = `
+//         <div class="spotlight-collage-item" onclick="openArticle(${n.ArticleID})">
+//           <img src="${img}" alt="${n.Title}" onerror="this.src='/images/default-news.jpg'">
+//           <div class="spotlight-collage-overlay">
+//             <div class="spotlight-collage-title">${n.Title}</div>
+//             <div class="spotlight-collage-footer">
+//               <span>${date}</span>
+//               <button class="spotlight-collage-btn"><i class="fa-solid fa-book-open"></i> Read More</button>
+//             </div>
+//           </div>
+//         </div>
+//       `;
+//       container.insertAdjacentHTML('beforeend', card);
+//     });
+//   } catch (err) {
+//     console.error('loadSpotlightCollage error:', err);
+//   }
+// }
+// loadSpotlightCollage();
+
 async function loadSpotlightCollage() {
   try {
     const res = await fetch('/api/news/admin', { cache: 'no-store' });
@@ -914,43 +1070,63 @@ async function loadSpotlightCollage() {
       n => n.IsActive && n.IsApproved
     );
 
+    // Sort newest first and pick 12
     const spotlight = validNews
       .sort((a, b) => new Date(b.PublishedOn) - new Date(a.PublishedOn))
-      .slice(0, 12); // max 12 for collage
+      .slice(0, 12);
 
     const container = document.getElementById('spotlightCollage');
     container.innerHTML = '';
 
     if (!spotlight.length) {
-      container.innerHTML = `<div class="text-center text-muted py-5">
-        <i class="fa-regular fa-eye-slash fs-2"></i>
-        <p class="mt-2">No Spotlight News available right now.</p>
-      </div>`;
+      container.innerHTML = `
+        <div class="spotlight-empty">
+          <i class="fa-regular fa-eye-slash"></i>
+          <p>No Spotlight News available right now.</p>
+        </div>`;
       return;
     }
 
-    spotlight.forEach(n => {
+    spotlight.forEach((n, index) => {
       const img = n.ImageURL || '/images/default-news.jpg';
-      const date = new Date(n.PublishedOn).toLocaleDateString();
-      const card = `
-        <div class="spotlight-collage-item" onclick="openArticle(${n.ArticleID})">
-          <img src="${img}" alt="${n.Title}" onerror="this.src='/images/default-news.jpg'">
-          <div class="spotlight-collage-overlay">
-            <div class="spotlight-collage-title">${n.Title}</div>
-            <div class="spotlight-collage-footer">
+      const date = formatDate(n.PublishedOn);
+      const category = n.CategoryName || "General";
+
+      container.insertAdjacentHTML(
+        'beforeend',
+        `
+        <div class="spotlight-item ${index === 0 ? 'spotlight-item-large' : ''}" 
+             onclick="openArticle(${n.ArticleID})">
+
+          <!-- Image -->
+          <img src="${img}" alt="${n.Title}" 
+               onerror="this.src='/images/default-news.jpg'">
+
+          <!-- Category Tag -->
+          <div class="spotlight-category">${category}</div>
+
+          <!-- Overlay -->
+          <div class="spotlight-overlay">
+            <div class="spotlight-title">${n.Title}</div>
+
+            <div class="spotlight-footer">
               <span>${date}</span>
-              <button class="spotlight-collage-btn">Read More</button>
+              <div class="spotlight-read-btn">
+                <i class="fa-solid fa-book-open"></i> Read
+              </div>
             </div>
           </div>
         </div>
-      `;
-      container.insertAdjacentHTML('beforeend', card);
+      `
+      );
     });
   } catch (err) {
-    console.error('loadSpotlightCollage error:', err);
+    console.error('Spotlight error:', err);
   }
 }
+
 loadSpotlightCollage();
+
 // ---------- INIT ----------
 document.getElementById('siteLogo').addEventListener('error', () => { document.getElementById('siteLogo').src = SITE.logoPath; });
 
