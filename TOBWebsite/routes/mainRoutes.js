@@ -4,17 +4,20 @@ const sql = require('mssql');
 const sqlConfig = require('../sqlconfig');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs'); // <-- Add this line at the top
+const fs = require('fs'); 
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
-// Ensure uploads folder exists
-const uploadPath = path.join(__dirname, "public", "uploads");
+// -------------------------
+// Ensure correct uploads folder exists
+// Use project root public/uploads, not __dirname/public/uploads
+const uploadPath = path.join(__dirname, "..", "public", "uploads"); // <-- fixed path
 if (!fs.existsSync(uploadPath)) {
   fs.mkdirSync(uploadPath, { recursive: true });
 }
 
+// -------------------------
 // Multer storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -91,47 +94,13 @@ router.get('/news', async (req, res) => {
   }
 });
 
-// -------------------------
 // Create News
-// -------------------------
-// router.post('/news/create', isAdmin, upload.single('image'), async (req, res) => {
-//   try {
-//     const { Title, Content, Title_Ar, Content_Ar, CategoryID, IsTopStory, IsFeatured } = req.body;
-//     if (!Title || !Content || !CategoryID)
-//       return res.status(400).json({ success: false, message: 'Title, Content, and CategoryID required' });
-
-//     const ImageURL = req.file ? `/uploads/${req.file.filename}` : null;
-
-//     const pool = await sql.connect(sqlConfig);
-//     await pool.request()
-//       .input('Title', sql.NVarChar(255), Title)
-//       .input('Content', sql.NText, Content)
-//       .input('Title_Ar', sql.NVarChar(255), Title_Ar || null)
-//       .input('Content_Ar', sql.NText, Content_Ar || null)
-//       .input('CategoryID', sql.Int, parseInt(CategoryID))
-//       .input('AuthorID', sql.Int, req.user.UserID)
-//       .input('ImageURL', sql.NVarChar(255), ImageURL)
-//       .input('IsTopStory', sql.Bit, IsTopStory === 'true' ? 1 : 0)
-//       .input('IsFeatured', sql.Bit, IsFeatured === 'true' ? 1 : 0)
-//       .query(`
-//         INSERT INTO NewsArticles (Title, Content, Title_Ar, Content_Ar, CategoryID, AuthorID, ImageURL, IsApproved, IsActive, CreatedOn, IsTopStory, IsFeatured)
-//         VALUES (@Title, @Content, @Title_Ar, @Content_Ar, @CategoryID, @AuthorID, @ImageURL, 0, 1, GETDATE(), @IsTopStory, @IsFeatured)
-//       `);
-
-//     res.json({ success: true, message: 'News created successfully and awaiting approval.' });
-//   } catch (err) {
-//     console.error('CREATE NEWS ERROR:', err);
-//     res.status(500).json({ success: false, message: err.message });
-//   }
-// });
-
-// Route: Create News
 router.post(
   "/news/create",
   isAdmin,
   upload.fields([
     { name: "MainImage", maxCount: 1 },
-    { name: "Attachments", maxCount: 50 } // Increased maxCount if needed
+    { name: "Attachments", maxCount: 50 }
   ]),
   async (req, res) => {
     try {
@@ -140,23 +109,18 @@ router.post(
         CategoryID, IsTopStory, IsFeatured, IsBreakingNews, IsSpotlightNews
       } = req.body;
 
-      if (!Title || !Content || !CategoryID)
-        return res.status(400).json({
-          success: false,
-          message: "Title, Content and Category are required"
-        });
+      if (!Title || !Content || !CategoryID) {
+        return res.status(400).json({ success: false, message: "Title, Content and Category are required" });
+      }
 
-      // File Handling
       const MainSlideImage = req.files?.MainImage
         ? `/uploads/${req.files.MainImage[0].filename}`
         : null;
 
-      // All attachments uploaded from table
       const Attachments = req.files?.Attachments
         ? req.files.Attachments.map(f => `/uploads/${f.filename}`)
         : [];
 
-      // Save to Database
       const pool = await sql.connect(sqlConfig);
       const request = pool.request();
 
@@ -166,7 +130,7 @@ router.post(
         .input("Title_Ar", sql.NVarChar(255), Title_Ar || null)
         .input("Content_Ar", sql.NText, Content_Ar || null)
         .input("CategoryID", sql.Int, parseInt(CategoryID))
-        .input("AuthorID", sql.Int, req.user.UserID)
+        .input("AuthorID", sql.Int, req.session.user.UserID) // Use session.user
         .input("MainSlideImage", sql.NVarChar(255), MainSlideImage)
         .input("IsTopStory", sql.Bit, IsTopStory === "true")
         .input("IsFeatured", sql.Bit, IsFeatured === "true")
@@ -189,14 +153,12 @@ router.post(
       `);
 
       res.json({ success: true, message: "News posted successfully." });
-
     } catch (err) {
       console.error("CREATE NEWS ERROR:", err);
       res.status(500).json({ success: false, message: err.message });
     }
   }
 );
-
 
 router.post(
   '/news/update/:id',
@@ -627,19 +589,27 @@ router.get('/news/:id', async (req, res) => {
   }
 });
 
-// Get article by ID
+// Get article by ID with all fields for preview modal
 router.get('/newscheck/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const pool = await sql.connect(sqlConfig);
 
-    // Get article with author name
     const result = await pool.request()
       .input('id', sql.Int, id)
       .query(`
-        SELECT n.*, u.FullName AS AuthorName
+        SELECT n.ArticleID, n.Title, n.Title_Ar, n.Content, n.Content_Ar,
+               n.CategoryID, n.MainSlideImage, n.Attachments,
+               n.IsApproved, n.IsActive, n.CreatedOn, n.PublishedOn, n.UpdatedOn,
+               n.IsTopStory, n.IsFeatured, n.IsBreakingNews, n.IsSpotlightNews,
+               n.HighlightOrder, n.ViewCount,
+               u.FullName AS AuthorName,
+               c.CategoryName, c.CategoryName_Ar,
+               (SELECT COUNT(*) FROM NewsLikes l WHERE l.ArticleID = n.ArticleID) AS LikesCount,
+               (SELECT COUNT(*) FROM NewsComments c WHERE c.ArticleID = n.ArticleID AND c.IsApproved=1) AS CommentsCount
         FROM NewsArticles n
         LEFT JOIN Users u ON n.AuthorID = u.UserID
+        LEFT JOIN NewsCategories c ON n.CategoryID = c.CategoryID
         WHERE n.ArticleID = @id
       `);
 
@@ -647,13 +617,25 @@ router.get('/newscheck/:id', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Article not found' });
     }
 
-    res.json({ success: true, data: result.recordset[0] });
+    const article = result.recordset[0];
+
+    // Parse attachments JSON
+    article.Attachments = article.Attachments ? JSON.parse(article.Attachments) : [];
+
+    // Convert flags to boolean
+    article.IsTopStory = !!article.IsTopStory;
+    article.IsFeatured = !!article.IsFeatured;
+    article.IsBreakingNews = !!article.IsBreakingNews;
+    article.IsSpotlightNews = !!article.IsSpotlightNews;
+
+    res.json({ success: true, data: article });
 
   } catch (err) {
     console.error('GET ARTICLE ERROR:', err);
     res.status(500).json({ success: false, message: 'Error fetching article' });
   }
 });
+
 
 // --------------------
 // Add new category

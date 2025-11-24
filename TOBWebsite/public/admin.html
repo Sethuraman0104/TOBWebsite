@@ -55,109 +55,111 @@
   <main class="main-content">
     <!-- Publish News -->
 
-   <section id="publish" class="section active">
-  <div class="floating-title">📝 Create News</div>
-  <div class="card form-card">
-    <form id="postNewsForm" enctype="multipart/form-data">
+    <section id="publish" class="section active publishNA-section">
+      <div class="floating-title">📝 Create News</div>
+      <div class="card form-card publishNA-form-card">
+        <form id="postNewsForm" enctype="multipart/form-data">
 
-      <label>Title (English)</label>
-      <input type="text" name="Title" required>
+          <label>Title (English)</label>
+          <input type="text" name="Title" required>
 
-      <label>Title (Arabic)</label>
-      <input type="text" name="Title_Ar">
+          <label>Title (Arabic)</label>
+          <input type="text" name="Title_Ar">
 
-      <label>Content (English)</label>
-      <textarea name="Content" required></textarea>
+          <label>Content (English)</label>
+          <textarea name="Content" required></textarea>
 
-      <label>Content (Arabic)</label>
-      <textarea name="Content_Ar"></textarea>
+          <label>Content (Arabic)</label>
+          <textarea name="Content_Ar"></textarea>
 
-      <label>Category</label>
-      <select name="CategoryID" id="createCategorySelect" class="custom-dropdown" required>
-        <option value="">-- Select Category --</option>
-      </select>
+          <label>Category</label>
+          <select name="CategoryID" id="createCategorySelect" class="custom-dropdown" required>
+            <option value="">-- Select Category --</option>
+          </select>
 
-      <label>Main Slide Image</label>
-      <input type="file" name="MainImage" accept="image/*">
+          <label>Main Slide Image</label>
+          <input type="file" name="MainImage" accept="image/*">
 
-      <!-- HTML Part -->
-<label>Additional Attachments</label>
-<div style="display: flex; gap: 10px; align-items: center;">
-  <input type="file" id="singleAttachmentInput" accept=".bmp,.png,.jpg,.jpeg,.gif,.pdf">
-  <button type="button" id="addAttachmentBtn">Add Attachment</button>
-</div>
+          <!-- HTML Part -->
+          <label>Additional Attachments</label>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="file" id="singleAttachmentInput" accept=".bmp,.png,.jpg,.jpeg,.gif,.pdf">
+            <button type="button" id="addAttachmentBtn">Add Attachment</button>
+          </div>
 
-<table id="attachmentsTable" border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse;">
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>File Name</th>
-      <th>Action</th>
-    </tr>
-  </thead>
-  <tbody>
-    <!-- Added attachments will appear here -->
-  </tbody>
-</table>
+          <table id="attachmentsTable" border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>File Name</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Added attachments will appear here -->
+            </tbody>
+          </table>
 
-      <label><input type="checkbox" name="IsTopStory" value="true"> Top Story</label>
-      <label><input type="checkbox" name="IsFeatured" value="true"> Featured</label>
-      <label><input type="checkbox" name="IsBreakingNews" value="true"> Breaking News</label>
-      <label><input type="checkbox" name="IsSpotlightNews" value="true"> Spotlight</label>
+          <label><input type="checkbox" name="IsTopStory" value="true"> Top Story</label>
+          <label><input type="checkbox" name="IsFeatured" value="true"> Featured</label>
+          <label><input type="checkbox" name="IsBreakingNews" value="true"> Breaking News</label>
+          <label><input type="checkbox" name="IsSpotlightNews" value="true"> Spotlight</label>
 
-      <button type="submit">Post News</button>
-    </form>
+          <button type="submit">Post News</button>
+        </form>
 
-    <div id="postNewsMsg" class="message"></div>
-  </div>
-</section>
+        <div id="postNewsMsg" class="message"></div>
+      </div>
+    </section>
 
-<!-- Pending News -->
-<section id="pending" class="section">
-  <div class="floating-title">⏳ Unpublished News</div>
-  <div id="pendingNewsContainer"></div>
-</section>
+    <!-- Pending News -->
+    <section id="pending" class="section">
+      <div class="floating-title">⏳ Unpublished News</div>
+      <div id="pendingNewsContainer"></div>
+    </section>
 
     <!-- News Preview Modal -->
-    <div id="newsPreviewModal" class="preview-modal">
-      <div class="preview-modal-content">
+<div id="newsPreviewModal" class="preview-modal">
+  <div class="preview-modal-content">
 
-        <!-- Fixed Header -->
-        <div class="preview-header">
-          <h2 id="previewTitleEn">English Title</h2>
-          <h2 id="previewTitleAr" dir="rtl">Arabic Title</h2>
-          <span class="preview-close" id="closeNewsPreview">&times;</span>
-        </div>
-
-        <!-- Scrollable Content -->
-        <div class="preview-scrollable">
-
-          <!-- Centered Image -->
-          <div class="preview-image-container">
-            <img id="previewImage" class="preview-image" />
-          </div>
-
-          <!-- Content -->
-          <div class="preview-body">
-            <div class="preview-left">
-              <h3>English Content</h3>
-              <div id="previewContentEn"></div>
-            </div>
-            <div class="preview-right" dir="rtl">
-              <h3>Arabic Content</h3>
-              <div id="previewContentAr"></div>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Bottom Close Button -->
-        <div class="preview-footer">
-          <button id="closeNewsPreviewFooter" class="btn-close-modal">Close</button>
-        </div>
-
-      </div>
+    <!-- Header -->
+    <div class="preview-header">
+      <h2 id="previewTitleEnHeader">English Title</h2>
+      <span class="preview-close" id="closeNewsPreview">&times;</span>
     </div>
+
+    <!-- Scrollable Content -->
+    <div class="preview-scrollable">
+
+      <!-- Carousel Container -->
+      <div class="carousel-container">
+        <button class="carousel-btn left" id="carouselPrev">&#10094;</button>
+        <img id="carouselImage" class="carousel-image" />
+        <button class="carousel-btn right" id="carouselNext">&#10095;</button>
+      </div>
+
+      <!-- Content -->
+      <div class="preview-body">
+        <div class="preview-left">
+          <h3>English Content</h3>
+          <div id="previewContentEn"></div>
+        </div>
+        <div class="preview-right" dir="rtl">
+          <h3>Arabic Content</h3>
+          <div id="previewContentAr"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="preview-footer">
+      <button id="closeNewsPreviewFooter" class="btn-close-modal">Close</button>
+    </div>
+
+  </div>
+</div>
+
 
     <!-- All Published News -->
     <section id="allnews" class="section">
@@ -623,61 +625,79 @@
       </div>
     </div>
 
-    <!-- Edit Modal -->
-<div id="editModal" class="modal">
-  <div class="modal-content">
-    <span class="close">&times;</span>
-    <h2>Edit News</h2>
-    <form id="editNewsForm" enctype="multipart/form-data">
-      <input type="hidden" name="ArticleID" id="editArticleID">
+    <div id="editModal" class="modal">
+      <div class="modal-content">
 
-      <label>Title (English)</label>
-      <input type="text" name="Title" id="editTitle" required>
+        <div class="modal-header">
+          <h2><i class="fa-solid fa-pen-to-square"></i> Edit News Article</h2>
+          <span class="close">&times;</span>
+        </div>
 
-      <label>Title (Arabic)</label>
-      <input type="text" name="Title_Ar" id="editTitle_Ar">
+        <div class="modal-body">
+          <form id="editNewsForm" enctype="multipart/form-data">
 
-      <label>Content (English)</label>
-      <textarea name="Content" id="editContent" required></textarea>
+            <input type="hidden" name="ArticleID" id="editArticleID">
 
-      <label>Content (Arabic)</label>
-      <textarea name="Content_Ar" id="editContent_Ar"></textarea>
+            <label>Title (English)</label>
+            <input type="text" name="Title" id="editTitle">
 
-      <label>Category</label>
-      <select name="CategoryID" id="editCategorySelect" class="custom-dropdown" required>
-        <option value="">-- Select Category --</option>
-      </select>
+            <label>Title (Arabic)</label>
+            <input type="text" name="Title_Ar" id="editTitle_Ar">
 
-      <label>Main Image</label>
-      <input type="file" name="MainImage" id="editMainImage">
-      <div id="currentImagePreview" style="margin:10px 0;"></div>
+            <label>Content (English)</label>
+            <textarea name="Content" id="editContent"></textarea>
 
-      <label>Attachments</label>
-      <input type="file" id="editsingleAttachmentInput">
-      <button type="button" id="editaddAttachmentBtn">Add Attachment</button>
+            <label>Content (Arabic)</label>
+            <textarea name="Content_Ar" id="editContent_Ar"></textarea>
 
-      <table id="editattachmentsTable">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Preview</th>
-            <th>File Name</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+            <label>Category</label>
+            <select name="CategoryID" id="editCategorySelect"></select>
 
-      <label><input type="checkbox" id="editIsTopStory" name="IsTopStory" value="true"> Mark as Top Story</label>
-      <label><input type="checkbox" id="editIsFeatured" name="IsFeatured" value="true"> Mark as Featured</label>
-      <label><input type="checkbox" id="editIsBreakingNews" name="IsBreakingNews" value="true"> Mark as Breaking News</label>
-      <label><input type="checkbox" id="editIsSpotlightNews" name="IsSpotlightNews" value="true"> Mark as Spotlight</label>
+            <label>Main Image</label>
+            <div class="file-upload-box" onclick="document.getElementById('editMainImage').click()">
+              <i class="fa-solid fa-image"></i><br>
+              Click to select Main Image
+            </div>
+            <input type="file" name="MainImage" id="editMainImage" style="display:none;">
+            <div id="currentImagePreview" style="margin-top:10px;"></div>
 
-      <button type="submit">Save Changes</button>
-      <input type="hidden" name="editExistingAttachments" id="editExistingAttachments">
-    </form>
-  </div>
-</div>
+            <label>Attachments</label>
+
+            <div class="file-upload-box" onclick="document.getElementById('editsingleAttachmentInput').click()">
+              <i class="fa-solid fa-paperclip"></i><br>
+              Click to add attachment
+            </div>
+            <input type="file" id="editsingleAttachmentInput" style="display:none;">
+
+            <button type="button" id="editaddAttachmentBtn" class="btn-add">
+              <i class="fa-solid fa-plus"></i> Add Attachment
+            </button>
+
+            <table id="editattachmentsTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Preview</th>
+                  <th>File Name</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+
+            <label><input type="checkbox" style="margin-top: 10px;" name="IsTopStory" id="editIsTopStory"> Mark as Top Story</label>
+            <label><input type="checkbox" name="IsFeatured" id="editIsFeatured"> Mark as Featured</label>
+            <label><input type="checkbox" name="IsBreakingNews" id="editIsBreakingNews"> Mark as Breaking News</label>
+            <label><input type="checkbox" name="IsSpotlightNews" id="editIsSpotlightNews"> Mark as Spotlight</label>
+            <button class="btn-primary" type="submit">
+              <i class="fa-solid fa-save"></i> Save Changes
+            </button>
+            <input type="hidden" name="editExistingAttachments" id="editExistingAttachments">
+          </form>
+        </div>
+      </div>
+    </div>
+
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">

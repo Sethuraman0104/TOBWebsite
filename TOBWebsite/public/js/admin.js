@@ -511,25 +511,6 @@ changePasswordForm.onsubmit = async (e) => {
   }
 };
 
-// --------------------
-// Post News
-// --------------------
-// postNewsForm.onsubmit = async (e) => {
-//   e.preventDefault();
-//   const formData = new FormData(postNewsForm);
-//   try {
-//     const res = await fetch('/api/news/create', { method: 'POST', body: formData });
-//     const data = await res.json();
-//     postNewsMsg.textContent = data.message || 'News posted!';
-//     postNewsForm.reset();
-//     await loadPendingNews();
-//     await loadAllNewsEngagement(filterMonthInput.value || moment().format('YYYY-MM'));
-//     await loadInactiveNews();
-//   } catch (err) {
-//     postNewsMsg.textContent = 'Error: ' + err.message;
-//   }
-// };
-
 // JavaScript Part
 const attachments = []; // Array to hold files
 const attachmentInput = document.getElementById("singleAttachmentInput");
@@ -647,8 +628,8 @@ async function loadPendingNews() {
               </span>
 
               <!-- Image -->
-              ${n.ImageURL
-          ? `<img src="${n.ImageURL}" alt="${n.Title}" class="news-img"/>`
+              ${n.MainSlideImage
+          ? `<img src="${n.MainSlideImage}" alt="${n.Title}" class="news-img"/>`
           : `<div class="news-img placeholder"></div>`}
 
               <div class="news-body">
@@ -685,49 +666,81 @@ async function loadPendingNews() {
   }
 }
 
+let carouselImages = [];
+let currentIndex = 0;
+let carouselTimer;
+
 async function openNewsPreview(articleId) {
   try {
     const res = await fetch(`/api/newscheck/${articleId}`, { cache: "no-store" });
     if (!res.ok) return console.error("API error:", res.status);
-
     const reply = await res.json();
     if (!reply.success || !reply.data) return console.error("No data returned");
 
     const n = reply.data;
 
-    // Set image
-    document.getElementById("previewImage").src = n.ImageURL || "";
+    // Collect all images (MainSlideImage + Attachments)
+    carouselImages = [];
+    if (n.MainSlideImage) carouselImages.push(n.MainSlideImage);
+    if (n.Attachments) {
+      const attachments = Array.isArray(n.Attachments) ? n.Attachments : JSON.parse(n.Attachments);
+      carouselImages.push(...attachments);
+    }
+
+    currentIndex = 0;
+    document.getElementById("carouselImage").src = carouselImages[currentIndex] || "";
 
     // Titles
-    document.getElementById("previewTitleEn").textContent = n.Title ?? "";
-    document.getElementById("previewTitleAr").textContent = n.Title_Ar ?? "";
-
-    // Contents (render HTML)
+    document.getElementById("previewTitleEnHeader").textContent = n.Title ?? "";
     document.getElementById("previewContentEn").innerHTML = n.Content ?? "";
     document.getElementById("previewContentAr").innerHTML = n.Content_Ar ?? "";
 
-    // Show modal
     document.getElementById("newsPreviewModal").style.display = "block";
+
+    // Start auto carousel
+    startCarousel();
 
   } catch (err) {
     console.error("Preview load error:", err);
   }
 }
 
-// Close modal
-document.getElementById("closeNewsPreview").onclick = () => {
-  document.getElementById("newsPreviewModal").style.display = "none";
+// Carousel navigation
+document.getElementById("carouselPrev").onclick = () => {
+  showCarousel(currentIndex - 1);
 };
-document.getElementById("closeNewsPreviewFooter").onclick = () => {
-  document.getElementById("newsPreviewModal").style.display = "none";
+document.getElementById("carouselNext").onclick = () => {
+  showCarousel(currentIndex + 1);
 };
 
-// Close if click outside
+function showCarousel(index) {
+  if (!carouselImages.length) return;
+  currentIndex = (index + carouselImages.length) % carouselImages.length;
+  document.getElementById("carouselImage").src = carouselImages[currentIndex];
+}
+
+// Auto slide every 3 seconds
+function startCarousel() {
+  clearInterval(carouselTimer);
+  carouselTimer = setInterval(() => {
+    showCarousel(currentIndex + 1);
+  }, 3000);
+}
+
+// Close modal
+document.getElementById("closeNewsPreview").onclick =
+document.getElementById("closeNewsPreviewFooter").onclick = () => {
+  document.getElementById("newsPreviewModal").style.display = "none";
+  clearInterval(carouselTimer);
+};
+
 window.onclick = (e) => {
   if (e.target.id === "newsPreviewModal") {
     document.getElementById("newsPreviewModal").style.display = "none";
+    clearInterval(carouselTimer);
   }
 };
+
 
 // --------------------
 // Load All Active News (Published)
@@ -996,7 +1009,7 @@ function editrenderAttachmentsTable() {
 
   allFiles.forEach((file, index) => {
     const isFileObject = file instanceof File;
-    const src = isFileObject ? URL.createObjectURL(file) : file;
+    const src = isFileObject ? URL.createObjectURL(file) : `${window.location.origin}${file}`;
 
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -1008,22 +1021,22 @@ function editrenderAttachmentsTable() {
     editattachmentsTable.appendChild(row);
   });
 
-  // Add remove listeners
+  // Remove listeners
   document.querySelectorAll(".removeAttachmentBtn").forEach(btn => {
     btn.addEventListener("click", e => {
       const idx = parseInt(e.target.dataset.index);
       if (idx < existingAttachments.length) {
-        existingAttachments.splice(idx, 1); // remove from existing
+        existingAttachments.splice(idx, 1);
       } else {
-        editAttachments.splice(idx - existingAttachments.length, 1); // remove from new files
+        editAttachments.splice(idx - existingAttachments.length, 1);
       }
       editrenderAttachmentsTable();
     });
   });
 
-  // Update hidden input for server
   editExistingAttachmentsInput.value = JSON.stringify(existingAttachments);
 }
+
 
 // Open edit modal and populate data
 window.openEditModal = async (articleID) => {
@@ -1057,18 +1070,22 @@ window.openEditModal = async (articleID) => {
   editModal.style.display = "block";
 };
 
-// Submit updated news
 editForm.onsubmit = async (e) => {
   e.preventDefault();
+
   const articleID = document.getElementById("editArticleID").value;
   const formData = new FormData(editForm);
 
-  // Append new attachments only (Files)
+  // Force checkbox values
+  formData.set("IsTopStory", document.getElementById("editIsTopStory").checked ? "true" : "false");
+  formData.set("IsFeatured", document.getElementById("editIsFeatured").checked ? "true" : "false");
+  formData.set("IsBreakingNews", document.getElementById("editIsBreakingNews").checked ? "true" : "false");
+  formData.set("IsSpotlightNews", document.getElementById("editIsSpotlightNews").checked ? "true" : "false");
+
+  // Add new files
   editAttachments.forEach(f => {
     if (f instanceof File) formData.append("Attachments", f);
   });
-
-  // Hidden input already contains existingAttachments JSON
 
   const res = await fetch(`/api/news/update/${articleID}`, {
     method: "POST",
@@ -1084,6 +1101,14 @@ editForm.onsubmit = async (e) => {
   await loadInactiveNews();
 };
 
+
+document.querySelector("#editModal .close").onclick = () => {
+  editModal.style.display = "none";
+};
+
+window.onclick = (e) => {
+  if (e.target === editModal) editModal.style.display = "none";
+};
 
 
 let categories = [];
@@ -1748,7 +1773,7 @@ async function loadSubscribers() {
           <td>${sub.UnsubscribedOn ? new Date(sub.UnsubscribedOn).toLocaleString() : '-'}</td>
           <td>
             ${
-              sub.IsActive 
+              sub.IsActive
               ? `<button class="btn btn-danger btn-sm" onclick="unsubscribeUser(${sub.SubscriberID})">Unsubscribe</button>`
               : `<button class="btn btn-success btn-sm" onclick="reactivateUser(${sub.SubscriberID})">Activate</button>`
             }
