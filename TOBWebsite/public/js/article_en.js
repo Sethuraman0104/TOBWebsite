@@ -219,7 +219,7 @@ async function loadArticle() {
                         <i class="fa-solid fa-newspaper article-icon"></i>
                         <h1 class="article-title">${n.Title}</h1>
                     </div>
-                    <p class="article-date">
+                    <p class="trend-date-badge">
                         <i class="fa-regular fa-calendar"></i>
                         ${formatDateTime(n.PublishedOn)}
                     </p>
@@ -227,17 +227,18 @@ async function loadArticle() {
 
                 <!-- FEATURED IMAGE -->
                 ${n.ImageURL ? `
-                <div class="article-image-box">
+                <div class="trend-image-box">
                     <img src="${n.ImageURL}" alt="${n.Title}" class="article-image">
                 </div>` : ''}
 
                 <!-- MAIN CONTENT -->
-                <div class="article-content">
-                    ${n.Content}
+                <div class="trend-section mt-4">
+                <div id="trendDescriptionEn" class="trend-description">
+                    ${n.Content}</div>
                 </div>
 
                 <!-- ACTIONS -->
-                <div class="article-actions">
+                <div class="mt-4 d-flex align-items-center gap-3">
                     <button id="likeBtn" class="like-btn">
                         <i class="fa-solid fa-heart"></i> Like
                     </button>
@@ -341,6 +342,131 @@ window.addEventListener('scroll', () => {
 
 // Initial load
 loadOtherNewsGrid();
+
+// ---------------- Breaking News ----------------
+const breakingNews = [
+  "Government announces new economic reforms",
+  "Local football team wins championship",
+  "Heavy rains expected tomorrow across the region",
+  "Stock market hits all-time high",
+  "New technology park to open downtown"
+];
+let newsIndex = 0;
+function updateBreakingNews() {
+  const ticker = document.getElementById('breakingNewsInner');
+  ticker.textContent = breakingNews[newsIndex];
+  newsIndex = (newsIndex + 1) % breakingNews.length;
+}
+setInterval(updateBreakingNews, 5000);
+updateBreakingNews();
+
+async function loadAdvertisements() {
+  try {
+    const res = await fetch('/api/advertisements/list?active=1', { cache: 'no-store' });
+    const json = await res.json();
+
+    if (!json.success || !Array.isArray(json.data)) {
+      console.error("Invalid advertisement response:", json);
+      return;
+    }
+
+    const ads = json.data;
+    if (!ads.length) return;
+
+    const positions = {
+      top: ['adTopBanner'],
+      sidebar: ['adSidebar'],
+      middle: ['adMiddleContent1', 'adMiddleContent2', 'adMiddleContent3'],
+      footer: ['adFooter']
+    };
+
+    Object.values(positions).flat().forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.innerHTML = '';
+        el.style.display = 'none';
+        if (el.carouselInterval) clearInterval(el.carouselInterval);
+      }
+    });
+
+    Object.entries(positions).forEach(([posKey, containerIds]) => {
+      containerIds.forEach(containerId => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        const filteredAds = ads.filter(ad => ad.Position && ad.Position.toLowerCase() === posKey);
+        if (!filteredAds.length) return;
+
+        container.style.display = 'block';
+        container.style.position = 'relative';
+        container.style.overflow = 'hidden';
+        container.style.padding = '10px 0';
+
+        // Determine wrapper height: largest ad in this set
+        const maxHeight = filteredAds.reduce((max, ad) => {
+          switch ((ad.Size || '').toLowerCase()) {
+            case 'small': return Math.max(max, 150);
+            case 'medium': return Math.max(max, 250);
+            case 'large': return Math.max(max, 350);
+            default: return Math.max(max, 250);
+          }
+        }, 0);
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'ad-carousel-wrapper';
+        wrapper.style.position = 'relative';
+        wrapper.style.width = '100%';
+        wrapper.style.height = `${maxHeight}px`;
+
+        filteredAds.forEach((ad, index) => {
+          const sizeClass = ad.Size ? `ad-${ad.Size.toLowerCase()}` : 'ad-medium';
+
+          const adDiv = document.createElement('div');
+          adDiv.className = `ad-card ${sizeClass}`;
+          adDiv.style.position = 'absolute';
+          adDiv.style.top = '0';
+          adDiv.style.left = '0';
+          adDiv.style.width = '100%';
+          adDiv.style.height = '100%';  // now fills the wrapper fully
+          adDiv.style.opacity = index === 0 ? '1' : '0';
+          adDiv.style.transition = 'opacity 1s ease-in-out';
+
+          const adLink = document.createElement('a');
+          adLink.href = ad.LinkURL || '#';
+          adLink.target = '_blank';
+          adLink.rel = 'noopener noreferrer';
+
+          const adImg = document.createElement('img');
+          adImg.src = ad.ImageURL;
+          adImg.alt = ad.Title;
+          adImg.onerror = () => { adImg.src = '/images/default-ad.jpg'; };
+
+          adLink.appendChild(adImg);
+          adDiv.appendChild(adLink);
+          wrapper.appendChild(adDiv);
+        });
+
+        container.appendChild(wrapper);
+
+        // Auto-scroll carousel
+        let currentIndex = 0;
+        const total = filteredAds.length;
+        container.carouselInterval = setInterval(() => {
+          const adCards = wrapper.querySelectorAll('.ad-card');
+          adCards.forEach((card, idx) => {
+            card.style.opacity = idx === currentIndex ? '1' : '0';
+          });
+          currentIndex = (currentIndex + 1) % total;
+        }, 4000);
+      });
+    });
+
+  } catch (err) {
+    console.error('❌ Error loading advertisements:', err);
+  }
+}
+
+window.addEventListener('load', loadAdvertisements);
 
 async function loadFooterCategories() {
     const container = document.getElementById('footerCategories');

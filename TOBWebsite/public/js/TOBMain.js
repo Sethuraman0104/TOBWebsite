@@ -260,44 +260,31 @@ async function loadTrendsTicker() {
     // 🟥 ----------------------
     // 2️⃣ Trending Cards Section
     // 🟥 ----------------------
-    trendsContainer.innerHTML = trends.map(t => {
-      const img = t.ImageURL || '/images/default-trend.jpg';
-      const title = t.TrendTitle_EN || 'Untitled Trend';
-      const content = t.TrendDescription_EN || 'No description available.';
-      const link = t.TrendLink || '#';
+    // 2️⃣ Trending Cards Section (revamped)
+    trendsContainer.innerHTML = `<div class="TOBTrends-selectable-grid">` +
+      trends.map(t => {
+        const img = t.ImageURL || '/images/default-trend.jpg';
+        const title = t.TrendTitle_EN || 'Untitled Trend';
+        const content = t.TrendDescription_EN || 'No description available.';
+        const date = t.CreatedOn ? formatDate(t.CreatedOn) : '';
 
-      const date = t.CreatedOn ? formatDate(t.CreatedOn) : '';
-
-      return `
-                <div class="col-md-6 col-lg-4 col-xl-3" data-aos="fade-up" data-aos-duration="900">
-                    <div class="trend-card h-100 shadow-sm">
-                        <div class="trend-img-wrapper">
-                            <img src="${img}" alt="${title}"
-                                 onerror="this.src='/images/default-trend.jpg';" />
-                        </div>
-
-                        <div class="trend-card-body">
-                            <h5 class="trend-card-title">
-                                <i class="fa-solid fa-fire-flame-curved"></i> ${title}
-                            </h5>
-
-                            <p class="trend-card-text">${content}</p>
-
-                            <div class="trend-card-footer">
-                                <span class="trend-date">
-                                    <i class="fa-regular fa-calendar"></i> ${date}
-                                </span>
-
-                                <button class="btn read-more-btn"
-                                        onclick="openTrendArticle(${t.TrendID})">
-                                    <i class="fa-solid fa-book-open"></i> Read More
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-    }).join('');
+        return `
+      <div class="TOBTrends-selectable-banner" data-aos="fade-up" data-aos-duration="900">
+        <img src="${img}" alt="${title}" onerror="this.src='/images/default-trend.jpg';" />
+        <div class="TOBTrends-selectable-body">
+          <h5 class="TOBTrends-selectable-title">${title}</h5>
+          <p class="TOBTrends-selectable-text">${content}</p>
+          <div class="TOBTrends-selectable-footer">
+            <span class="trend-date">📅 ${date}</span>
+            <button class="read-more-btn" onclick="openTrendArticle(${t.TrendID})">
+              <i class="fa-solid fa-book-open"></i> Read More
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+      }).join('') +
+      `</div>`;
   } catch (err) {
     console.error(err);
     tickerInner.innerHTML = 'Error loading trends';
@@ -804,7 +791,7 @@ async function loadNewsArticles() {
                   ${bigStory.IsLive ? `<span class="live-badge">LIVE</span>` : ""}
                   <span class="category-big-title">${bigStory.Title}</span>
                 </div>
-                <div class="category-big-meta">${formatDateTime(bigStory.PublishedOn)}</div>
+                <div class="category-big-meta">📅 ${formatDateTime(bigStory.PublishedOn)}</div>
               </div>
             </div>
 
@@ -818,21 +805,12 @@ async function loadNewsArticles() {
                       ${a.IsLive ? `<span class="live-badge">LIVE</span>` : ""} 
                       ${a.Title}
                     </div>
-                    <div class="category-list-meta">${formatDateTime(a.PublishedOn)}</div>
+                    <div style="font-size: 0.85rem; color: #777">📅 ${formatDateTime(a.PublishedOn)}</div>
                   </div>
                 </div>
               `).join("")}
-
-              <div class="category-more-btn">
-                <a href="/category/${safeId}">
-                  More in ${cat.CategoryName} → 
-                </a>
-              </div>
-
             </div>
-
           </div>
-
         </div>
       `;
 
@@ -921,7 +899,7 @@ async function loadMostReadNews() {
             </div>
             <div class="most-read-footer">
               <span><i class="fa-solid fa-eye"></i> ${n.ViewCount || 0} views</span>
-              <span><i class="fa-regular fa-calendar"></i> ${date}</span>
+              <span>📅 ${date}</span>
               <button class="most-read-btn" onclick="openArticle(${n.ArticleID})"><i class="fa-solid fa-book-open"></i> Read More</button>
             </div>
           </div>
@@ -1110,7 +1088,7 @@ async function loadSpotlightCollage() {
             <div class="spotlight-title">${n.Title}</div>
 
             <div class="spotlight-footer">
-              <span>${date}</span>
+              <span>📅 ${date}</span>
               <div class="spotlight-read-btn">
                 <i class="fa-solid fa-book-open"></i> Read
               </div>

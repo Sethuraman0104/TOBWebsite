@@ -123,9 +123,9 @@
     </div>
   </nav>
 
-  <div id="adMiddleContent1" class="container my-5"></div>
+  <div id="adMiddleContent1" class="container my-2"></div>
   <!-- TOB News Section Header -->
-  <div class="container my-5" style="margin-bottom: 0px;">
+  <div class="container my-3" style="margin-top: 0px; margin-bottom: 0px;">
     <div class="TOB-news-section-header mb-4" style="margin-bottom: 0px;" data-aos="fade-up" data-aos-duration="1000">
       <div class="TOB-header-icon">
         <i class="fa-solid fa-thumbtack"></i>
@@ -170,7 +170,7 @@
       </div>
       <div class="header-text">
         <h2 class="header-title">Highlights</h2>
-        <p class="header-subtitle">Handpicked stories that matter most</p>
+        <p class="header-subtitle">Important news and features catching everyone’s attention.</p>
       </div>
     </div>
 
@@ -180,16 +180,16 @@
     </section>
   </div>
 
-  <div id="adMiddleContent2" class="container my-5"></div>
+  <div id="adMiddleContent2" class="container my-2"></div>
   <!-- 🌟 Trending Articles Section -->
-  <div id="trendsWrapper" class="container my-5">
+  <div id="trendsWrapper" class="container my-5" style="margin-top: 0px; margin-bottom: 0px;">
     <div class="TOBIndividualSectionHeader" data-aos="fade-up">
       <div class="header-icon">
         <i class="fa-solid fa-chart-line"></i>
       </div>
       <div class="header-text">
         <h2 class="header-title">Trending Articles</h2>
-        <p class="header-subtitle">Handpicked stories that are catching everyone’s eye</p>
+        <p class="header-subtitle">Articles that are trending and widely read.</p>
       </div>
     </div>
 
@@ -199,66 +199,62 @@
 
   <!-- 🌟 Newsletter Subscription Section -->
   <div id="newsletterWrapper" class="container my-5">
-    <div class="newsletter-card p-4 p-md-5 rounded-4 shadow-sm text-center bg-white">
-      <h2 class="newsletter-title mb-2">Subscribe to Our Newsletter</h2>
-      <p class="newsletter-subtitle mb-4">
+    <div class="TOBNLSCentered-card p-4 p-md-5 rounded-4 shadow-sm text-center">
+      <h2 class="TOBNLSCentered-title mb-2">Subscribe to Our Newsletter</h2>
+      <p class="TOBNLSCentered-subtitle mb-4">
         Get the latest news, trending stories, and updates delivered straight to your inbox.
       </p>
       <form id="newsletterForm" class="d-flex flex-column flex-sm-row justify-content-center gap-3">
-        <input type="email" class="form-control newsletter-input" placeholder="Enter your email" required>
-        <button type="submit" class="btn newsletter-btn">Subscribe</button>
+        <input type="email" class="TOBNLSCentered-input" placeholder="Enter your email" required>
+        <button type="submit" class="TOBNLSCentered-btn">
+          <i class="fa-solid fa-envelope"></i> Subscribe
+        </button>
       </form>
-      <small class="text-muted d-block mt-3">We respect your privacy. Unsubscribe anytime.</small>
+      <small class="TOBNLSCentered-privacy mt-3 d-block">We respect your privacy. Unsubscribe anytime.</small>
     </div>
   </div>
 
   <div id="spotlightCollageWrapper" class="container my-5">
-  <!-- Your original header — unchanged -->
-  <div class="TOBIndividualSectionHeader" data-aos="fade-up">
-    <div class="header-icon">
-      <i class="fa-solid fa-lightbulb"></i>
+    <!-- Your original header — unchanged -->
+    <div class="TOBIndividualSectionHeader" data-aos="fade-up">
+      <div class="header-icon">
+        <i class="fa-solid fa-lightbulb"></i>
+      </div>
+      <div class="header-text">
+        <h2 class="header-title">Spotlight News</h2>
+        <p class="header-subtitle">Handpicked stories that are catching everyone’s eye</p>
+      </div>
     </div>
-    <div class="header-text">
-      <h2 class="header-title">Spotlight News</h2>
-      <p class="header-subtitle">Handpicked stories that are catching everyone’s eye</p>
-    </div>
+
+    <!-- NEW Collage Grid -->
+    <div id="spotlightCollage" class="spotlight-grid"></div>
   </div>
 
-  <!-- NEW Collage Grid -->
-  <div id="spotlightCollage" class="spotlight-grid"></div>
-</div>
+  <div id="adMiddleContent3" class="container my-2"></div>
 
-  <div id="adMiddleContent3" class="container my-5"></div>
-  <!-- <div id="newsWrapper" class="container my-5">
-    <div class="news-section-header-modern mb-4" data-aos="fade-up" data-aos-duration="1000">
-      <i class="fa-solid fa-bullhorn text-danger fs-3 me-2"></i>
-      <div>
-        <h2 class="news-section-title mb-1">Latest News</h2>
-        <div class="news-section-underline"></div>
-        <p class="news-section-subtitle mb-0">
-          Explore the latest stories, grouped by category
-        </p>
+  <div id="newsWrapper" class="container my-5" style="margin-top: 0px; margin-bottom: 0px;">
+    <div class="TOBIndividualSectionHeader" data-aos="fade-up">
+      <div class="header-icon">
+        <i class="fa-solid fa-folder-open"></i>
+      </div>
+      <div class="header-text">
+        <h2 class="header-title">Browse by Topics</h2>
+        <p class="header-subtitle">Browse news articles organized by topics and interests</p>
       </div>
     </div>
 
     <div id="newsCategoriesSection"></div>
-  </div> -->
-
- <div id="newsWrapper" class="container my-5">
-  <div id="newsCategoriesSection"></div>
-</div>
+  </div>
 
   <!-- 🔥 Most Read News Articles Section -->
   <div id="mostReadWrapper" class="container my-5">
-    <!-- Header -->
-    <div class="news-section-header-modern mb-4" data-aos="fade-up" data-aos-duration="1000">
-      <i class="fa-solid fa-fire text-danger fs-3 me-2"></i>
-      <div>
-        <h2 class="news-section-title mb-1 text-dark">Most Read News</h2>
-        <div class="news-section-underline"></div>
-        <p class="news-section-subtitle mb-0 text-secondary">
-          See what everyone’s talking about the most
-        </p>
+    <div class="TOBIndividualSectionHeader" data-aos="fade-up">
+      <div class="header-icon">
+        <i class="fa-solid fa-newspaper"></i>
+      </div>
+      <div class="header-text">
+        <h2 class="header-title">Most Read News</h2>
+        <p class="header-subtitle">The latest stories that readers are clicking on the most</p>
       </div>
     </div>
 
@@ -334,7 +330,7 @@
         <small>© <span id="year"></span> TOB News Portal. All rights reserved.</small>
       </div>
     </div>
-    <div id="adFooter" class="container my-5"></div>
+    <div id="adFooter" class="container my-2"></div>
   </footer>
 
   <!-- Scripts -->
@@ -347,5 +343,4 @@
 
   <script src="js/TOBMain.js"></script>
 </body>
-
 </html>

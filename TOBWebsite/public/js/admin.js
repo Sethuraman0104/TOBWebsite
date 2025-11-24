@@ -514,21 +514,114 @@ changePasswordForm.onsubmit = async (e) => {
 // --------------------
 // Post News
 // --------------------
+// postNewsForm.onsubmit = async (e) => {
+//   e.preventDefault();
+//   const formData = new FormData(postNewsForm);
+//   try {
+//     const res = await fetch('/api/news/create', { method: 'POST', body: formData });
+//     const data = await res.json();
+//     postNewsMsg.textContent = data.message || 'News posted!';
+//     postNewsForm.reset();
+//     await loadPendingNews();
+//     await loadAllNewsEngagement(filterMonthInput.value || moment().format('YYYY-MM'));
+//     await loadInactiveNews();
+//   } catch (err) {
+//     postNewsMsg.textContent = 'Error: ' + err.message;
+//   }
+// };
+
+// JavaScript Part
+const attachments = []; // Array to hold files
+const attachmentInput = document.getElementById("singleAttachmentInput");
+const addAttachmentBtn = document.getElementById("addAttachmentBtn");
+const attachmentsTable = document.getElementById("attachmentsTable").querySelector("tbody");
+
+addAttachmentBtn.addEventListener("click", () => {
+  const file = attachmentInput.files[0];
+  if (!file) return alert("Please select a file.");
+
+  attachments.push(file);
+  renderAttachmentsTable();
+  attachmentInput.value = ""; // Clear input
+});
+
+// Render attachments table
+function renderAttachmentsTable() {
+  attachmentsTable.innerHTML = "";
+  attachments.forEach((file, index) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${index + 1}</td>
+      <td>${file.name}</td>
+      <td><button type="button" data-index="${index}" class="removeAttachmentBtn">Remove</button></td>
+    `;
+    attachmentsTable.appendChild(row);
+  });
+
+  // Remove attachment from array and re-render
+  document.querySelectorAll(".removeAttachmentBtn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const idx = parseInt(e.target.dataset.index);
+      attachments.splice(idx, 1);
+      renderAttachmentsTable();
+    });
+  });
+}
+
+// Form Submit
 postNewsForm.onsubmit = async (e) => {
   e.preventDefault();
-  const formData = new FormData(postNewsForm);
+
+  const formData = new FormData();
+
+  // Add all text fields
+  const fields = [
+    "Title", "Title_Ar", "Content", "Content_Ar",
+    "CategoryID", "IsTopStory", "IsFeatured",
+    "IsBreakingNews", "IsSpotlightNews"
+  ];
+
+  fields.forEach(f => {
+    const el = postNewsForm.querySelector(`[name="${f}"]`);
+    if (!el) return;
+
+    if (el.type === "checkbox") {
+      if (el.checked) formData.append(f, "true");
+    } else {
+      formData.append(f, el.value);
+    }
+  });
+
+  // Main Image
+  const mainImage = postNewsForm.querySelector('input[name="MainImage"]').files;
+  if (mainImage.length > 0) {
+    formData.append("MainImage", mainImage[0]);
+  }
+
+  // Append dynamically added attachments
+  attachments.forEach(file => {
+    formData.append("Attachments", file);
+  });
+
   try {
-    const res = await fetch('/api/news/create', { method: 'POST', body: formData });
+    const res = await fetch("/api/news/create", {
+      method: "POST",
+      body: formData
+    });
+
     const data = await res.json();
-    postNewsMsg.textContent = data.message || 'News posted!';
+    postNewsMsg.textContent = data.message;
     postNewsForm.reset();
     await loadPendingNews();
     await loadAllNewsEngagement(filterMonthInput.value || moment().format('YYYY-MM'));
     await loadInactiveNews();
+    attachments.length = 0; // Clear attachments array
+    renderAttachmentsTable(); // Clear table
   } catch (err) {
-    postNewsMsg.textContent = 'Error: ' + err.message;
+    postNewsMsg.textContent = "Error: " + err.message;
   }
 };
+
 
 // --------------------
 // Load Pending News
@@ -877,41 +970,121 @@ async function approveNews(articleID) {
   await loadInactiveNews();
 }
 
+
+let editAttachments = []; // Array to hold new files (File objects)
+let existingAttachments = []; // Array to hold URLs of existing attachments
+
+const editattachmentInput = document.getElementById("editsingleAttachmentInput");
+const editaddAttachmentBtn = document.getElementById("editaddAttachmentBtn");
+const editattachmentsTable = document.getElementById("editattachmentsTable").querySelector("tbody");
+const editExistingAttachmentsInput = document.getElementById("editExistingAttachments"); // hidden input
+
+// Add new attachment to array and render table
+editaddAttachmentBtn.addEventListener("click", () => {
+  const file = editattachmentInput.files[0];
+  if (!file) return alert("Please select a file.");
+  editAttachments.push(file);
+  editrenderAttachmentsTable();
+  editattachmentInput.value = "";
+});
+
+// Render attachments table
+function editrenderAttachmentsTable() {
+  editattachmentsTable.innerHTML = "";
+
+  const allFiles = [...existingAttachments, ...editAttachments];
+
+  allFiles.forEach((file, index) => {
+    const isFileObject = file instanceof File;
+    const src = isFileObject ? URL.createObjectURL(file) : file;
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${index + 1}</td>
+      <td><img src="${src}" style="height:50px;"></td>
+      <td>${isFileObject ? file.name : file.split("/").pop()}</td>
+      <td><button type="button" data-index="${index}" class="removeAttachmentBtn">Remove</button></td>
+    `;
+    editattachmentsTable.appendChild(row);
+  });
+
+  // Add remove listeners
+  document.querySelectorAll(".removeAttachmentBtn").forEach(btn => {
+    btn.addEventListener("click", e => {
+      const idx = parseInt(e.target.dataset.index);
+      if (idx < existingAttachments.length) {
+        existingAttachments.splice(idx, 1); // remove from existing
+      } else {
+        editAttachments.splice(idx - existingAttachments.length, 1); // remove from new files
+      }
+      editrenderAttachmentsTable();
+    });
+  });
+
+  // Update hidden input for server
+  editExistingAttachmentsInput.value = JSON.stringify(existingAttachments);
+}
+
+// Open edit modal and populate data
 window.openEditModal = async (articleID) => {
-  const res = await fetch('/api/news/admin');
+  const res = await fetch("/api/news/admin");
   const news = await res.json();
   const article = news.find(n => n.ArticleID === articleID);
-  if (!article) return alert('Article not found');
+  if (!article) return alert("Article not found");
 
-  document.getElementById('editArticleID').value = article.ArticleID;
-  document.getElementById('editTitle').value = article.Title;
-  document.getElementById('editTitle_Ar').value = article.Title_Ar || '';
-  document.getElementById('editContent').value = article.Content;
-  document.getElementById('editContent_Ar').value = article.Content_Ar || '';
-  document.getElementById('editCategorySelect').value = article.CategoryID || '';
+  document.getElementById("editArticleID").value = article.ArticleID;
+  document.getElementById("editTitle").value = article.Title;
+  document.getElementById("editTitle_Ar").value = article.Title_Ar || "";
+  document.getElementById("editContent").value = article.Content;
+  document.getElementById("editContent_Ar").value = article.Content_Ar || "";
+  document.getElementById("editCategorySelect").value = article.CategoryID || "";
 
-  document.getElementById('editIsTopStory').checked = article.IsTopStory;
-  document.getElementById('editIsFeatured').checked = article.IsFeatured;
+  document.getElementById("editIsTopStory").checked = article.IsTopStory;
+  document.getElementById("editIsFeatured").checked = article.IsFeatured;
+  document.getElementById("editIsBreakingNews").checked = article.IsBreakingNews;
+  document.getElementById("editIsSpotlightNews").checked = article.IsSpotlightNews;
 
-  editModal.style.display = 'block';
+  const currentImagePreview = document.getElementById("currentImagePreview");
+  currentImagePreview.innerHTML = article.MainSlideImage
+    ? `<img src="${article.MainSlideImage}" style="height:80px;">`
+    : "";
+
+  // Load existing attachments
+  existingAttachments = article.Attachments || [];
+  editAttachments = []; // clear any old new files
+  editrenderAttachmentsTable();
+
+  editModal.style.display = "block";
 };
 
-closeModal.onclick = () => editModal.style.display = 'none';
-window.onclick = (e) => { if (e.target == editModal) editModal.style.display = 'none'; };
-
-// Edit form submit
+// Submit updated news
 editForm.onsubmit = async (e) => {
   e.preventDefault();
-  const articleID = document.getElementById('editArticleID').value;
+  const articleID = document.getElementById("editArticleID").value;
   const formData = new FormData(editForm);
-  const res = await fetch(`/api/news/update/${articleID}`, { method: 'POST', body: formData });
+
+  // Append new attachments only (Files)
+  editAttachments.forEach(f => {
+    if (f instanceof File) formData.append("Attachments", f);
+  });
+
+  // Hidden input already contains existingAttachments JSON
+
+  const res = await fetch(`/api/news/update/${articleID}`, {
+    method: "POST",
+    body: formData
+  });
+
   const data = await res.json();
   alert(data.message);
-  editModal.style.display = 'none';
+  editModal.style.display = "none";
+
   await loadPendingNews();
   await loadAllNewsEngagement(filterMonthInput.value);
   await loadInactiveNews();
 };
+
+
 
 let categories = [];
 let currentPage = 1;
@@ -1077,7 +1250,6 @@ async function deleteCategory(e) {
     console.error('Delete Category Error:', err);
   }
 }
-
 // Initialize
 document.addEventListener('DOMContentLoaded', loadCategoriesList);
 

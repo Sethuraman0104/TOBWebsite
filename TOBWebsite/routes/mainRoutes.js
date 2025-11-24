@@ -4,17 +4,29 @@ const sql = require('mssql');
 const sqlConfig = require('../sqlconfig');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs'); // <-- Add this line at the top
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
-// Multer setup
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, '../public/uploads')),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
-});
-const upload = multer({ storage });
+// Ensure uploads folder exists
+const uploadPath = path.join(__dirname, "public", "uploads");
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath, { recursive: true });
+}
 
+// Multer storage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadPath); // guaranteed folder exists
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + "-" + file.originalname);
+  }
+});
+
+const upload = multer({ storage: storage });
 // Temporary admin middleware
 const isAdmin = (req, res, next) => {
   req.user = { UserID: 1, Role: 'Admin' };
@@ -82,82 +94,242 @@ router.get('/news', async (req, res) => {
 // -------------------------
 // Create News
 // -------------------------
-router.post('/news/create', isAdmin, upload.single('image'), async (req, res) => {
-  try {
-    const { Title, Content, Title_Ar, Content_Ar, CategoryID, IsTopStory, IsFeatured } = req.body;
-    if (!Title || !Content || !CategoryID)
-      return res.status(400).json({ success: false, message: 'Title, Content, and CategoryID required' });
+// router.post('/news/create', isAdmin, upload.single('image'), async (req, res) => {
+//   try {
+//     const { Title, Content, Title_Ar, Content_Ar, CategoryID, IsTopStory, IsFeatured } = req.body;
+//     if (!Title || !Content || !CategoryID)
+//       return res.status(400).json({ success: false, message: 'Title, Content, and CategoryID required' });
 
-    const ImageURL = req.file ? `/uploads/${req.file.filename}` : null;
+//     const ImageURL = req.file ? `/uploads/${req.file.filename}` : null;
 
-    const pool = await sql.connect(sqlConfig);
-    await pool.request()
-      .input('Title', sql.NVarChar(255), Title)
-      .input('Content', sql.NText, Content)
-      .input('Title_Ar', sql.NVarChar(255), Title_Ar || null)
-      .input('Content_Ar', sql.NText, Content_Ar || null)
-      .input('CategoryID', sql.Int, parseInt(CategoryID))
-      .input('AuthorID', sql.Int, req.user.UserID)
-      .input('ImageURL', sql.NVarChar(255), ImageURL)
-      .input('IsTopStory', sql.Bit, IsTopStory === 'true' ? 1 : 0)
-      .input('IsFeatured', sql.Bit, IsFeatured === 'true' ? 1 : 0)
-      .query(`
-        INSERT INTO NewsArticles (Title, Content, Title_Ar, Content_Ar, CategoryID, AuthorID, ImageURL, IsApproved, IsActive, CreatedOn, IsTopStory, IsFeatured)
-        VALUES (@Title, @Content, @Title_Ar, @Content_Ar, @CategoryID, @AuthorID, @ImageURL, 0, 1, GETDATE(), @IsTopStory, @IsFeatured)
+//     const pool = await sql.connect(sqlConfig);
+//     await pool.request()
+//       .input('Title', sql.NVarChar(255), Title)
+//       .input('Content', sql.NText, Content)
+//       .input('Title_Ar', sql.NVarChar(255), Title_Ar || null)
+//       .input('Content_Ar', sql.NText, Content_Ar || null)
+//       .input('CategoryID', sql.Int, parseInt(CategoryID))
+//       .input('AuthorID', sql.Int, req.user.UserID)
+//       .input('ImageURL', sql.NVarChar(255), ImageURL)
+//       .input('IsTopStory', sql.Bit, IsTopStory === 'true' ? 1 : 0)
+//       .input('IsFeatured', sql.Bit, IsFeatured === 'true' ? 1 : 0)
+//       .query(`
+//         INSERT INTO NewsArticles (Title, Content, Title_Ar, Content_Ar, CategoryID, AuthorID, ImageURL, IsApproved, IsActive, CreatedOn, IsTopStory, IsFeatured)
+//         VALUES (@Title, @Content, @Title_Ar, @Content_Ar, @CategoryID, @AuthorID, @ImageURL, 0, 1, GETDATE(), @IsTopStory, @IsFeatured)
+//       `);
+
+//     res.json({ success: true, message: 'News created successfully and awaiting approval.' });
+//   } catch (err) {
+//     console.error('CREATE NEWS ERROR:', err);
+//     res.status(500).json({ success: false, message: err.message });
+//   }
+// });
+
+// Route: Create News
+router.post(
+  "/news/create",
+  isAdmin,
+  upload.fields([
+    { name: "MainImage", maxCount: 1 },
+    { name: "Attachments", maxCount: 50 } // Increased maxCount if needed
+  ]),
+  async (req, res) => {
+    try {
+      const {
+        Title, Content, Title_Ar, Content_Ar,
+        CategoryID, IsTopStory, IsFeatured, IsBreakingNews, IsSpotlightNews
+      } = req.body;
+
+      if (!Title || !Content || !CategoryID)
+        return res.status(400).json({
+          success: false,
+          message: "Title, Content and Category are required"
+        });
+
+      // File Handling
+      const MainSlideImage = req.files?.MainImage
+        ? `/uploads/${req.files.MainImage[0].filename}`
+        : null;
+
+      // All attachments uploaded from table
+      const Attachments = req.files?.Attachments
+        ? req.files.Attachments.map(f => `/uploads/${f.filename}`)
+        : [];
+
+      // Save to Database
+      const pool = await sql.connect(sqlConfig);
+      const request = pool.request();
+
+      request
+        .input("Title", sql.NVarChar(255), Title)
+        .input("Content", sql.NText, Content)
+        .input("Title_Ar", sql.NVarChar(255), Title_Ar || null)
+        .input("Content_Ar", sql.NText, Content_Ar || null)
+        .input("CategoryID", sql.Int, parseInt(CategoryID))
+        .input("AuthorID", sql.Int, req.user.UserID)
+        .input("MainSlideImage", sql.NVarChar(255), MainSlideImage)
+        .input("IsTopStory", sql.Bit, IsTopStory === "true")
+        .input("IsFeatured", sql.Bit, IsFeatured === "true")
+        .input("IsBreakingNews", sql.Bit, IsBreakingNews === "true")
+        .input("IsSpotlightNews", sql.Bit, IsSpotlightNews === "true")
+        .input("CreatedOn", sql.DateTime, new Date())
+        .input("IsActive", sql.Bit, 1)
+        .input("IsApproved", sql.Bit, 0)
+        .input("Attachments", sql.NVarChar(sql.MAX), JSON.stringify(Attachments));
+
+      await request.query(`
+        INSERT INTO NewsArticles
+        (Title, Content, Title_Ar, Content_Ar, CategoryID, AuthorID,
+         MainSlideImage, IsTopStory, IsFeatured, IsBreakingNews, IsSpotlightNews,
+         CreatedOn, IsActive, IsApproved, Attachments)
+        VALUES
+        (@Title, @Content, @Title_Ar, @Content_Ar, @CategoryID, @AuthorID,
+         @MainSlideImage, @IsTopStory, @IsFeatured, @IsBreakingNews, @IsSpotlightNews,
+         @CreatedOn, @IsActive, @IsApproved, @Attachments)
       `);
 
-    res.json({ success: true, message: 'News created successfully and awaiting approval.' });
-  } catch (err) {
-    console.error('CREATE NEWS ERROR:', err);
-    res.status(500).json({ success: false, message: err.message });
+      res.json({ success: true, message: "News posted successfully." });
+
+    } catch (err) {
+      console.error("CREATE NEWS ERROR:", err);
+      res.status(500).json({ success: false, message: err.message });
+    }
   }
-});
+);
 
-router.post('/news/update/:id', isAdmin, upload.single('image'), async (req, res) => {
-  const ArticleID = parseInt(req.params.id);
-  try {
-    const { Title, Content, Title_Ar, Content_Ar, CategoryID, IsTopStory, IsFeatured } = req.body;
 
-    const ImageURL = req.file ? `/uploads/${req.file.filename}` : null;
+router.post(
+  '/news/update/:id',
+  isAdmin,
+  upload.fields([
+    { name: 'MainImage', maxCount: 1 },
+    { name: 'Attachments', maxCount: 10 }
+  ]),
+  async (req, res) => {
+    const ArticleID = parseInt(req.params.id);
+    try {
+      const {
+        Title, Content, Title_Ar, Content_Ar,
+        CategoryID, IsTopStory, IsFeatured, IsBreakingNews, IsSpotlightNews,
+        editExistingAttachments // hidden input with JSON of old attachments
+      } = req.body;
 
-    const pool = await sql.connect(sqlConfig);
-    const request = pool.request();
-    request.input('ArticleID', sql.Int, ArticleID)
-      .input('Title', sql.NVarChar(255), Title)
-      .input('Content', sql.NText, Content)
-      .input('Title_Ar', sql.NVarChar(255), Title_Ar || null)
-      .input('Content_Ar', sql.NText, Content_Ar || null)
-      .input('CategoryID', sql.Int, parseInt(CategoryID))
-      .input('IsTopStory', sql.Bit, IsTopStory === 'true' ? 1 : 0)
-      .input('IsFeatured', sql.Bit, IsFeatured === 'true' ? 1 : 0);
+      // Parse existing attachments
+      let existingAttachments = [];
+      if (editExistingAttachments) {
+        try {
+          existingAttachments = JSON.parse(editExistingAttachments);
+        } catch (err) {
+          console.error('Error parsing existing attachments:', err);
+        }
+      }
 
-    if (ImageURL) request.input('ImageURL', sql.NVarChar(255), ImageURL);
+      // New uploaded attachments
+      const newAttachments = req.files['Attachments']
+        ? req.files['Attachments'].map(f => `/uploads/${f.filename}`)
+        : [];
 
-    await request.query(`
-      UPDATE NewsArticles
-      SET Title=@Title,
-          Content=@Content,
-          Title_Ar=@Title_Ar,
-          Content_Ar=@Content_Ar,
-          CategoryID=@CategoryID,
-          IsTopStory=@IsTopStory,
-          IsFeatured=@IsFeatured
-          ${ImageURL ? ', ImageURL=@ImageURL' : ''},
-          UpdatedOn=GETDATE()
-      WHERE ArticleID=@ArticleID
-    `);
+      // Merge both
+      const finalAttachments = [...existingAttachments, ...newAttachments];
 
-    res.json({ success: true, message: 'News updated successfully.' });
-  } catch (err) {
-    console.error('UPDATE NEWS ERROR:', err);
-    res.status(500).json({ success: false, message: err.message });
+      const MainImage = req.files['MainImage']
+        ? `/uploads/${req.files['MainImage'][0].filename}`
+        : null;
+
+      const pool = await sql.connect(sqlConfig);
+      const request = pool.request();
+
+      request.input('ArticleID', sql.Int, ArticleID)
+        .input('Title', sql.NVarChar(255), Title)
+        .input('Content', sql.NText, Content)
+        .input('Title_Ar', sql.NVarChar(255), Title_Ar || null)
+        .input('Content_Ar', sql.NText, Content_Ar || null)
+        .input('CategoryID', sql.Int, parseInt(CategoryID))
+        .input('IsTopStory', sql.Bit, IsTopStory === 'true' ? 1 : 0)
+        .input('IsFeatured', sql.Bit, IsFeatured === 'true' ? 1 : 0)
+        .input('IsBreakingNews', sql.Bit, IsBreakingNews === 'true' ? 1 : 0)
+        .input('IsSpotlightNews', sql.Bit, IsSpotlightNews === 'true' ? 1 : 0)
+        .input('UpdatedOn', sql.DateTime, new Date())
+        .input('Attachments', sql.NVarChar(sql.MAX), JSON.stringify(finalAttachments));
+
+      let updateQuery = `
+        UPDATE NewsArticles
+        SET Title=@Title,
+            Content=@Content,
+            Title_Ar=@Title_Ar,
+            Content_Ar=@Content_Ar,
+            CategoryID=@CategoryID,
+            IsTopStory=@IsTopStory,
+            IsFeatured=@IsFeatured,
+            IsBreakingNews=@IsBreakingNews,
+            IsSpotlightNews=@IsSpotlightNews,
+            UpdatedOn=@UpdatedOn,
+            Attachments=@Attachments
+      `;
+
+      if (MainImage) {
+        request.input('MainImage', sql.NVarChar(255), MainImage);
+        updateQuery += `, MainSlideImage=@MainImage`;
+      }
+
+      updateQuery += ` WHERE ArticleID=@ArticleID`;
+
+      await request.query(updateQuery);
+
+      res.json({ success: true, message: 'News updated successfully.' });
+    } catch (err) {
+      console.error('UPDATE NEWS ERROR:', err);
+      res.status(500).json({ success: false, message: err.message });
+    }
   }
-});
+);
+
+
+
+// router.post('/news/update/:id', isAdmin, upload.single('image'), async (req, res) => {
+//   const ArticleID = parseInt(req.params.id);
+//   try {
+//     const { Title, Content, Title_Ar, Content_Ar, CategoryID, IsTopStory, IsFeatured } = req.body;
+
+//     const ImageURL = req.file ? `/uploads/${req.file.filename}` : null;
+
+//     const pool = await sql.connect(sqlConfig);
+//     const request = pool.request();
+//     request.input('ArticleID', sql.Int, ArticleID)
+//       .input('Title', sql.NVarChar(255), Title)
+//       .input('Content', sql.NText, Content)
+//       .input('Title_Ar', sql.NVarChar(255), Title_Ar || null)
+//       .input('Content_Ar', sql.NText, Content_Ar || null)
+//       .input('CategoryID', sql.Int, parseInt(CategoryID))
+//       .input('IsTopStory', sql.Bit, IsTopStory === 'true' ? 1 : 0)
+//       .input('IsFeatured', sql.Bit, IsFeatured === 'true' ? 1 : 0);
+
+//     if (ImageURL) request.input('ImageURL', sql.NVarChar(255), ImageURL);
+
+//     await request.query(`
+//       UPDATE NewsArticles
+//       SET Title=@Title,
+//           Content=@Content,
+//           Title_Ar=@Title_Ar,
+//           Content_Ar=@Content_Ar,
+//           CategoryID=@CategoryID,
+//           IsTopStory=@IsTopStory,
+//           IsFeatured=@IsFeatured
+//           ${ImageURL ? ', ImageURL=@ImageURL' : ''},
+//           UpdatedOn=GETDATE()
+//       WHERE ArticleID=@ArticleID
+//     `);
+
+//     res.json({ success: true, message: 'News updated successfully.' });
+//   } catch (err) {
+//     console.error('UPDATE NEWS ERROR:', err);
+//     res.status(500).json({ success: false, message: err.message });
+//   }
+// });
 
 // -------------------------
 // 4️⃣ Delete News
 // -------------------------
-const fs = require('fs');
 router.delete('/news/:id', isAdmin, async (req, res) => {
   const ArticleID = parseInt(req.params.id);
 
@@ -213,24 +385,64 @@ router.post('/news/approve/:id', isAdmin, async (req, res) => {
 // -------------------------
 // 6️⃣ Admin: Get all news with likes/comments
 // -------------------------
+// router.get('/news/admin', isAdmin, async (req, res) => {
+//   try {
+//     await sql.connect(sqlConfig);
+//     const result = await sql.query(`
+//       SELECT n.ArticleID, n.Title, n.Title_Ar, n.Content, n.Content_Ar,
+//              n.ImageURL, n.IsApproved, n.IsActive, n.CreatedOn, n.PublishedOn, n.CategoryID,
+//              n.UpdatedOn,n.IsTopStory,n.IsFeatured,n.HighlightOrder, n.ViewCount,
+//              (SELECT COUNT(*) FROM NewsLikes l WHERE l.ArticleID = n.ArticleID) AS LikesCount,
+//              (SELECT COUNT(*) FROM NewsComments c WHERE c.ArticleID = n.ArticleID and c.IsApproved=1) AS CommentsCount,
+// 			 c.CategoryName, 
+//           c.CategoryName_Ar
+//       FROM NewsArticles n LEFT JOIN NewsCategories c ON c.CategoryID = n.CategoryID
+//       ORDER BY n.CreatedOn DESC
+//     `);
+//     res.json(result.recordset);
+//   } catch (err) {
+//     console.error('ADMIN NEWS ERROR:', err);
+//     res.status(500).json({ success: false, message: err.message });
+//   }
+// });
+
+// -------------------------
+// 6️⃣ Admin: Get all news with likes/comments and full fields for edit
+// -------------------------
 router.get('/news/admin', isAdmin, async (req, res) => {
   try {
     await sql.connect(sqlConfig);
     const result = await sql.query(`
       SELECT n.ArticleID, n.Title, n.Title_Ar, n.Content, n.Content_Ar,
-             n.ImageURL, n.IsApproved, n.IsActive, n.CreatedOn, n.PublishedOn, n.CategoryID,
-             n.UpdatedOn,n.IsTopStory,n.IsFeatured,n.HighlightOrder, n.ViewCount,
+             n.CategoryID, n.AuthorID, n.MainSlideImage, n.Attachments,
+             n.IsApproved, n.IsActive, n.CreatedOn, n.PublishedOn, n.UpdatedOn,
+             n.IsTopStory, n.IsFeatured, n.IsBreakingNews, n.IsSpotlightNews,
+             n.HighlightOrder, n.ViewCount,
              (SELECT COUNT(*) FROM NewsLikes l WHERE l.ArticleID = n.ArticleID) AS LikesCount,
-             (SELECT COUNT(*) FROM NewsComments c WHERE c.ArticleID = n.ArticleID and c.IsApproved=1) AS CommentsCount
+             (SELECT COUNT(*) FROM NewsComments c WHERE c.ArticleID = n.ArticleID AND c.IsApproved=1) AS CommentsCount,
+             c.CategoryName, c.CategoryName_Ar
       FROM NewsArticles n
+      LEFT JOIN NewsCategories c ON c.CategoryID = n.CategoryID
       ORDER BY n.CreatedOn DESC
     `);
-    res.json(result.recordset);
+
+    // Parse attachments from JSON
+    const newsWithAttachments = result.recordset.map(n => ({
+      ...n,
+      Attachments: n.Attachments ? JSON.parse(n.Attachments) : [],
+      IsTopStory: !!n.IsTopStory,
+      IsFeatured: !!n.IsFeatured,
+      IsBreakingNews: !!n.IsBreakingNews,
+      IsSpotlightNews: !!n.IsSpotlightNews
+    }));
+
+    res.json(newsWithAttachments);
   } catch (err) {
     console.error('ADMIN NEWS ERROR:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
 
 // -------------------------
 // 6️⃣ Admin: Get active & approved news grouped by category
@@ -1066,10 +1278,10 @@ async function sendConfirmationEmail(email, token) {
 
   const confirmLink = `http://localhost:3000/api/newsletter/confirm/${token}`;
   const mailOptions = {
-  from: '"TOB News" <sethuraman0104@gmail.com>',
-  to: email,
-  subject: '📰 Confirm Your Subscription to TOB News',
-  html: `
+    from: '"TOB News" <sethuraman0104@gmail.com>',
+    to: email,
+    subject: '📰 Confirm Your Subscription to TOB News',
+    html: `
   <div style="background:#eef2f7; padding:40px 0; font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
     <div style="max-width:620px; margin:auto; background:#fff; border-radius:14px; box-shadow:0 8px 25px rgba(0,0,0,0.08); overflow:hidden;">
 
@@ -1130,7 +1342,7 @@ async function sendConfirmationEmail(email, token) {
     </div>
   </div>
   `
-};
+  };
 
   try {
     const info = await transporter.sendMail(mailOptions);
