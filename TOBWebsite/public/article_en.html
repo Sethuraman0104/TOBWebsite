@@ -26,15 +26,18 @@
 
 <body>
   <!-- ===================== Breaking News Ticker ===================== -->
-<div class="breaking-news-banner py-1 shadow-sm w-100">
+<div class="breaking-news-banner py-1 w-100">
   <div class="breaking-inner d-flex align-items-center">
-    <strong class="text-light me-3">Breaking News:</strong>
+
+    <div class="bn-left d-flex align-items-center">
+      <span class="live-badge">🔴 LIVE</span>
+      <strong class="bn-label">Breaking:</strong>
+    </div>
 
     <div class="breaking-ticker">
-      <div id="breakingNewsInner">
-        Loading latest news...
-      </div>
+      <div id="breakingNewsInner">Loading latest news...</div>
     </div>
+
   </div>
 </div>
 
@@ -44,9 +47,10 @@
 
             <!-- 🔹 Logo -->
             <div class="brand-box d-flex align-items-center gap-3">
-                <div class="logo-card">
+                <div class="logo-card spark-wrapper">
                     <a href="TOBHome.html#home"><img src="images/TOBDownTransparent.png" class="logo" alt="TOB Logo"
                             id="siteLogo"></a>
+                            <div class="spark-line"></div>
                 </div>
                 <div class="brand-text">
                     <div id="brandTitle">TOB News</div>

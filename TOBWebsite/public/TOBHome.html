@@ -28,15 +28,18 @@
 
 <body>
   <!-- ===================== Breaking News Ticker ===================== -->
-<div class="breaking-news-banner py-1 shadow-sm w-100">
+<div class="breaking-news-banner py-1 w-100">
   <div class="breaking-inner d-flex align-items-center">
-    <strong class="text-light me-3">Breaking News:</strong>
+
+    <div class="bn-left d-flex align-items-center">
+      <span class="live-badge">🔴 LIVE</span>
+      <strong class="bn-label">Breaking:</strong>
+    </div>
 
     <div class="breaking-ticker">
-      <div id="breakingNewsInner">
-        Loading latest news...
-      </div>
+      <div id="breakingNewsInner">Loading latest news...</div>
     </div>
+
   </div>
 </div>
 
@@ -45,7 +48,7 @@
     <div class="container d-flex align-items-center justify-content-between flex-wrap gap-3">
 
       <!-- 🔹 Logo -->
-      <div class="brand-box d-flex align-items-center gap-3">
+      <!-- <div class="brand-box d-flex align-items-center gap-3">
         <div class="logo-card">
           <img src="images/TOBDownTransparent.png" class="logo" alt="TOB Logo" id="siteLogo">
         </div>
@@ -53,7 +56,20 @@
           <div id="brandTitle">TOB News</div>
           <div class="muted-small text-light fs-6">Reliable local & global news</div>
         </div>
-      </div>
+      </div> -->
+
+      <div class="brand-box d-flex align-items-center gap-3">
+  <div class="logo-card spark-wrapper">
+    <img src="images/TOBDownTransparent.png" class="logo" alt="TOB Logo" id="siteLogo">
+    <div class="spark-line"></div>
+  </div>
+
+  <div class="brand-text">
+    <div id="brandTitle">TOB News</div>
+    <div class="muted-small text-light fs-6">Reliable local & global news</div>
+  </div>
+</div>
+
 
       <!-- 🔹 Live Info Card -->
       <div class="live-info-card d-flex align-items-center gap-4 flex-wrap">

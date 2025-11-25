@@ -242,15 +242,11 @@
       </div>
       <div id="articlesWithComments" class="articles-grid"></div>
     </section>
-    <!-- Trends Comments Management Section -->
-    <section id="trendcomments" class="section">
-      <div class="floating-title">
-        💬 Trends Comments Management
-      </div>
-
-      <!-- Container for all trends -->
-      <div id="trendsWithComments" class="articles-grid"></div>
-    </section>
+   <!-- Trends Comments Management Section -->
+<section id="trendcomments" class="section">
+  <div class="floating-title">💬 Trends Comments Management</div>
+  <div id="trendsWithComments" class="trdComments-grid"></div>
+</section>
     <!-- Manage Categories -->
     <section id="managecategories" class="section container py-4">
       <div class="floating-title">🗂️ Manage Categories
@@ -397,77 +393,7 @@
         <ul class="pagination justify-content-center" id="subscriberPagination"></ul>
       </nav>
     </section>
-    <!-- News Comments Modal Window -->
-    <!-- <div id="commentsModalCustom" class="modal">
-      <div class="modal-content">
-        <span id="closeCommentsModal" class="close">&times;</span>
-        <h2 id="modalArticleTitle">Comments</h2>
-        <ul class="nav-tabs">
-          <li><button class="tablink active" data-tab="pendingTab">🕓 Pending</button></li>
-          <li><button class="tablink" data-tab="approvedTab">✅ Approved</button></li>
-          <li><button class="tablink" data-tab="rejectedTab">🚫 Rejected</button></li>
-        </ul>
-        <input type="text" id="commentSearch" placeholder="Search comments..."
-          style="margin:10px 0; padding:5px; width:100%;">
-        <div id="tabContent">
-          <div id="pendingTab" class="tab-pane active">
-            <div class="table-responsive">
-              <table class="table" id="pendingCommentsTable">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Comment</th>
-                    <th>Commented On</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
-            <ul class="pagination" id="pendingPagination"></ul>
-          </div>
-          <div id="approvedTab" class="tab-pane">
-            <div class="table-responsive">
-              <table class="table" id="approvedCommentsTable">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Comment</th>
-                    <th>Commented On</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
-            <ul class="pagination" id="approvedPagination"></ul>
-          </div>
-          <div id="rejectedTab" class="tab-pane">
-            <div class="table-responsive">
-              <table class="table" id="rejectedCommentsTable">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Comment</th>
-                    <th>Commented On</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
-            <ul class="pagination" id="rejectedPagination"></ul>
-          </div>
-        </div>
-      </div>
-    </div> -->
-
-    <!-- News Comments Modal Window -->
+    <!-- News Comments Modal Window -->    
 <div id="commentsModalCustom" class="mdlArticleModal-container">
   <div class="mdlArticleModal-content">
     <div class="mdlArticleModal-header">
@@ -545,85 +471,90 @@
 </div>
 
     <!-- Trends Comments Modal Window -->
-    <div id="trendsCommentsModalCustom" class="modal">
-      <div class="modal-content">
-        <span id="closeTrendsCommentsModal" class="close">&times;</span>
-        <h2 id="modalTrendTitle">Comments</h2>
+    <div id="trendsCommentsModalCustom" class="mdlArticleModal-container">
+  <div class="mdlArticleModal-content">
 
-        <!-- Tabs -->
-        <ul class="nav-tabs">
-          <li><button class="tablink active" data-tab="trendsPendingTab">🕓 Pending</button></li>
-          <li><button class="tablink" data-tab="trendsApprovedTab">✅ Approved</button></li>
-          <li><button class="tablink" data-tab="trendsRejectedTab">🚫 Rejected</button></li>
-        </ul>
-
-        <!-- Search -->
-        <input type="text" id="trendsCommentSearch" placeholder="Search comments..."
-          style="margin:10px 0; padding:5px; width:100%;">
-
-        <!-- Tab Content -->
-        <div id="trendsTabContent">
-          <!-- Pending -->
-          <div id="trendsPendingTab" class="tab-pane active">
-            <div class="table-responsive">
-              <table class="table" id="trendsPendingCommentsTable">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Comment</th>
-                    <th>Commented On</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
-            <ul class="pagination" id="trendsPendingPagination"></ul>
-          </div>
-
-          <!-- Approved -->
-          <div id="trendsApprovedTab" class="tab-pane">
-            <div class="table-responsive">
-              <table class="table" id="trendsApprovedCommentsTable">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Comment</th>
-                    <th>Commented On</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
-            <ul class="pagination" id="trendsApprovedPagination"></ul>
-          </div>
-
-          <!-- Rejected -->
-          <div id="trendsRejectedTab" class="tab-pane">
-            <div class="table-responsive">
-              <table class="table" id="trendsRejectedCommentsTable">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Comment</th>
-                    <th>Commented On</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
-            <ul class="pagination" id="trendsRejectedPagination"></ul>
-          </div>
-        </div>
-      </div>
+    <!-- Header -->
+    <div class="mdlArticleModal-header">
+      <h4 id="modalTrendTitle">Comments</h4>
+      <span id="closeTrendsCommentsModal" class="mdlArticleModal-close">&times;</span>
     </div>
+
+    <!-- Tabs + Search -->
+    <div class="mdlArticleModal-tabs">
+      <button class="tablink active" data-tab="trendsPendingTab">🕓 Pending</button>
+      <button class="tablink" data-tab="trendsApprovedTab">✅ Approved</button>
+      <button class="tablink" data-tab="trendsRejectedTab">🚫 Rejected</button>
+
+      <input type="text" id="trendsCommentSearch" class="mdlArticleModal-search" placeholder="Search comments...">
+    </div>
+
+    <!-- Tab Content -->
+    <div class="mdlArticleModal-tabcontent">
+
+      <!-- Pending -->
+      <div id="trendsPendingTab" class="tab-pane active">
+        <div class="mdlArticleModal-table-wrapper">
+          <table class="mdlArticleModal-table" id="trendsPendingCommentsTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Comment</th>
+                <th>Commented On</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <ul class="mdlArticleModal-pagination" id="trendsPendingPagination"></ul>
+      </div>
+
+      <!-- Approved -->
+      <div id="trendsApprovedTab" class="tab-pane">
+        <div class="mdlArticleModal-table-wrapper">
+          <table class="mdlArticleModal-table" id="trendsApprovedCommentsTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Comment</th>
+                <th>Commented On</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <ul class="mdlArticleModal-pagination" id="trendsApprovedPagination"></ul>
+      </div>
+
+      <!-- Rejected -->
+      <div id="trendsRejectedTab" class="tab-pane">
+        <div class="mdlArticleModal-table-wrapper">
+          <table class="mdlArticleModal-table" id="trendsRejectedCommentsTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Comment</th>
+                <th>Commented On</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <ul class="mdlArticleModal-pagination" id="trendsRejectedPagination"></ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+
     <!-- Add/Edit Trend Modal Window -->
     <div id="trendModal" class="modal">
       <div class="modal-content">

@@ -1981,54 +1981,89 @@ img:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-
-/* ===================== Breaking News ===================== */
+/* ------------------ Main Bar ------------------ */
 .breaking-news-banner {
-  background: #e11e26;
-  overflow: hidden;  
+  background: linear-gradient(90deg, #c90000, #ff4d4d);
+  overflow: hidden;
+  box-shadow: 0 0 12px rgba(255, 0, 0, 0.3);
 }
 
-.breaking-news-banner strong {
-  white-space: nowrap;
+/* Left side: LIVE + Breaking */
+.bn-left {
+  background: rgba(255, 255, 255, 0.25);
+  padding: 3px 10px;
+  border-radius: 6px;
+  margin-right: 12px;
+  backdrop-filter: blur(4px);
 }
 
+/* LIVE badge */
+.live-badge {
+  background: #ffffff;
+  color: #c90000;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-right: 6px;
+  box-shadow: 0 0 8px rgba(255,255,255,0.7);
+  animation: pulseLive 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseLive {
+  0%   { transform: scale(1); opacity: 0.8; }
+  50%  { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+/* Breaking: label */
+.bn-label {
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* Ticker */
 .breaking-inner {
-  width: 100%;
-  max-width: 1520px; /* same as container-xl */
+  max-width: 1520px;
   margin: 0 auto;
   padding-left: 12px;
   padding-right: 12px;
+  width: 100%;
 }
 
 .breaking-ticker {
   display: flex;
-  white-space: nowrap;
   overflow: hidden;
+  white-space: nowrap;
   flex: 1;
 }
 
 #breakingNewsInner {
   display: inline-block;
   padding-left: 100%;
-  animation: scrollBreaking 40s linear infinite;
+  animation: scrollBreaking 20s linear infinite;
   color: #fff;
+  font-weight: 500;
 }
 
 .breaking-item {
   margin-right: 60px;
   cursor: pointer;
   font-weight: 600;
-  color: #fff;
+  transition: 0.2s ease;
 }
 
 .breaking-item:hover {
-  text-decoration: underline;
+  transform: scale(1.05);
+  text-shadow: 0 0 8px rgba(255,255,255,0.8);
 }
 
 @keyframes scrollBreaking {
   0% { transform: translateX(0%); }
   100% { transform: translateX(-100%); }
 }
+
 
 /* ===================== TOB Top Header ===================== */
 .TOBTopheader {
@@ -2098,6 +2133,50 @@ img:hover {
     transform: rotate(360deg);
   }
 }
+
+/* Wrapper to hold logo + spark effect */
+.spark-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+/* Spark line that traces around the logo */
+.spark-line {
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border-radius: 14px;
+  pointer-events: none;
+  border: 3px solid transparent;
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.7);
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: sparkRun 3s linear infinite;
+}
+
+/* Spark running animation */
+@keyframes sparkRun {
+  0% {
+    border-image: linear-gradient(0deg, #ffea00, #ff0000) 1;
+  }
+  50% {
+    border-image: linear-gradient(180deg, #ffea00, #ff0000) 1;
+  }
+  100% {
+    border-image: linear-gradient(360deg, #ffea00, #ff0000) 1;
+  }
+}
+
+/* Optional glow on hover */
+.spark-wrapper:hover .spark-line {
+  box-shadow: 0 0 20px rgba(255, 230, 0, 1);
+  transition: 0.2s;
+}
+
 
 /* Trends Ticker */
 .TOBNavbar .trends-strip-container {

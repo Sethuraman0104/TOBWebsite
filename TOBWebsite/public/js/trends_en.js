@@ -346,22 +346,48 @@ async function loadTrend() {
   }
 }
 
-// ---------------- Breaking News ----------------
-const breakingNews = [
-  "Government announces new economic reforms",
-  "Local football team wins championship",
-  "Heavy rains expected tomorrow across the region",
-  "Stock market hits all-time high",
-  "New technology park to open downtown"
-];
-let newsIndex = 0;
-function updateBreakingNews() {
-  const ticker = document.getElementById('breakingNewsInner');
-  ticker.textContent = breakingNews[newsIndex];
-  newsIndex = (newsIndex + 1) % breakingNews.length;
+const icons = ["🔥", "⚡", "📢", "🚨", "🛑"];
+async function loadBreakingNews() {
+  try {
+    const res = await fetch('/api/news/admin', { cache: 'no-store' });
+    const news = await res.json();
+
+    // Validate and filter
+    const validNews = (Array.isArray(news) ? news : []).filter(
+      n => n.IsActive && n.IsApproved && n.IsBreakingNews
+    );
+
+    const ticker = document.getElementById("breakingNewsInner");
+
+    if (!validNews.length) {
+      ticker.innerHTML = `<span class="text-light">No breaking news right now.</span>`;
+      return;
+    }
+
+    // Sort by latest first
+    const sorted = validNews.sort(
+      (a, b) => new Date(b.PublishedOn) - new Date(a.PublishedOn)
+    );
+
+    // Build scrolling text line
+    let html = "";
+    sorted.forEach((n, i) => {
+      const icon = icons[i % icons.length]; // rotate icons
+      html += `
+    <span class="breaking-item" onclick="openArticle(${n.ArticleID})">
+      ${icon} ${n.Title}
+    </span>
+  `;
+    });
+    ticker.innerHTML = html + html;
+
+  } catch (err) {
+    console.error("loadBreakingNews error:", err);
+    document.getElementById("breakingNewsInner").innerHTML =
+      `<span class="text-light">Error loading breaking news...</span>`;
+  }
 }
-setInterval(updateBreakingNews, 5000);
-updateBreakingNews();
+loadBreakingNews();
 
 async function loadAdvertisements() {
   try {
@@ -468,7 +494,6 @@ async function loadAdvertisements() {
     console.error('❌ Error loading advertisements:', err);
   }
 }
-
 window.addEventListener('load', loadAdvertisements);
 
 // -----------------------------------------
@@ -556,7 +581,7 @@ function renderCommentsRecursive(comments) {
         <div class="comment-header d-flex justify-content-between align-items-start">
           <div>
             <strong>${escapeHtml(c.Name || 'Anonymous')}</strong>
-            <small class="text-muted ms-2">• ${c.CreatedOn ? new Date(c.CreatedOn).toLocaleString() : ''}</small>
+            <small class="text-muted ms-2">• ${c.CreatedOn ? formatDateTime(c.CreatedOn) : ''}</small>
           </div>
           <button class="btn btn-sm btn-outline-primary reply-btn" data-commentid="${c.CommentID}">
             <i class="fa fa-reply"></i> Reply

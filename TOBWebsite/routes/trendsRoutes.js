@@ -300,7 +300,7 @@ router.get("/gettrend/:id", async (req, res) => {
 // ===================================================================
 router.post("/:id/likes", async (req, res) => {
   const TrendID = parseInt(req.params.id, 10);
-  const { UserIP } = req.body;
+  const { UserIP } = req.body; // UserIP from frontend
 
   if (!TrendID || isNaN(TrendID)) {
     return res.status(400).json({ success: false, message: "Invalid TrendID" });
@@ -312,7 +312,7 @@ router.post("/:id/likes", async (req, res) => {
   try {
     const pool = await sql.connect(sqlConfig);
 
-    // Check trend existence
+    // Check trend exists
     const trendExists = await pool
       .request()
       .input("TrendID", sql.Int, TrendID)
@@ -322,12 +322,16 @@ router.post("/:id/likes", async (req, res) => {
       return res.status(404).json({ success: false, message: "Trend not found" });
     }
 
-    // Check for duplicate like
+    // Check duplicate like
     const alreadyLiked = await pool
       .request()
       .input("TrendID", sql.Int, TrendID)
-      .input("UserIP", sql.NVarChar(255), UserIP)
-      .query("SELECT 1 FROM TrendLikes WHERE TrendID=@TrendID AND UserIP=@UserIP");
+      .input("UserIdentifier", sql.NVarChar(255), UserIP)
+      .query(`
+        SELECT 1 
+        FROM TrendLikes 
+        WHERE TrendID=@TrendID AND UserIdentifier=@UserIdentifier
+      `);
 
     if (alreadyLiked.recordset.length) {
       return res.json({ success: false, message: "You already liked this trend" });
@@ -337,19 +341,35 @@ router.post("/:id/likes", async (req, res) => {
     await pool
       .request()
       .input("TrendID", sql.Int, TrendID)
-      .input("UserIP", sql.NVarChar(255), UserIP)
-      .query("INSERT INTO TrendLikes (TrendID, UserIP, CreatedOn) VALUES (@TrendID, @UserIP, GETDATE())");
+      .input("UserIdentifier", sql.NVarChar(255), UserIP)
+      .query(`
+        INSERT INTO TrendLikes (TrendID, UserIdentifier, LikedOn)
+        VALUES (@TrendID, @UserIdentifier, GETDATE())
+      `);
 
     // Return updated like count
     const likeCountResult = await pool
       .request()
       .input("TrendID", sql.Int, TrendID)
-      .query("SELECT COUNT(*) AS LikeCount FROM TrendLikes WHERE TrendID=@TrendID");
+      .query(`
+        SELECT COUNT(*) AS LikeCount 
+        FROM TrendLikes 
+        WHERE TrendID=@TrendID
+      `);
 
-    res.json({ success: true, message: "Trend liked successfully", likeCount: likeCountResult.recordset[0].LikeCount });
+    res.json({
+      success: true,
+      message: "Trend liked successfully",
+      likeCount: likeCountResult.recordset[0].LikeCount
+    });
+
   } catch (err) {
     console.error("POST /trends/:id/likes error:", err);
-    res.status(500).json({ success: false, message: "Server error while liking trend", error: err.message });
+    res.status(500).json({
+      success: false,
+      message: "Server error while liking trend",
+      error: err.message
+    });
   }
 });
 

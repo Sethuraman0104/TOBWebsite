@@ -1708,6 +1708,7 @@ async function loadTrendsWithComments() {
 
     const container = document.getElementById('trendsWithComments');
     container.innerHTML = '';
+    container.className = 'trdComments-grid'; // apply new grid
 
     if (!data.data.length) {
       container.innerHTML = '<p>No trends with comments found.</p>';
@@ -1715,31 +1716,46 @@ async function loadTrendsWithComments() {
     }
 
     data.data.forEach(trend => {
+      const mainImage = trend.ImageURL || 'images/default-trend.jpg';
+
       const card = document.createElement('div');
-      card.className = 'article-card';
+      card.className = 'trdComments-card';
+
       card.innerHTML = `
-        <img src="${trend.ImageURL || 'images/default-trend.jpg'}" alt="${trend.TrendTitle_EN}">
-        <h5>${trend.TrendTitle_EN}</h5>
-        <p class="text-muted mb-1">Created: ${moment(trend.CreatedOn).format('LL')}</p>
-        <div class="comment-stats text-start mt-2">
-          <p class="mb-0 text-warning"><i class="fa-solid fa-hourglass-half"></i> Pending: ${trend.PendingCount}</p>
-          <p class="mb-0 text-success"><i class="fa-solid fa-check-circle"></i> Approved: ${trend.ApprovedCount}</p>
+        <img src="${mainImage}" alt="${trend.TrendTitle_EN}" class="trdComments-mainImage">
+
+        <div class="trdComments-info">
+
+          <h5>${trend.TrendTitle_EN}</h5>
+
+          <div class="trdComments-meta">
+            <span><i class="fa-regular fa-calendar"></i> ${moment(trend.CreatedOn).format('LL')}</span>
+          </div>
+
+          <div class="trdComments-comments">
+            <p class="text-warning">
+              <i class="fa-solid fa-hourglass-half"></i> Pending: ${trend.PendingCount}
+            </p>
+            <p class="text-success">
+              <i class="fa-solid fa-check-circle"></i> Approved: ${trend.ApprovedCount}
+            </p>
+          </div>
+
+          <button class="trdComments-btn" onclick="viewTrendComments(${trend.TrendID}, '${trend.TrendTitle_EN.replace(/'/g, "\\'")}')">
+            <i class="fa-solid fa-comments"></i> View Comments
+          </button>
+
         </div>
       `;
 
-      // Create "View Comments" button safely
-      const btn = document.createElement('button');
-      btn.className = 'btn btn-primary btn-sm mt-3';
-      btn.textContent = 'View Comments';
-      btn.addEventListener('click', () => viewTrendComments(trend.TrendID, trend.TrendTitle_EN));
-
-      card.appendChild(btn);
       container.appendChild(card);
     });
+
   } catch (err) {
     console.error('❌ Error loading trends:', err);
   }
 }
+
 
 // ---------------------------------
 // View comments modal for trend
@@ -1795,12 +1811,12 @@ function renderTrendCommentsTable(list, tableId, type, currentPage, trendTitle, 
     if (type !== 'rejected') {
       if (type === 'pending') {
         const approveBtn = document.createElement('button');
-        approveBtn.className = 'btn btn-success btn-sm me-1';
+        approveBtn.className = 'approve';
         approveBtn.textContent = 'Approve';
         approveBtn.addEventListener('click', () => updateTrendCommentStatus(c.CommentID, 'approve', c.TrendID, trendTitle));
 
         const rejectBtn = document.createElement('button');
-        rejectBtn.className = 'btn btn-danger btn-sm';
+        rejectBtn.className = 'reject';
         rejectBtn.textContent = 'Reject';
         rejectBtn.addEventListener('click', () => updateTrendCommentStatus(c.CommentID, 'reject', c.TrendID, trendTitle));
 
@@ -1808,7 +1824,7 @@ function renderTrendCommentsTable(list, tableId, type, currentPage, trendTitle, 
         tdActions.appendChild(rejectBtn);
       } else if (type === 'approved') {
         const rejectBtn = document.createElement('button');
-        rejectBtn.className = 'btn btn-danger btn-sm';
+        rejectBtn.className = 'reject';
         rejectBtn.textContent = 'Reject';
         rejectBtn.addEventListener('click', () => updateTrendCommentStatus(c.CommentID, 'reject', c.TrendID, trendTitle));
         tdActions.appendChild(rejectBtn);
