@@ -54,7 +54,6 @@
 
   <main class="main-content">
     <!-- Publish News -->
-
     <section id="publish" class="section active publishNA-section">
       <div class="floating-title">📝 Create News</div>
       <div class="card form-card publishNA-form-card">
@@ -111,56 +110,52 @@
         <div id="postNewsMsg" class="message"></div>
       </div>
     </section>
-
     <!-- Pending News -->
     <section id="pending" class="section">
       <div class="floating-title">⏳ Unpublished News</div>
       <div id="pendingNewsContainer"></div>
     </section>
-
     <!-- News Preview Modal -->
-<div id="newsPreviewModal" class="preview-modal">
-  <div class="preview-modal-content">
+    <div id="newsPreviewModal" class="preview-modal">
+      <div class="preview-modal-content">
 
-    <!-- Header -->
-    <div class="preview-header">
-      <h2 id="previewTitleEnHeader">English Title</h2>
-      <span class="preview-close" id="closeNewsPreview">&times;</span>
-    </div>
-
-    <!-- Scrollable Content -->
-    <div class="preview-scrollable">
-
-      <!-- Carousel Container -->
-      <div class="carousel-container">
-        <button class="carousel-btn left" id="carouselPrev">&#10094;</button>
-        <img id="carouselImage" class="carousel-image" />
-        <button class="carousel-btn right" id="carouselNext">&#10095;</button>
-      </div>
-
-      <!-- Content -->
-      <div class="preview-body">
-        <div class="preview-left">
-          <h3>English Content</h3>
-          <div id="previewContentEn"></div>
+        <!-- Header -->
+        <div class="preview-header">
+          <h2 id="previewTitleEnHeader">English Title</h2>
+          <span class="preview-close" id="closeNewsPreview">&times;</span>
         </div>
-        <div class="preview-right" dir="rtl">
-          <h3>Arabic Content</h3>
-          <div id="previewContentAr"></div>
+
+        <!-- Scrollable Content -->
+        <div class="preview-scrollable">
+
+          <!-- Carousel Container -->
+          <div class="carousel-container">
+            <button class="carousel-btn left" id="carouselPrev">&#10094;</button>
+            <img id="carouselImage" class="carousel-image" />
+            <button class="carousel-btn right" id="carouselNext">&#10095;</button>
+          </div>
+
+          <!-- Content -->
+          <div class="preview-body">
+            <div class="preview-left">
+              <h3>English Content</h3>
+              <div id="previewContentEn"></div>
+            </div>
+            <div class="preview-right" dir="rtl">
+              <h3>Arabic Content</h3>
+              <div id="previewContentAr"></div>
+            </div>
+          </div>
+
         </div>
+
+        <!-- Footer -->
+        <div class="preview-footer">
+          <button id="closeNewsPreviewFooter" class="btn-close-modal">Close</button>
+        </div>
+
       </div>
-
     </div>
-
-    <!-- Footer -->
-    <div class="preview-footer">
-      <button id="closeNewsPreviewFooter" class="btn-close-modal">Close</button>
-    </div>
-
-  </div>
-</div>
-
-
     <!-- All Published News -->
     <section id="allnews" class="section">
       <div class="floating-title">📄 Published News</div>
@@ -170,14 +165,13 @@
       </div>
       <div id="allNewsEngagement"></div>
     </section>
-
+    <!-- Deactivated News -->
     <section id="inactive" class="section">
       <div class="floating-title">
         🚫 Deactivated News
       </div>
       <div id="inactiveNewsContainer"></div>
     </section>
-
     <!-- Trending Section -->
     <section id="trending" class="section">
       <div class="floating-title">
@@ -205,8 +199,7 @@
 
       <div id="trendsContainer" class="trends-grid"></div>
     </section>
-
-    <!-- Trend Preview Modal -->
+    <!-- Trend Preview Modal Window -->
     <div id="trendsmdl-modal" class="trendsmdl-overlay">
       <div class="trendsmdl-box">
         <!-- FIXED HEADER -->
@@ -242,18 +235,14 @@
         </div>
       </div>
     </div>
-
-    <!-- Comments -->
+    <!-- News Comments Confirmation -->
     <section id="comments" class="section">
       <div class="floating-title">
         💬 Article Comments Management
       </div>
       <div id="articlesWithComments" class="articles-grid"></div>
     </section>
-
-    <!-- =================================== -->
     <!-- Trends Comments Management Section -->
-    <!-- =================================== -->
     <section id="trendcomments" class="section">
       <div class="floating-title">
         💬 Trends Comments Management
@@ -262,7 +251,6 @@
       <!-- Container for all trends -->
       <div id="trendsWithComments" class="articles-grid"></div>
     </section>
-
     <!-- Manage Categories -->
     <section id="managecategories" class="section container py-4">
       <div class="floating-title">🗂️ Manage Categories
@@ -270,12 +258,10 @@
           <i class="fa-solid fa-plus"></i> Add New Category
         </button>
       </div>
-
       <!-- Search Input -->
       <div class="mb-3">
         <input type="text" id="categorySearch" class="form-control" placeholder="Search categories...">
       </div>
-
       <!-- Grid / Table -->
       <div class="table-responsive">
         <table class="table table-striped table-hover align-middle" id="categoriesTable">
@@ -293,58 +279,64 @@
           <tbody></tbody>
         </table>
       </div>
-
       <!-- Pagination -->
       <nav>
         <ul class="pagination justify-content-center" id="categoryPagination"></ul>
       </nav>
     </section>
+    <!-- Add/Edit Category Modal Window -->
+    <div id="categoryModal" class="mdlCategoryModal">
+      <div class="mdlCategoryContent">
+        <!-- Modal Header -->
+        <div class="mdlCategoryHeader">
+          <h2 id="categoryModalTitle"><i class="fa-solid fa-folder-plus"></i> Add Category</h2>
+          <span class="mdlCategoryClose" id="closeCategoryModal">&times;</span>
+        </div>
 
-    <!-- Category Modal -->
-    <div class="modal fade" id="categoryModal" tabindex="-1">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content p-3">
-          <div class="modal-header">
-            <h5 id="categoryModalTitle" class="modal-title">Add Category</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <form id="categoryForm" class="p-2">
+        <!-- Modal Body -->
+        <div class="mdlCategoryBody">
+          <form id="categoryForm">
             <input type="hidden" id="CategoryID">
-            <div class="row mb-3">
-              <div class="col-md-6">
+
+            <div class="mdlCategoryRow">
+              <div class="mdlCategoryCol">
                 <label>Category Name (English)</label>
-                <input type="text" id="CategoryName" class="form-control" required>
+                <input type="text" id="CategoryName" required>
               </div>
-              <div class="col-md-6">
+              <div class="mdlCategoryCol">
                 <label>Category Name (Arabic)</label>
-                <input type="text" id="CategoryName_Ar" class="form-control">
+                <input type="text" id="CategoryName_Ar">
               </div>
             </div>
-            <div class="row mb-3">
-              <div class="col-md-6">
+
+            <div class="mdlCategoryRow">
+              <div class="mdlCategoryCol">
                 <label>Description (English)</label>
-                <textarea id="Description" class="form-control"></textarea>
+                <textarea id="Description"></textarea>
               </div>
-              <div class="col-md-6">
+              <div class="mdlCategoryCol">
                 <label>Description (Arabic)</label>
-                <textarea id="Description_Ar" class="form-control"></textarea>
+                <textarea id="Description_Ar"></textarea>
               </div>
             </div>
-            <div class="form-check mb-3">
-              <input type="checkbox" class="form-check-input" id="categoryIsActive" checked>
-              <label class="form-check-label" for="IsActive">Active</label>
+
+            <div class="mdlCategoryCheckbox">
+              <label>
+                <input type="checkbox" id="categoryIsActive" checked> Active
+              </label>
             </div>
-            <div class="modal-footer">
-              <button type="submit" class="btn btn-success">
+
+            <div class="mdlCategoryFooter">
+              <button type="submit" class="mdlCategoryBtnSave">
                 <i class="fa fa-save"></i> Save
               </button>
-              <button type="button" class="btn btn-secondary" id="closeCategoryModalFooter">Cancel</button>
+              <button type="button" class="mdlCategoryBtnCancel" id="closeCategoryModalFooter">Cancel</button>
             </div>
           </form>
         </div>
       </div>
     </div>
-
+    <!-- Profile -->
     <section id="profile" class="section container py-4">
       <div class="floating-title">👤 Profile</div>
       <div class="profile-card">
@@ -371,7 +363,6 @@
         </form>
       </div>
     </section>
-
     <!-- Manage Subscribers -->
     <section id="managesubscribers" class="section container py-4">
       <div class="floating-title">
@@ -406,25 +397,18 @@
         <ul class="pagination justify-content-center" id="subscriberPagination"></ul>
       </nav>
     </section>
-
-    <!-- Comments Modal Custom -->
-    <div id="commentsModalCustom" class="modal">
+    <!-- News Comments Modal Window -->
+    <!-- <div id="commentsModalCustom" class="modal">
       <div class="modal-content">
         <span id="closeCommentsModal" class="close">&times;</span>
         <h2 id="modalArticleTitle">Comments</h2>
-
-        <!-- Tabs -->
         <ul class="nav-tabs">
           <li><button class="tablink active" data-tab="pendingTab">🕓 Pending</button></li>
           <li><button class="tablink" data-tab="approvedTab">✅ Approved</button></li>
           <li><button class="tablink" data-tab="rejectedTab">🚫 Rejected</button></li>
         </ul>
-
-        <!-- Search -->
         <input type="text" id="commentSearch" placeholder="Search comments..."
           style="margin:10px 0; padding:5px; width:100%;">
-
-        <!-- Tab Content -->
         <div id="tabContent">
           <div id="pendingTab" class="tab-pane active">
             <div class="table-responsive">
@@ -481,11 +465,86 @@
           </div>
         </div>
       </div>
+    </div> -->
+
+    <!-- News Comments Modal Window -->
+<div id="commentsModalCustom" class="mdlArticleModal-container">
+  <div class="mdlArticleModal-content">
+    <div class="mdlArticleModal-header">
+      <h4 id="modalArticleTitle">Comments</h4>
+      <span id="closeCommentsModal" class="mdlArticleModal-close">&times;</span>
     </div>
 
-    <!-- =================================== -->
-    <!-- Trends Comments Modal Custom -->
-    <!-- =================================== -->
+    <!-- Tabs + Search -->
+    <div class="mdlArticleModal-tabs">
+      <button class="tablink active" data-tab="pendingTab">🕓 Pending</button>
+      <button class="tablink" data-tab="approvedTab">✅ Approved</button>
+      <button class="tablink" data-tab="rejectedTab">🚫 Rejected</button>
+      <input type="text" id="commentSearch" class="mdlArticleModal-search" placeholder="Search comments...">
+    </div>
+
+    <!-- Tab Content -->
+    <div class="mdlArticleModal-tabcontent">
+      <div id="pendingTab" class="tab-pane active">
+        <div class="mdlArticleModal-table-wrapper">
+          <table class="mdlArticleModal-table" id="pendingCommentsTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Comment</th>
+                <th>Commented On</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <ul class="mdlArticleModal-pagination" id="pendingPagination"></ul>
+      </div>
+
+      <div id="approvedTab" class="tab-pane">
+        <div class="mdlArticleModal-table-wrapper">
+          <table class="mdlArticleModal-table" id="approvedCommentsTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Comment</th>
+                <th>Commented On</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <ul class="mdlArticleModal-pagination" id="approvedPagination"></ul>
+      </div>
+
+      <div id="rejectedTab" class="tab-pane">
+        <div class="mdlArticleModal-table-wrapper">
+          <table class="mdlArticleModal-table" id="rejectedCommentsTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Comment</th>
+                <th>Commented On</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <ul class="mdlArticleModal-pagination" id="rejectedPagination"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <!-- Trends Comments Modal Window -->
     <div id="trendsCommentsModalCustom" class="modal">
       <div class="modal-content">
         <span id="closeTrendsCommentsModal" class="close">&times;</span>
@@ -565,66 +624,92 @@
         </div>
       </div>
     </div>
-
-    <!-- Add/Edit Trend Modal -->
+    <!-- Add/Edit Trend Modal Window -->
     <div id="trendModal" class="modal">
       <div class="modal-content">
-        <span id="closeTrendModal" class="close">&times;</span>
-        <h2 id="trendModalTitle">Add Trend</h2>
-        <form id="trendForm" enctype="multipart/form-data">
-          <input type="hidden" id="TrendID" name="TrendID">
 
-          <label>Title (English)</label>
-          <input type="text" name="TrendTitle_EN" id="TrendTitle_EN" required>
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h2 id="trendModalTitle"><i class="fa-solid fa-fire"></i> Add Trend</h2>
+          <span id="closeTrendModal" class="close">&times;</span>
+        </div>
 
-          <label>Title (Arabic)</label>
-          <input type="text" name="TrendTitle_AR" id="TrendTitle_AR">
+        <!-- Modal Body -->
+        <div class="modal-body">
+          <form id="trendForm" enctype="multipart/form-data">
+            <input type="hidden" id="TrendID" name="TrendID">
 
-          <label>Description (English)</label>
-          <textarea name="TrendDescription_EN" id="TrendDescription_EN"></textarea>
+            <label>Title (English)</label>
+            <input type="text" name="TrendTitle_EN" id="TrendTitle_EN" required>
 
-          <label>Description (Arabic)</label>
-          <textarea name="TrendDescription_AR" id="TrendDescription_AR"></textarea>
+            <label>Title (Arabic)</label>
+            <input type="text" name="TrendTitle_AR" id="TrendTitle_AR">
 
-          <label>Image</label>
-          <input type="file" name="Image" id="TrendImage">
+            <label>Description (English)</label>
+            <textarea name="TrendDescription_EN" id="TrendDescription_EN"></textarea>
 
-          <label>From Date</label>
-          <input type="date" name="FromDate" id="FromDate" required>
+            <label>Description (Arabic)</label>
+            <textarea name="TrendDescription_AR" id="TrendDescription_AR"></textarea>
 
-          <label>To Date</label>
-          <input type="date" name="ToDate" id="ToDate">
+            <label>Image</label>
+            <div class="file-upload-box" onclick="document.getElementById('TrendImage').click()">
+              <i class="fa-solid fa-image"></i><br>
+              Click to select Image
+            </div>
+            <input type="file" name="Image" id="TrendImage" style="display:none;">
+            <div id="trendImagePreview" style="margin-top:10px;"></div>
 
-          <label><input type="checkbox" name="IsActive" id="IsActive" checked> Active</label>
+            <label>From Date</label>
+            <input type="date" name="FromDate" id="FromDate" required>
 
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-primary">Save</button>
-          </div>
-        </form>
+            <label>To Date</label>
+            <input type="date" name="ToDate" id="ToDate">
+
+            <label style="margin-top: 10px;"><input type="checkbox" name="IsActive" id="IsActive" checked> Active</label>
+
+            <div class="modal-footer">
+              <button type="submit" class="btn-primary">Save</button>
+            </div>
+            <input type="hidden" name="ExistingImageURL" id="ExistingImageURL">
+          </form>
+        </div>
       </div>
     </div>
-
     <!-- Change Password Modal -->
-    <div id="changePasswordModal" class="modal">
-      <div class="modal-content">
-        <span id="closePasswordModal" class="close">&times;</span>
-        <h2>Change Password</h2>
-        <form id="changePasswordForm">
-          <label for="CurrentPassword">Current Password</label>
-          <input type="password" id="CurrentPassword" name="CurrentPassword" required>
+    <div id="changePasswordModal" class="mdlChangePasswordModal">
+      <div class="mdlChangePasswordContent">
+        <!-- Modal Header -->
+        <div class="mdlChangePasswordHeader">
+          <h2>Change Password</h2>
+          <span class="mdlChangePasswordClose" id="closePasswordModal">&times;</span>
+        </div>
+        <!-- Modal Body -->
+        <div class="mdlChangePasswordBody">
+          <form id="changePasswordForm">
+            <div class="mdlChangePasswordRow">
+              <label for="CurrentPassword">Current Password</label>
+              <input type="password" id="CurrentPassword" name="CurrentPassword" required>
+            </div>
 
-          <label for="NewPassword">New Password</label>
-          <input type="password" id="NewPassword" name="NewPassword" required>
+            <div class="mdlChangePasswordRow">
+              <label for="NewPassword">New Password</label>
+              <input type="password" id="NewPassword" name="NewPassword" required>
+            </div>
 
-          <label for="ConfirmPassword">Confirm New Password</label>
-          <input type="password" id="ConfirmPassword" name="ConfirmPassword" required>
+            <div class="mdlChangePasswordRow">
+              <label for="ConfirmPassword">Confirm New Password</label>
+              <input type="password" id="ConfirmPassword" name="ConfirmPassword" required>
+            </div>
 
-          <button type="submit">Change Password</button>
-          <p id="changePasswordMsg" class="msg"></p>
-        </form>
+            <div class="mdlChangePasswordFooter">
+              <button type="submit" class="mdlChangePasswordBtn">Change Password</button>
+              <p id="changePasswordMsg" class="mdlChangePasswordMsg"></p>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
-
+    <!-- Edit News Articles Modal Window -->
     <div id="editModal" class="modal">
       <div class="modal-content">
 
@@ -698,7 +783,6 @@
       </div>
     </div>
 
-
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome (optional for icons) -->
@@ -708,5 +792,4 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.0/moment.min.js"></script>
     <script src="js/admin.js"></script>
 </body>
-
 </html>

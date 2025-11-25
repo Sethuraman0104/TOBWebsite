@@ -195,11 +195,28 @@ router.post("/create", upload.single("Image"), async (req, res) => {
 // ===================================================================
 router.post("/update", upload.single("Image"), async (req, res) => {
   try {
-    const { TrendID, TrendTitle_EN, TrendTitle_AR, TrendDescription_EN, TrendDescription_AR, FromDate, ToDate } =
-      req.body;
+    const {
+      TrendID,
+      TrendTitle_EN,
+      TrendTitle_AR,
+      TrendDescription_EN,
+      TrendDescription_AR,
+      FromDate,
+      ToDate,
+      ExistingImageURL
+    } = req.body;
 
     const IsActive = req.body.IsActive === "on" ? 1 : 0;
-    const ImageURL = req.file ? `/uploads/trends/${req.file.filename}` : null;
+
+    let ImageURL = null;
+
+    if (req.file) {
+      // New image uploaded
+      ImageURL = `/uploads/trends/${req.file.filename}`;
+    } else if (ExistingImageURL && String(ExistingImageURL).trim() !== '') {
+      // Use exactly the existing image URL, no duplicates
+      ImageURL = String(ExistingImageURL).trim();
+    }
 
     const pool = await sql.connect(sqlConfig);
 
@@ -220,7 +237,7 @@ router.post("/update", upload.single("Image"), async (req, res) => {
           TrendTitle_AR=@TrendTitle_AR,
           TrendDescription_EN=@TrendDescription_EN,
           TrendDescription_AR=@TrendDescription_AR,
-          ImageURL = ISNULL(@ImageURL, ImageURL),
+          ImageURL=@ImageURL,
           FromDate=@FromDate, 
           ToDate=@ToDate, 
           IsActive=@IsActive, 
@@ -233,6 +250,8 @@ router.post("/update", upload.single("Image"), async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
+
 
 // ===================================================================
 // ACTIVATE / DEACTIVATE

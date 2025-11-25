@@ -297,23 +297,6 @@ async function loadTrendsTicker() {
 // Initialize
 document.addEventListener('DOMContentLoaded', loadTrendsTicker);
 
-// ---------------- Breaking News ----------------
-const breakingNews = [
-  "Government announces new economic reforms",
-  "Local football team wins championship",
-  "Heavy rains expected tomorrow across the region",
-  "Stock market hits all-time high",
-  "New technology park to open downtown"
-];
-let newsIndex = 0;
-function updateBreakingNews() {
-  const ticker = document.getElementById('breakingNewsInner');
-  ticker.textContent = breakingNews[newsIndex];
-  newsIndex = (newsIndex + 1) % breakingNews.length;
-}
-setInterval(updateBreakingNews, 5000);
-updateBreakingNews();
-
 async function loadAdvertisements() {
   try {
     const res = await fetch('/api/advertisements/list?active=1', { cache: 'no-store' });
@@ -426,19 +409,26 @@ async function loadTopStories() {
   try {
     const res = await fetch('/api/news/admin', { cache: 'no-store' });
     const news = await res.json();
-    const activeNews = (Array.isArray(news) ? news : [])
-      .filter(n => n.IsActive && n.IsApproved && n.IsTopStory == 1);
+    const allNews = Array.isArray(news) ? news : [];
+
+    // Filter only active & approved
+    const activeNews = allNews
+      .filter(n => n.IsActive && n.IsApproved)
+      .sort((a, b) => new Date(b.PublishedOn) - new Date(a.PublishedOn)); // Descending by date
+
     if (!activeNews.length) return;
 
+    // --- Top Stories (IsTopStory = 1) ---
+    const topStories = activeNews.filter(n => n.IsTopStory == 1);
     const carousel = document.getElementById('topStoriesCarousel');
     carousel.innerHTML = '';
 
-    activeNews.forEach(n => {
+    topStories.forEach(n => {
       let images = Array.isArray(n.ImagesURLs) ? n.ImagesURLs : [];
-      if (n.ImageURL && !images.includes(n.ImageURL)) images.unshift(n.ImageURL);
-      images = images.filter(Boolean).slice(0, 5); // 1-5 images
+      if (n.MainSlideImage && !images.includes(n.MainSlideImage)) images.unshift(n.MainSlideImage);
+      images = images.filter(Boolean).slice(0, 5);
 
-      // Dynamically assign grid layout based on image count
+      // Grid layout based on number of images
       let gridTemplate;
       switch (images.length) {
         case 1: gridTemplate = 'grid-template-columns:1fr; grid-template-rows:1fr;'; break;
@@ -451,8 +441,8 @@ async function loadTopStories() {
       let collageHtml = `<div class="collage-grid" style="${gridTemplate}">`;
       images.forEach((img, index) => {
         collageHtml += `<div class="collage-item collage-item-${index + 1}">
-                    <img src="${img}" alt="${n.Title}" onerror="this.src='/images/default-news.jpg'">
-                </div>`;
+                          <img src="${img}" alt="${n.Title}" onerror="this.src='/images/default-news.png'">
+                        </div>`;
       });
       collageHtml += `</div>`;
 
@@ -460,22 +450,22 @@ async function loadTopStories() {
       const published = formatDateTime(n.PublishedOn);
 
       carousel.innerHTML += `
-            <div class="item">
-                ${collageHtml}
-                <div class="carousel-category">${category}</div>
-                <div class="carousel-overlay">
-                    <div class="carousel-date">📅 ${published}</div>
-                    <h3 class="carousel-title">${n.Title}</h3>
-                    <p>${n.Summary || ''}</p>
-                    <button class="btn read-more-btn" onclick="openArticle(${n.ArticleID})"><i class="fa-solid fa-book-open"></i> Read More</button>
-                </div>
-            </div>
-            `;
+        <div class="item">
+          ${collageHtml}
+          <div class="carousel-category">${category}</div>
+          <div class="carousel-overlay">
+            <div class="carousel-date">📅 ${published}</div>
+            <h3 class="carousel-title">${n.Title}</h3>
+            <p>${n.Summary || ''}</p>
+            <button class="btn read-more-btn" onclick="openArticle(${n.ArticleID})">
+              <i class="fa-solid fa-book-open"></i> Read More
+            </button>
+          </div>
+        </div>
+      `;
     });
 
-    // Destroy previous carousel if exists
     try { $('#topStoriesCarousel').owlCarousel('destroy'); } catch (e) { }
-    // Initialize Owl Carousel
     $('#topStoriesCarousel').owlCarousel({
       items: 1,
       loop: true,
@@ -487,18 +477,13 @@ async function loadTopStories() {
     });
 
     adjustCarouselHeight();
+
+    // --- Latest News (all active & approved, descending) ---
     loadLatestNews(activeNews);
 
-  } catch (err) { console.error('Error loading top stories:', err); }
-}
-
-function adjustCarouselHeight() {
-  const carousel = document.getElementById('topStoriesCarousel');
-  const latest = document.querySelector('.latest-news-container');
-  if (!carousel || !latest) return;
-  const latestHeight = latest.offsetHeight;
-  carousel.querySelectorAll('.item').forEach(item => { item.style.height = latestHeight + 'px'; });
-  carousel.style.height = latestHeight + 'px';
+  } catch (err) {
+    console.error('Error loading top stories:', err);
+  }
 }
 
 function loadLatestNews(news) {
@@ -506,39 +491,53 @@ function loadLatestNews(news) {
   latestContainer.innerHTML = '<div class="scroll-wrapper"></div>';
   const wrapper = latestContainer.querySelector('.scroll-wrapper');
 
-  const topStories = news.slice(0, 10);
-  topStories.forEach(n => {
-    const img = n.ImageURL || '/images/default-news.jpg';
+  news.forEach(n => {
+    const img = n.MainSlideImage || '/images/default-news.png';
     wrapper.innerHTML += `
       <div class="side-news-card">
-        <img src="${img}" alt="${n.Title}" onerror="this.src='/images/default-news.jpg'">
-       <div class="side-news-card-body">
-  <h5>${n.Title}</h5>
-  <p>${n.Summary || ''}</p>
-  <div class="card-footer">
-    <small>📅 ${formatDateTime(n.PublishedOn)}</small>
-    <button class="read-more-btn" onclick="openArticle(${n.ArticleID})">Read More <i class="fa-solid fa-arrow-right"></i></button>
-  </div>
-</div>
-
+        <img src="${img}" alt="${n.Title}" onerror="this.src='/images/default-news.png'">
+        <div class="side-news-card-body">
+          <h5>${n.Title}</h5>
+          <p>${n.Summary || ''}</p>
+          <div class="card-footer">
+            <small>📅 ${formatDateTime(n.PublishedOn)}</small>
+            <button class="read-more-btn" onclick="openArticle(${n.ArticleID})">
+              Read More <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
       </div>`;
   });
 
-  // Duplicate content for smooth scrolling if more than 3 cards
-  if (topStories.length > 3) wrapper.innerHTML += wrapper.innerHTML;
+  if (news.length > 3) wrapper.innerHTML += wrapper.innerHTML; // Duplicate for smooth scroll
 }
-window.addEventListener('load', () => { loadTopStories(); setTimeout(adjustCarouselHeight, 500); }); //setTimeout(adjustCarouselHeight,500);
-window.addEventListener('resize', adjustCarouselHeight);
 
+function adjustCarouselHeight() {
+  const carousel = document.getElementById('topStoriesCarousel');
+  const latest = document.querySelector('.latest-news-container');
+  if (!carousel || !latest) return;
+  const latestHeight = latest.offsetHeight;
+  carousel.querySelectorAll('.item').forEach(item => {
+    item.style.height = latestHeight + 'px';
+  });
+  carousel.style.height = latestHeight + 'px';
+}
+
+window.addEventListener('load', () => {
+  loadTopStories();
+  setTimeout(adjustCarouselHeight, 500);
+});
+window.addEventListener('resize', adjustCarouselHeight);
 
 async function loadHighlightsFeatured() {
   try {
     const res = await fetch('/api/news/admin', { cache: 'no-store' });
     const news = await res.json();
 
-    const featuredNews = (Array.isArray(news) ? news : []).filter(
-      n => n.IsActive && n.IsApproved && n.IsFeatured == 1
-    );
+    // Filter active, approved, and featured news
+    const featuredNews = (Array.isArray(news) ? news : [])
+      .filter(n => n.IsActive && n.IsApproved && n.IsFeatured == 1)
+      .sort((a, b) => new Date(b.PublishedOn) - new Date(a.PublishedOn)); // Descending by date
 
     const container = document.getElementById('featuredHighlights');
     container.innerHTML = '';
@@ -553,26 +552,29 @@ async function loadHighlightsFeatured() {
     }
 
     featuredNews.forEach((n, index) => {
-      const img = n.ImageURL || '/images/default-news.jpg';
-      const date = formatDateTime(n.PublishedOn);;
+      // Use MainSlideImage if available, fallback to default
+      const img = n.MainSlideImage || n.ImageURL || '/images/default-news.png';
+      const date = formatDateTime(n.PublishedOn);
       const delay = 150 * index; // animation delay
 
       const card = `
-  <div class="featured-item" data-aos="zoom-in" data-aos-delay="${delay}">
-    <div class="featured-card flex-fill">
-      <div class="featured-tag">FEATURED</div>
-      <img src="${img}" alt="${n.Title}" onerror="this.src='/images/default-news.jpg'">
-      <div class="card-overlay"></div>
-      <div class="featured-body">
-        <div class="featured-title">${n.Title}</div>
-        <div class="featured-content">${n.Content || ''}</div>
-        <div class="featured-footer">
-          <span>📅 ${date}</span>
-          <button class="featured-read-btn" onclick="openArticle(${n.ArticleID})"><i class="fa-solid fa-book-open"></i> Read More</button>
-        </div>
-      </div>
-    </div>
-  </div>`;
+        <div class="featured-item" data-aos="zoom-in" data-aos-delay="${delay}">
+          <div class="featured-card flex-fill">
+            <div class="featured-tag">FEATURED</div>
+            <img src="${img}" alt="${n.Title}" onerror="this.src='/images/default-news.png'">
+            <div class="card-overlay"></div>
+            <div class="featured-body">
+              <div class="featured-title">${n.Title}</div>
+              <div class="featured-content">${n.Content || ''}</div>
+              <div class="featured-footer">
+                <span>📅 ${date}</span>
+                <button class="featured-read-btn" onclick="openArticle(${n.ArticleID})">
+                  <i class="fa-solid fa-book-open"></i> Read More
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>`;
 
       container.insertAdjacentHTML('beforeend', card);
     });
@@ -581,7 +583,8 @@ async function loadHighlightsFeatured() {
     console.error('loadHighlightsFeatured error:', err);
   }
 }
-loadHighlightsFeatured();
+// Initialize
+window.addEventListener('load', loadHighlightsFeatured);
 
 // 🔝 Scroll to Top Button Logic
 const scrollTopBtn = document.getElementById("scrollTopBtn");
@@ -661,84 +664,66 @@ function showToast(message, type = 'info') {
   }, 4000);
 }
 
-// async function loadNewsArticles() {
-//   const container = document.getElementById('newsCategoriesSection');
-//   container.innerHTML = '<p>Loading news...</p>';
-
-//   try {
-//     const res = await fetch('/api/news/categories/admin', { cache: 'no-store' });
-//     const categories = await res.json();
-
-//     if (!categories.length) {
-//       container.innerHTML = '<p>No news available</p>';
-//       return;
-//     }
-
-//     container.innerHTML = '';
-
-//     categories.forEach(cat => {
-//       if (!cat.Articles || cat.Articles.length === 0) return;
-
-//       // Category Section Wrapper
-//       const safeId = encodeURIComponent(cat.CategoryName);
-//       const catDiv = document.createElement('div');
-//       catDiv.className = 'mb-5';
-//       catDiv.innerHTML = `
-//   <h3 class="category-header mb-3" id="${safeId}">${cat.CategoryName}</h3>
-//   <div class="news-grid"></div>
-// `;
-
-//       const gridDiv = catDiv.querySelector('.news-grid');
-
-//       // Article Cards
-//       cat.Articles.forEach(article => {
-//         const cardDiv = document.createElement('div');
-//         cardDiv.className = 'news-item';
-//         cardDiv.innerHTML = `
-//           <div class="card news-card h-100 shadow-sm border-0" data-aos="fade-up">
-//             <div class="card-img-container">
-//               <img src="${article.ImageURL}" class="card-img-top" alt="${article.Title}" onerror="this.src='/images/default-news.jpg';">
-//             </div>
-//             <div class="card-body d-flex flex-column">
-//               <h5 class="card-title fw-bold mb-2">${article.Title}</h5>
-//               <p class="card-text text-truncate mb-3">${article.Content}</p>
-//               <div class="mt-auto d-flex justify-content-between align-items-center">
-//                 <small class="text-muted">${formatDateTime(article.PublishedOn)}</small>
-//                 <div>
-//                   <i class="fa-solid fa-heart text-danger me-1"></i> ${article.LikesCount}
-//                   <i class="fa-solid fa-comment text-secondary ms-3 me-1"></i> ${article.CommentsCount}
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-//         `;
-//         gridDiv.appendChild(cardDiv);
-//       });
-
-//       container.appendChild(catDiv);
-//     });
-
-//   } catch (err) {
-//     container.innerHTML = '<p>Error loading news</p>';
-//     console.error(err);
-//   }
-// }
-// loadNewsArticles();
-
 // ------------------
 // Category → Icon Map
 // ------------------
 const CATEGORY_ICONS = {
-  "Politics": "fa-landmark",
-  "Sports": "fa-football-ball",
-  "Technology": "fa-microchip",
-  "Business": "fa-chart-line",
-  "World": "fa-globe",
-  "Health": "fa-heartbeat",
+  "Home": "fa-home",
+  "Breaking News": "fa-bolt",
+
+  "Local News": "fa-location-dot",
+  "Bahrain": "fa-flag",
+  "GCC": "fa-globe",
+  "Saudi Arabia": "fa-kaaba",
+  "UAE": "fa-building-columns",
+  "Oman": "fa-water",
+  "Kuwait": "fa-oil-can",
+  "Qatar": "fa-wind",
+
+  "World News": "fa-earth-americas",
+
+  "Culture": "fa-landmark",
+  "Business": "fa-briefcase",
+  "Health": "fa-heart-pulse",
+  "Education": "fa-book",
+  "Others": "fa-layer-group",
+
+  "Political": "fa-gavel",
   "Entertainment": "fa-film",
-  "Local": "fa-location-dot",
-  "Weather": "fa-cloud-sun",
-  "Science": "fa-flask",
+  "Lifestyle": "fa-masks-theater",
+  "Technology": "fa-microchip",
+  "Travel": "fa-plane",
+  "Society & People": "fa-users",
+  "Fitness": "fa-dumbbell",
+  "Covid-19": "fa-virus-covid",
+
+  "TOB Reporter": "fa-user-pen",
+  "TOB Investigation": "fa-search",
+  "TOB Life Story": "fa-book-open",
+  "TOB Social": "fa-comments",
+  "TOB Weekend": "fa-sun",
+
+  "India": "fa-landmark-flag",
+  "Kerala": "fa-umbrella-beach",
+  "New Delhi": "fa-building",
+
+  "Bangladesh": "fa-water",
+
+  "Sports": "fa-football",
+  "Cricket": "fa-baseball-bat-ball",
+  "Football": "fa-futbol",
+  "Basketball": "fa-basketball",
+  "Handball": "fa-hand-fist",
+  "Volleyball": "fa-volleyball",
+  "Hockey": "fa-hockey-stick-puck",
+  "Tennis": "fa-table-tennis-paddle-ball",
+  "Athletics": "fa-person-running",
+  "Gymnastics": "fa-child-reaching",
+  "Boxing": "fa-hand-fist",
+  "Wrestling": "fa-people-arrows",
+  "Golf": "fa-golf-ball-tee",
+  "Badminton": "fa-shuttlecock",
+
   "Default": "fa-newspaper"
 };
 
@@ -765,7 +750,7 @@ async function loadNewsArticles() {
       const icon = CATEGORY_ICONS[cat.CategoryName] || CATEGORY_ICONS["Default"];
 
       // Breaking if any article is flagged as Breaking
-      const hasBreaking = cat.Articles.some(a => a.IsBreaking === true);
+      const hasBreaking = cat.Articles.some(a => a.IsBreakingNews === true);
 
       // left big + right small
       const [bigStory, ...smallStories] = cat.Articles;
@@ -784,7 +769,7 @@ async function loadNewsArticles() {
 
             <!-- LEFT BIG STORY -->
             <div class="category-big-box" onclick="openArticle(${bigStory.ArticleID})">
-              <img src="${bigStory.ImageURL || "/images/default-news.jpg"}">
+              <img src="${bigStory.MainSlideImage || bigStory.ImageURL || "/images/default-news.png"}">
 
               <div class="category-big-overlay">
                 <div class="d-flex align-items-center mb-1">
@@ -799,7 +784,7 @@ async function loadNewsArticles() {
             <div class="category-list-box">
               ${smallStories.slice(0, 5).map(a => `
                 <div class="category-list-item" onclick="openArticle(${a.ArticleID})">
-                  <img class="category-list-thumb" src="${a.ImageURL || '/images/default-news.jpg'}">
+                  <img class="category-list-thumb" src="${a.MainSlideImage || a.ImageURL || '/images/default-news.png'}">
                   <div>
                     <div class="category-list-title">
                       ${a.IsLive ? `<span class="live-badge">LIVE</span>` : ""} 
@@ -822,7 +807,6 @@ async function loadNewsArticles() {
     console.error(err);
   }
 }
-
 loadNewsArticles();
 
 async function loadFooterCategories() {
@@ -860,7 +844,7 @@ async function loadMostReadNews() {
     const news = await res.json();
 
     const validNews = (Array.isArray(news) ? news : []).filter(
-      n => n.IsActive && n.IsApproved
+      n => n.IsActive && n.IsApproved && (n.ViewCount || 0) > 0   // 🔥 Remove ViewCount = 0
     );
 
     const mostRead = validNews
@@ -880,30 +864,44 @@ async function loadMostReadNews() {
     }
 
     mostRead.forEach((n, i) => {
-      const img = n.ImageURL || '/images/default-news.jpg';
+      // 🔥 Priority: MainSlideImage > ImageURL > default
+      const img =
+        n.MainSlideImage && n.MainSlideImage.trim() !== ""
+          ? n.MainSlideImage
+          : n.ImageURL && n.ImageURL.trim() !== ""
+            ? n.ImageURL
+            : '/images/default-news.png';
+
       const date = formatDateTime(n.PublishedOn);
       const delay = 100 * i;
 
-      const snippet = (n.Content || '').length > 160
-        ? n.Content.substring(0, 160) + '...'
-        : n.Content || '';
+      const snippet =
+        (n.Content || '').length > 160
+          ? n.Content.substring(0, 160) + '...'
+          : n.Content || '';
 
       const card = `
         <div class="most-read-item" data-aos="fade-right" data-aos-delay="${delay}">
           <div class="timeline-dot"></div>
-          <img src="${img}" alt="${n.Title}" class="most-read-img" onerror="this.src='/images/default-news.jpg'">
+          <img src="${img}" alt="${n.Title}" class="most-read-img"
+               onerror="this.src='/images/default-news.png'">
+
           <div class="most-read-content">
             <div>
               <div class="most-read-title">${n.Title}</div>
               <div class="most-read-snippet">${snippet}</div>
             </div>
+
             <div class="most-read-footer">
-              <span><i class="fa-solid fa-eye"></i> ${n.ViewCount || 0} views</span>
+              <span><i class="fa-solid fa-eye"></i> ${n.ViewCount}</span>
               <span>📅 ${date}</span>
-              <button class="most-read-btn" onclick="openArticle(${n.ArticleID})"><i class="fa-solid fa-book-open"></i> Read More</button>
+              <button class="most-read-btn" onclick="openArticle(${n.ArticleID})">
+                <i class="fa-solid fa-book-open"></i> Read More
+              </button>
             </div>
           </div>
         </div>`;
+
       container.insertAdjacentHTML('beforeend', card);
     });
   } catch (err) {
@@ -911,6 +909,49 @@ async function loadMostReadNews() {
   }
 }
 loadMostReadNews();
+
+const icons = ["🔥", "⚡", "📢", "🚨", "🛑"];
+async function loadBreakingNews() {
+  try {
+    const res = await fetch('/api/news/admin', { cache: 'no-store' });
+    const news = await res.json();
+
+    // Validate and filter
+    const validNews = (Array.isArray(news) ? news : []).filter(
+      n => n.IsActive && n.IsApproved && n.IsBreakingNews
+    );
+
+    const ticker = document.getElementById("breakingNewsInner");
+
+    if (!validNews.length) {
+      ticker.innerHTML = `<span class="text-light">No breaking news right now.</span>`;
+      return;
+    }
+
+    // Sort by latest first
+    const sorted = validNews.sort(
+      (a, b) => new Date(b.PublishedOn) - new Date(a.PublishedOn)
+    );
+
+    // Build scrolling text line
+    let html = "";
+    sorted.forEach((n, i) => {
+      const icon = icons[i % icons.length]; // rotate icons
+      html += `
+    <span class="breaking-item" onclick="openArticle(${n.ArticleID})">
+      ${icon} ${n.Title}
+    </span>
+  `;
+    });
+    ticker.innerHTML = html + html;
+
+  } catch (err) {
+    console.error("loadBreakingNews error:", err);
+    document.getElementById("breakingNewsInner").innerHTML =
+      `<span class="text-light">Error loading breaking news...</span>`;
+  }
+}
+loadBreakingNews();
 
 function openArticle(articleId) {
   // Redirect to article.html with the articleId as a query parameter
@@ -992,63 +1033,17 @@ async function subscribeNewsletter() {
   }
 }
 
-// async function loadSpotlightCollage() {
-//   try {
-//     const res = await fetch('/api/news/admin', { cache: 'no-store' });
-//     const news = await res.json();
-
-//     const validNews = (Array.isArray(news) ? news : []).filter(
-//       n => n.IsActive && n.IsApproved
-//     );
-
-//     const spotlight = validNews
-//       .sort((a, b) => new Date(b.PublishedOn) - new Date(a.PublishedOn))
-//       .slice(0, 12); // max 12 for collage
-
-//     const container = document.getElementById('spotlightCollage');
-//     container.innerHTML = '';
-
-//     if (!spotlight.length) {
-//       container.innerHTML = `<div class="text-center text-muted py-5">
-//         <i class="fa-regular fa-eye-slash fs-2"></i>
-//         <p class="mt-2">No Spotlight News available right now.</p>
-//       </div>`;
-//       return;
-//     }
-
-//     spotlight.forEach(n => {
-//       const img = n.ImageURL || '/images/default-news.jpg';
-//       const date = new Date(n.PublishedOn).toLocaleDateString();
-//       const card = `
-//         <div class="spotlight-collage-item" onclick="openArticle(${n.ArticleID})">
-//           <img src="${img}" alt="${n.Title}" onerror="this.src='/images/default-news.jpg'">
-//           <div class="spotlight-collage-overlay">
-//             <div class="spotlight-collage-title">${n.Title}</div>
-//             <div class="spotlight-collage-footer">
-//               <span>${date}</span>
-//               <button class="spotlight-collage-btn"><i class="fa-solid fa-book-open"></i> Read More</button>
-//             </div>
-//           </div>
-//         </div>
-//       `;
-//       container.insertAdjacentHTML('beforeend', card);
-//     });
-//   } catch (err) {
-//     console.error('loadSpotlightCollage error:', err);
-//   }
-// }
-// loadSpotlightCollage();
-
 async function loadSpotlightCollage() {
   try {
     const res = await fetch('/api/news/admin', { cache: 'no-store' });
     const news = await res.json();
 
-    const validNews = (Array.isArray(news) ? news : []).filter(
-      n => n.IsActive && n.IsApproved
-    );
+    // Filter active, approved, and featured news
+    const validNews = (Array.isArray(news) ? news : [])
+      .filter(n => n.IsActive && n.IsApproved && n.IsSpotlightNews == 1)
+      .sort((a, b) => new Date(b.PublishedOn) - new Date(a.PublishedOn)); // Descending by date
 
-    // Sort newest first and pick 12
+    // Sort newest first and pick top 12
     const spotlight = validNews
       .sort((a, b) => new Date(b.PublishedOn) - new Date(a.PublishedOn))
       .slice(0, 12);
@@ -1066,7 +1061,8 @@ async function loadSpotlightCollage() {
     }
 
     spotlight.forEach((n, index) => {
-      const img = n.ImageURL || '/images/default-news.jpg';
+      // Use MainSlideImage first, fallback to ImageURL or default
+      const img = n.MainSlideImage || n.ImageURL || '/images/default-news.png';
       const date = formatDate(n.PublishedOn);
       const category = n.CategoryName || "General";
 
@@ -1078,7 +1074,7 @@ async function loadSpotlightCollage() {
 
           <!-- Image -->
           <img src="${img}" alt="${n.Title}" 
-               onerror="this.src='/images/default-news.jpg'">
+               onerror="this.src='/images/default-news.png'">
 
           <!-- Category Tag -->
           <div class="spotlight-category">${category}</div>
@@ -1102,8 +1098,7 @@ async function loadSpotlightCollage() {
     console.error('Spotlight error:', err);
   }
 }
-
-loadSpotlightCollage();
+window.addEventListener('load', loadSpotlightCollage);
 
 // ---------- INIT ----------
 document.getElementById('siteLogo').addEventListener('error', () => { document.getElementById('siteLogo').src = SITE.logoPath; });

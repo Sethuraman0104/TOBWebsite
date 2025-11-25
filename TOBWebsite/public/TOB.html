@@ -75,7 +75,7 @@ async function loadTopStories(){
             let collageHtml = `<div class="collage-grid" style="${gridTemplate}">`;
             images.forEach((img,index)=>{
                 collageHtml += `<div class="collage-item collage-item-${index+1}">
-                    <img src="${img}" alt="${n.Title}" onerror="this.src='/images/default-news.jpg'">
+                    <img src="${img}" alt="${n.Title}" onerror="this.src='/images/default-news.png'">
                 </div>`;
             });
             collageHtml += `</div>`;

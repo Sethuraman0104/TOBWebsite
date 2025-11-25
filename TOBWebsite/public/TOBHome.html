@@ -28,16 +28,17 @@
 
 <body>
   <!-- ===================== Breaking News Ticker ===================== -->
-  <div class="breaking-news-banner py-1 shadow-sm">
-    <div class="container d-flex align-items-center">
-      <strong class="text-light me-3">Breaking News:</strong>
-      <div class="breaking-ticker">
-        <div id="breakingNewsInner">
-          Loading latest news...
-        </div>
+<div class="breaking-news-banner py-1 shadow-sm w-100">
+  <div class="breaking-inner d-flex align-items-center">
+    <strong class="text-light me-3">Breaking News:</strong>
+
+    <div class="breaking-ticker">
+      <div id="breakingNewsInner">
+        Loading latest news...
       </div>
     </div>
   </div>
+</div>
 
   <!-- 🌤️ TOB Top Header -->
   <div class="TOBTopheader py-2 shadow-sm">
@@ -86,7 +87,6 @@
     </div>
     <div id="adTopBanner" class="container my-6"></div>
   </div>
-
   <!-- 🌐 TOB Navbar -->
   <nav class="TOBNavbar shadow-sm py-2">
     <div class="container d-flex align-items-center justify-content-between">
@@ -139,7 +139,6 @@
       </div>
     </div>
   </div>
-
   <!-- News Section -->
   <section id="newsSection" class="TOB-news-section py-4">
     <div class="container">
@@ -161,7 +160,6 @@
       </div>
     </div>
   </section>
-
   <!-- 📰 TOB Individual Section Header -->
   <div id="highlightsWrapper" class="container my-5">
     <div class="TOBIndividualSectionHeader" data-aos="fade-up">
@@ -179,7 +177,6 @@
       <!-- Your dynamic cards go here -->
     </section>
   </div>
-
   <div id="adMiddleContent2" class="container my-2"></div>
   <!-- 🌟 Trending Articles Section -->
   <div id="trendsWrapper" class="container my-5" style="margin-top: 0px; margin-bottom: 0px;">
@@ -196,7 +193,6 @@
     <!-- Dynamic Cards Grid -->
     <section id="trendsSection" class="row g-4 justify-content-center"></section>
   </div>
-
   <!-- 🌟 Newsletter Subscription Section -->
   <div id="newsletterWrapper" class="container my-5">
     <div class="TOBNLSCentered-card p-4 p-md-5 rounded-4 shadow-sm text-center">
@@ -213,7 +209,7 @@
       <small class="TOBNLSCentered-privacy mt-3 d-block">We respect your privacy. Unsubscribe anytime.</small>
     </div>
   </div>
-
+    <!-- Spotlight Section -->
   <div id="spotlightCollageWrapper" class="container my-5">
     <!-- Your original header — unchanged -->
     <div class="TOBIndividualSectionHeader" data-aos="fade-up">
@@ -229,9 +225,8 @@
     <!-- NEW Collage Grid -->
     <div id="spotlightCollage" class="spotlight-grid"></div>
   </div>
-
   <div id="adMiddleContent3" class="container my-2"></div>
-
+  <!-- Browse by Topics Section -->
   <div id="newsWrapper" class="container my-5" style="margin-top: 0px; margin-bottom: 0px;">
     <div class="TOBIndividualSectionHeader" data-aos="fade-up">
       <div class="header-icon">
@@ -245,12 +240,11 @@
 
     <div id="newsCategoriesSection"></div>
   </div>
-
   <!-- 🔥 Most Read News Articles Section -->
   <div id="mostReadWrapper" class="container my-5">
     <div class="TOBIndividualSectionHeader" data-aos="fade-up">
       <div class="header-icon">
-        <i class="fa-solid fa-newspaper"></i>
+        <i class="fa-solid fa-ranking-star"></i>
       </div>
       <div class="header-text">
         <h2 class="header-title">Most Read News</h2>
@@ -261,12 +255,11 @@
     <!-- 🕒 Timeline Style List -->
     <section id="mostReadList" class="most-read-timeline"></section>
   </div>
-
   <!-- 🔝 Scroll-to-Top Button -->
   <button id="scrollTopBtn" title="Go to top">
     <i class="fa-solid fa-arrow-up"></i>
   </button>
-
+  <!-- Footer -->
   <footer class="site-footer text-light">
     <div class="overlay"></div>
     <div class="container py-5">

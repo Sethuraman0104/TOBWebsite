@@ -25,17 +25,18 @@
 </head>
 
 <body>
-    <!-- ===================== Breaking News Ticker ===================== -->
-    <div class="breaking-news-banner py-1 shadow-sm">
-        <div class="container d-flex align-items-center" style="max-width: 1600px;">
-            <strong class="text-light me-3">Breaking News:</strong>
-            <div class="breaking-ticker">
-                <div id="breakingNewsInner">
-                    Loading latest news...
-                </div>
-            </div>
-        </div>
+  <!-- ===================== Breaking News Ticker ===================== -->
+<div class="breaking-news-banner py-1 shadow-sm w-100">
+  <div class="breaking-inner d-flex align-items-center">
+    <strong class="text-light me-3">Breaking News:</strong>
+
+    <div class="breaking-ticker">
+      <div id="breakingNewsInner">
+        Loading latest news...
+      </div>
     </div>
+  </div>
+</div>
 
     <!-- 🌤️ TOB Top Header -->
     <div class="TOBTopheader py-2 shadow-sm">
@@ -125,45 +126,45 @@
     </nav>
 
     <div id="adMiddleContent1" class="container my-2"></div>
-    <div class="container my-5" style="margin-top: 0px; margin-bottom: 0px;">
-        <!-- Article Header -->
-        <div id="articleContainer" class="mb-5" style="margin-top: 0px; margin-bottom: 0px;">
-            Loading article...
-        </div>
-        <!-- Comments Section -->
-        <div class="comments-section mb-5">
-            <h4>Comments</h4>
-            <div id="commentsContainer" class="mb-3">Loading comments...</div>
-
-            <h5 class="mt-4">Leave a Comment</h5>
-            <form id="commentForm">
-                <input type="hidden" id="articleId" value="">
-                <div class="mb-3">
-                    <input type="text" class="form-control" id="commentName" placeholder="Your Name" required>
-                </div>
-                <div class="mb-3">
-                    <input type="email" class="form-control" id="commentEmail" placeholder="Your Email" required>
-                </div>
-                <div class="mb-3">
-                    <textarea class="form-control" id="commentContent" placeholder="Your Comment" rows="3"
-                        required></textarea>
-                </div>
-                <button type="submit" class="comment-submit-btn">
-                    <i class="fa-regular fa-paper-plane"></i> Submit Comment
-                </button>
-
-            </form>
-            <small id="commentMsg" class="text-success d-block mt-2"></small>
-        </div>
-        <div id="adMiddleContent2" class="container my-2"></div>
-        <div class="category-header mb-3">Other News</div>
-        <div id="otherNewsContainer" class="other-news-grid"></div>
-        <div id="newsLoader" class="text-center py-3" style="display:none;">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-        </div>
+    <div class="container my-5">
+    <!-- Article Header -->
+    <div id="articleContainer" class="mb-5">
+        Loading article...
     </div>
+
+    <!-- Comments Section -->
+    <div class="comments-section mb-5">
+        <h4>Comments</h4>
+        <div id="commentsContainer" class="mb-3">Loading comments...</div>
+
+        <h5 class="mt-4">Leave a Comment</h5>
+        <form id="commentForm">
+            <input type="hidden" id="articleId" value="">
+            <div class="mb-3">
+                <input type="text" class="form-control" id="commentName" placeholder="Your Name" required>
+            </div>
+            <div class="mb-3">
+                <input type="email" class="form-control" id="commentEmail" placeholder="Your Email" required>
+            </div>
+            <div class="mb-3">
+                <textarea class="form-control" id="commentContent" placeholder="Your Comment" rows="3" required></textarea>
+            </div>
+            <button type="submit" class="comment-submit-btn">
+                <i class="fa-regular fa-paper-plane"></i> Submit Comment
+            </button>
+        </form>
+        <small id="commentMsg" class="text-success d-block mt-2"></small>
+    </div>
+
+    <div id="adMiddleContent2" class="container my-2"></div>
+
+    <div class="category-header mb-3">Other News</div>
+    <div id="otherNewsContainer" class="other-news-grid"></div>
+    <div id="newsLoader" class="text-center py-3" style="display:none;">
+      <i class="fa-solid fa-spinner fa-spin"></i> Loading...
+    </div>
+</div>
+
 
     <footer class="site-footer text-light">
         <div class="overlay"></div>

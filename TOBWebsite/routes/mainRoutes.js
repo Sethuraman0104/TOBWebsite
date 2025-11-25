@@ -65,9 +65,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// -------------------------
-// 1️⃣ Get all news (with optional lang)
-// -------------------------
+// Get all news (with optional lang)
 router.get('/news', async (req, res) => {
   const lang = req.query.lang || 'en';
   try {
@@ -152,7 +150,7 @@ router.post(
          @CreatedOn, @IsActive, @IsApproved, @Attachments)
       `);
 
-      res.json({ success: true, message: "News posted successfully." });
+      res.json({ success: true, message: "News article is saved successfully and waiting for Super Admin to review and publish it to the TOB News site from UnPublished Menu." });
     } catch (err) {
       console.error("CREATE NEWS ERROR:", err);
       res.status(500).json({ success: false, message: err.message });
@@ -246,52 +244,7 @@ router.post(
   }
 );
 
-
-
-// router.post('/news/update/:id', isAdmin, upload.single('image'), async (req, res) => {
-//   const ArticleID = parseInt(req.params.id);
-//   try {
-//     const { Title, Content, Title_Ar, Content_Ar, CategoryID, IsTopStory, IsFeatured } = req.body;
-
-//     const ImageURL = req.file ? `/uploads/${req.file.filename}` : null;
-
-//     const pool = await sql.connect(sqlConfig);
-//     const request = pool.request();
-//     request.input('ArticleID', sql.Int, ArticleID)
-//       .input('Title', sql.NVarChar(255), Title)
-//       .input('Content', sql.NText, Content)
-//       .input('Title_Ar', sql.NVarChar(255), Title_Ar || null)
-//       .input('Content_Ar', sql.NText, Content_Ar || null)
-//       .input('CategoryID', sql.Int, parseInt(CategoryID))
-//       .input('IsTopStory', sql.Bit, IsTopStory === 'true' ? 1 : 0)
-//       .input('IsFeatured', sql.Bit, IsFeatured === 'true' ? 1 : 0);
-
-//     if (ImageURL) request.input('ImageURL', sql.NVarChar(255), ImageURL);
-
-//     await request.query(`
-//       UPDATE NewsArticles
-//       SET Title=@Title,
-//           Content=@Content,
-//           Title_Ar=@Title_Ar,
-//           Content_Ar=@Content_Ar,
-//           CategoryID=@CategoryID,
-//           IsTopStory=@IsTopStory,
-//           IsFeatured=@IsFeatured
-//           ${ImageURL ? ', ImageURL=@ImageURL' : ''},
-//           UpdatedOn=GETDATE()
-//       WHERE ArticleID=@ArticleID
-//     `);
-
-//     res.json({ success: true, message: 'News updated successfully.' });
-//   } catch (err) {
-//     console.error('UPDATE NEWS ERROR:', err);
-//     res.status(500).json({ success: false, message: err.message });
-//   }
-// });
-
-// -------------------------
-// 4️⃣ Delete News
-// -------------------------
+// Delete News
 router.delete('/news/:id', isAdmin, async (req, res) => {
   const ArticleID = parseInt(req.params.id);
 
@@ -327,9 +280,7 @@ router.delete('/news/:id', isAdmin, async (req, res) => {
   }
 });
 
-// -------------------------
-// 5️⃣ Approve News
-// -------------------------
+// Approve News
 router.post('/news/approve/:id', isAdmin, async (req, res) => {
   const ArticleID = parseInt(req.params.id);
   try {
@@ -344,33 +295,7 @@ router.post('/news/approve/:id', isAdmin, async (req, res) => {
   }
 });
 
-// -------------------------
-// 6️⃣ Admin: Get all news with likes/comments
-// -------------------------
-// router.get('/news/admin', isAdmin, async (req, res) => {
-//   try {
-//     await sql.connect(sqlConfig);
-//     const result = await sql.query(`
-//       SELECT n.ArticleID, n.Title, n.Title_Ar, n.Content, n.Content_Ar,
-//              n.ImageURL, n.IsApproved, n.IsActive, n.CreatedOn, n.PublishedOn, n.CategoryID,
-//              n.UpdatedOn,n.IsTopStory,n.IsFeatured,n.HighlightOrder, n.ViewCount,
-//              (SELECT COUNT(*) FROM NewsLikes l WHERE l.ArticleID = n.ArticleID) AS LikesCount,
-//              (SELECT COUNT(*) FROM NewsComments c WHERE c.ArticleID = n.ArticleID and c.IsApproved=1) AS CommentsCount,
-// 			 c.CategoryName, 
-//           c.CategoryName_Ar
-//       FROM NewsArticles n LEFT JOIN NewsCategories c ON c.CategoryID = n.CategoryID
-//       ORDER BY n.CreatedOn DESC
-//     `);
-//     res.json(result.recordset);
-//   } catch (err) {
-//     console.error('ADMIN NEWS ERROR:', err);
-//     res.status(500).json({ success: false, message: err.message });
-//   }
-// });
-
-// -------------------------
-// 6️⃣ Admin: Get all news with likes/comments and full fields for edit
-// -------------------------
+// Admin: Get all news with likes/comments and full fields for edit
 router.get('/news/admin', isAdmin, async (req, res) => {
   try {
     await sql.connect(sqlConfig);
@@ -405,10 +330,7 @@ router.get('/news/admin', isAdmin, async (req, res) => {
   }
 });
 
-
-// -------------------------
-// 6️⃣ Admin: Get active & approved news grouped by category
-// -------------------------
+// Admin: Get active & approved news grouped by category
 router.get('/news/categories/admin', isAdmin, async (req, res) => {
   try {
     await sql.connect(sqlConfig);
@@ -424,13 +346,18 @@ router.get('/news/categories/admin', isAdmin, async (req, res) => {
           n.Content, 
           n.Content_Ar,
           n.ImageURL, 
+          n.MainSlideImage,
+          n.Attachments,
           n.CreatedOn, 
+          n.UpdatedOn,
           n.PublishedOn, 
           n.IsTopStory,
           n.IsFeatured,
+          n.IsBreakingNews,
+          n.IsSpotlightNews,
           n.HighlightOrder,
           (SELECT COUNT(*) FROM NewsLikes l WHERE l.ArticleID = n.ArticleID) AS LikesCount,
-          (SELECT COUNT(*) FROM NewsComments c WHERE c.ArticleID = n.ArticleID and c.IsApproved=1) AS CommentsCount
+          (SELECT COUNT(*) FROM NewsComments c WHERE c.ArticleID = n.ArticleID AND c.IsApproved=1) AS CommentsCount
       FROM NewsCategories c
       LEFT JOIN NewsArticles n 
           ON n.CategoryID = c.CategoryID
@@ -440,7 +367,7 @@ router.get('/news/categories/admin', isAdmin, async (req, res) => {
       ORDER BY c.CategoryName, n.HighlightOrder ASC, n.PublishedOn DESC
     `);
 
-    // Optional: group articles by category for easier front-end consumption
+    // Group articles by category
     const categories = {};
     result.recordset.forEach(row => {
       const catId = row.CategoryID;
@@ -459,11 +386,16 @@ router.get('/news/categories/admin', isAdmin, async (req, res) => {
           Title_Ar: row.Title_Ar,
           Content: row.Content,
           Content_Ar: row.Content_Ar,
-          ImageURL: row.ImageURL || '/images/default-news.jpg',
+          ImageURL: row.ImageURL || '/images/default-news.png',
+          MainSlideImage: row.MainSlideImage || row.ImageURL || '/images/default-news.png',
+          Attachments: row.Attachments ? JSON.parse(row.Attachments) : [],
           CreatedOn: row.CreatedOn,
+          UpdatedOn: row.UpdatedOn,
           PublishedOn: row.PublishedOn,
           IsTopStory: row.IsTopStory,
           IsFeatured: row.IsFeatured,
+          IsBreakingNews: row.IsBreakingNews,
+          IsSpotlightNews: row.IsSpotlightNews,
           HighlightOrder: row.HighlightOrder,
           LikesCount: row.LikesCount,
           CommentsCount: row.CommentsCount
@@ -479,9 +411,8 @@ router.get('/news/categories/admin', isAdmin, async (req, res) => {
   }
 });
 
-// -------------------------
-// 7️⃣ Deactivate News
-// -------------------------
+
+// Deactivate News
 router.post('/news/deactivate/:id', isAdmin, async (req, res) => {
   const ArticleID = parseInt(req.params.id);
   try {
@@ -496,9 +427,7 @@ router.post('/news/deactivate/:id', isAdmin, async (req, res) => {
   }
 });
 
-// -------------------------
-// 8️⃣ Reactivate News
-// -------------------------
+// Reactivate News
 router.post('/news/reactivate/:id', isAdmin, async (req, res) => {
   const ArticleID = parseInt(req.params.id);
   try {
@@ -513,9 +442,7 @@ router.post('/news/reactivate/:id', isAdmin, async (req, res) => {
   }
 });
 
-// -------------------------
-// 9️⃣ Get All Active News Categories
-// -------------------------
+// Get All Active News Categories
 router.get('/news/categories', async (req, res) => {
   try {
     await sql.connect(sqlConfig);
@@ -536,9 +463,7 @@ router.get('/news/categories', async (req, res) => {
   }
 });
 
-// -------------------------
-// 9️⃣ Get All Active News Categories
-// -------------------------
+// Get All Active News Categories
 router.get('/news/Allcategories', async (req, res) => {
   try {
     await sql.connect(sqlConfig);
@@ -556,7 +481,7 @@ router.get('/news/Allcategories', async (req, res) => {
   }
 });
 
-// Get article by ID
+// Get article by ID with full details
 router.get('/news/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -567,49 +492,40 @@ router.get('/news/:id', async (req, res) => {
       .input('id', sql.Int, id)
       .query(`UPDATE NewsArticles SET ViewCount = ISNULL(ViewCount,0) + 1 WHERE ArticleID = @id`);
 
-    // Get article with author name
+    // Get article with author name, category, likes, comments
     const result = await pool.request()
       .input('id', sql.Int, id)
       .query(`
-        SELECT n.*, u.FullName AS AuthorName
+        SELECT 
+          n.ArticleID,
+          n.Title,
+          n.Title_Ar,
+          n.Content,
+          n.Content_Ar,
+          n.CategoryID,
+          n.AuthorID,
+          n.MainSlideImage,
+          n.ImageURL,
+          n.Attachments,
+          n.IsApproved,
+          n.IsActive,
+          n.CreatedOn,
+          n.PublishedOn,
+          n.UpdatedOn,
+          n.IsTopStory,
+          n.IsFeatured,
+          n.IsBreakingNews,
+          n.IsSpotlightNews,
+          n.HighlightOrder,
+          n.ViewCount,
+          c.CategoryName,
+          c.CategoryName_Ar,
+          u.FullName AS AuthorName,
+          (SELECT COUNT(*) FROM NewsLikes l WHERE l.ArticleID = n.ArticleID) AS LikesCount,
+          (SELECT COUNT(*) FROM NewsComments cm WHERE cm.ArticleID = n.ArticleID AND cm.IsApproved=1) AS CommentsCount
         FROM NewsArticles n
         LEFT JOIN Users u ON n.AuthorID = u.UserID
-        WHERE n.ArticleID = @id
-      `);
-
-    if (result.recordset.length === 0) {
-      return res.status(404).json({ success: false, message: 'Article not found' });
-    }
-
-    res.json({ success: true, data: result.recordset[0] });
-
-  } catch (err) {
-    console.error('GET ARTICLE ERROR:', err);
-    res.status(500).json({ success: false, message: 'Error fetching article' });
-  }
-});
-
-// Get article by ID with all fields for preview modal
-router.get('/newscheck/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const pool = await sql.connect(sqlConfig);
-
-    const result = await pool.request()
-      .input('id', sql.Int, id)
-      .query(`
-        SELECT n.ArticleID, n.Title, n.Title_Ar, n.Content, n.Content_Ar,
-               n.CategoryID, n.MainSlideImage, n.Attachments,
-               n.IsApproved, n.IsActive, n.CreatedOn, n.PublishedOn, n.UpdatedOn,
-               n.IsTopStory, n.IsFeatured, n.IsBreakingNews, n.IsSpotlightNews,
-               n.HighlightOrder, n.ViewCount,
-               u.FullName AS AuthorName,
-               c.CategoryName, c.CategoryName_Ar,
-               (SELECT COUNT(*) FROM NewsLikes l WHERE l.ArticleID = n.ArticleID) AS LikesCount,
-               (SELECT COUNT(*) FROM NewsComments c WHERE c.ArticleID = n.ArticleID AND c.IsApproved=1) AS CommentsCount
-        FROM NewsArticles n
-        LEFT JOIN Users u ON n.AuthorID = u.UserID
-        LEFT JOIN NewsCategories c ON n.CategoryID = c.CategoryID
+        LEFT JOIN NewsCategories c ON c.CategoryID = n.CategoryID
         WHERE n.ArticleID = @id
       `);
 
@@ -619,10 +535,10 @@ router.get('/newscheck/:id', async (req, res) => {
 
     const article = result.recordset[0];
 
-    // Parse attachments JSON
+    // Parse attachments JSON if exists
     article.Attachments = article.Attachments ? JSON.parse(article.Attachments) : [];
 
-    // Convert flags to boolean
+    // Ensure boolean flags
     article.IsTopStory = !!article.IsTopStory;
     article.IsFeatured = !!article.IsFeatured;
     article.IsBreakingNews = !!article.IsBreakingNews;
@@ -637,9 +553,7 @@ router.get('/newscheck/:id', async (req, res) => {
 });
 
 
-// --------------------
 // Add new category
-// --------------------
 router.post('/news/category/add', isAdmin, async (req, res) => {
   const { CategoryName, CategoryName_Ar, Description, Description_Ar, IsActive } = req.body;
 
@@ -683,9 +597,7 @@ router.post('/news/category/add', isAdmin, async (req, res) => {
   }
 });
 
-// --------------------
 // Update category
-// --------------------
 router.put('/news/category/update/:id', isAdmin, async (req, res) => {
   const { id } = req.params;
   const { CategoryName, CategoryName_Ar, Description, Description_Ar, IsActive } = req.body;
@@ -736,9 +648,7 @@ router.put('/news/category/update/:id', isAdmin, async (req, res) => {
   }
 });
 
-// --------------------
 // Delete category (only if no linked articles)
-// --------------------
 router.delete('/news/category/delete/:id', isAdmin, async (req, res) => {
   const { id } = req.params;
 
@@ -767,9 +677,7 @@ router.delete('/news/category/delete/:id', isAdmin, async (req, res) => {
   }
 });
 
-// --------------------
 // Get all categories
-// --------------------
 router.get('/news/categories', isAdmin, async (req, res) => {
   try {
     const pool = await sql.connect(sqlConfig);
@@ -784,9 +692,7 @@ router.get('/news/categories', isAdmin, async (req, res) => {
   }
 });
 
-// --------------------
 // Get single category by ID
-// --------------------
 router.get('/news/category/:id', isAdmin, async (req, res) => {
   const { id } = req.params;
   try {
@@ -803,11 +709,7 @@ router.get('/news/category/:id', isAdmin, async (req, res) => {
   }
 });
 
-
-
-// ----------------------
 // GET comments for article
-// ----------------------
 router.get('/comments/:articleId', async (req, res) => {
   try {
     const articleId = parseInt(req.params.articleId);
@@ -831,9 +733,7 @@ router.get('/comments/:articleId', async (req, res) => {
   }
 });
 
-// ----------------------
 // POST new comment or reply
-// ----------------------
 router.post('/comments', async (req, res) => {
   try {
     const { articleId, name, email, content, parentCommentId = null } = req.body;
@@ -864,9 +764,7 @@ router.post('/comments', async (req, res) => {
   }
 });
 
-// ----------------------
 // POST like
-// ----------------------
 router.post('/likes', async (req, res) => {
   try {
     const { articleId, userIdentifier } = req.body;
@@ -897,9 +795,7 @@ router.post('/likes', async (req, res) => {
   }
 });
 
-// ----------------------
 // GET likes count
-// ----------------------
 router.get('/likes/:articleId', async (req, res) => {
   try {
     const articleIdNum = parseInt(req.params.articleId);
@@ -917,9 +813,8 @@ router.get('/likes/:articleId', async (req, res) => {
   }
 });
 
-// -----------------------------
 // GET articles with comment stats
-// -----------------------------
+// GET articles with comments and full details
 router.get('/articles/with-comments', async (req, res) => {
   try {
     const pool = await sql.connect(sqlConfig);
@@ -928,28 +823,38 @@ router.get('/articles/with-comments', async (req, res) => {
       SELECT 
         a.ArticleID,
         a.Title,
+        a.Title_Ar,
+        a.Content,
+        a.Content_Ar,
+        a.MainSlideImage,
         a.ImageURL,
+        a.Attachments,        -- JSON or CSV string of attachments
+        a.CategoryID,
+        a.PublishedOn,
         a.CreatedOn,
-        COUNT(CASE WHEN c.IsApproved = 1 THEN 1 END) AS ApprovedCount,
-        COUNT(CASE WHEN (c.IsApproved = 0 AND c.IsActive = 1) THEN 1 END) AS PendingCount
+        a.ViewCount,
+        u.FullName AS AuthorName,
+        COUNT(CASE WHEN c.IsApproved = 1 THEN 1 END) AS ApprovedComments,
+        COUNT(CASE WHEN (c.IsApproved = 0 AND c.IsActive = 1) THEN 1 END) AS PendingComments
       FROM NewsArticles a
-      INNER JOIN NewsComments c ON a.ArticleID = c.ArticleID
+      LEFT JOIN Users u ON a.AuthorID = u.UserID
+      LEFT JOIN NewsComments c ON a.ArticleID = c.ArticleID
       WHERE a.IsApproved = 1 AND a.IsActive = 1
-      GROUP BY a.ArticleID, a.Title, a.ImageURL, a.CreatedOn
-      ORDER BY a.CreatedOn DESC
+      GROUP BY 
+        a.ArticleID, a.Title, a.Title_Ar, a.Content, a.Content_Ar,
+        a.MainSlideImage, a.ImageURL, a.Attachments, a.CategoryID,
+        a.PublishedOn, a.CreatedOn, a.ViewCount, u.FullName
+      ORDER BY a.PublishedOn DESC
     `);
 
     res.json({ success: true, data: result.recordset });
   } catch (err) {
     console.error('❌ Error fetching articles with comments:', err);
-    res.status(500).json({ success: false });
+    res.status(500).json({ success: false, message: 'Failed to fetch articles' });
   }
 });
 
-
-// ----------------------------------------------
 // GET comments for specific article
-// ----------------------------------------------
 router.get('/admincomments/:articleId', async (req, res) => {
   try {
     const articleId = parseInt(req.params.articleId);
@@ -976,9 +881,7 @@ router.get('/admincomments/:articleId', async (req, res) => {
   }
 });
 
-// ----------------------------------------------
 // PUT comment approve/reject
-// ----------------------------------------------
 router.put('/comments/:commentId/status', async (req, res) => {
   try {
     const { status } = req.body; // "approve" | "reject"
@@ -1004,9 +907,7 @@ router.put('/comments/:commentId/status', async (req, res) => {
   }
 });
 
-// ===================================================================
 // GET SINGLE TREND
-// ===================================================================
 router.get("/gettrend/:id", async (req, res) => {
   try {
     const pool = await sql.connect(sqlConfig);
@@ -1025,9 +926,7 @@ router.get("/gettrend/:id", async (req, res) => {
   }
 });
 
-// -----------------------------
 // GET trends with comment stats
-// -----------------------------
 router.get('/trends/with-comments', async (req, res) => {
   try {
     const pool = await sql.connect(sqlConfig);
@@ -1054,9 +953,7 @@ router.get('/trends/with-comments', async (req, res) => {
   }
 });
 
-// ----------------------------------------------
 // GET comments for specific trend
-// ----------------------------------------------
 router.get('/admintrendcomments/:trendId', async (req, res) => {
   try {
     const trendId = parseInt(req.params.trendId);
@@ -1083,10 +980,7 @@ router.get('/admintrendcomments/:trendId', async (req, res) => {
   }
 });
 
-
-// ----------------------------------------------
 // PUT comment approve/reject (TrendComments)
-// ----------------------------------------------
 router.put('/trendcomments/:commentId/status', async (req, res) => {
   try {
     const { status } = req.body; // "approve" | "reject"
@@ -1113,9 +1007,7 @@ router.put('/trendcomments/:commentId/status', async (req, res) => {
   }
 });
 
-// -------------------------------
 // POST /newsletter/subscribe
-// -------------------------------
 router.post('/newsletter/subscribe', async (req, res) => {
   try {
     const { email } = req.body;
@@ -1169,10 +1061,7 @@ router.post('/newsletter/subscribe', async (req, res) => {
   }
 });
 
-// -------------------------------
-// Confirmation route
 // GET /newsletter/confirm/:token
-// -------------------------------
 router.get('/newsletter/confirm/:token', async (req, res) => {
   try {
     const { token } = req.params;
@@ -1248,7 +1137,7 @@ router.get('/newsletter/confirm/:token', async (req, res) => {
   }
 });
 
-
+// Send Email to Confirm for Subscribers
 async function sendConfirmationEmail(email, token) {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -1334,9 +1223,7 @@ async function sendConfirmationEmail(email, token) {
   }
 }
 
-// ----------------------------------------------
 // PUT newsletter unsubscribe
-// ----------------------------------------------
 router.put('/newsletter/unsubscribe', async (req, res) => {
   try {
     const { email } = req.body;
@@ -1362,9 +1249,7 @@ router.put('/newsletter/unsubscribe', async (req, res) => {
   }
 });
 
-// ----------------------------------------------
 // PUT newsletter unsubscribe (Admin)
-// ----------------------------------------------
 router.put('/newsletter/admin/unsubscribe', async (req, res) => {
   try {
     const { subscriberId } = req.body;
@@ -1393,6 +1278,7 @@ router.put('/newsletter/admin/unsubscribe', async (req, res) => {
   }
 });
 
+// PUT newsletter reactivate (Admin)
 router.put('/newsletter/admin/reactivate', async (req, res) => {
   try {
     const { subscriberId } = req.body;
@@ -1417,7 +1303,6 @@ router.put('/newsletter/admin/reactivate', async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error." });
   }
 });
-
 
 // GET newsletter subscribers list (Admin)
 router.get('/newsletter/list', async (req, res) => {
@@ -1488,9 +1373,7 @@ router.get('/advertisements/list', async (req, res) => {
   }
 });
 
-// -------------------------
 // Login
-// -------------------------
 router.post('/login', async (req, res) => {
   const { Email, Password } = req.body;
   if (!Email || !Password) return res.status(400).json({ success: false, message: 'Email & password required' });
@@ -1521,9 +1404,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// -------------------------
 // Logout
-// -------------------------
 router.post('/logout', (req, res) => {
   req.session.destroy(err => {
     if (err) return res.status(500).json({ success: false, message: 'Logout failed' });
@@ -1531,18 +1412,14 @@ router.post('/logout', (req, res) => {
   });
 });
 
-// -------------------------
 // Middleware to protect routes
-// -------------------------
 function requireLogin(req, res, next) {
   if (req.session.user) return next();
   res.status(401).json({ success: false, message: 'Login required' });
 }
 module.exports.requireLogin = requireLogin;
 
-// -------------------------
 // 404 fallback for API
-// -------------------------
 router.use((req, res) => {
   res.status(404).json({ success: false, message: 'API route not found' });
 });

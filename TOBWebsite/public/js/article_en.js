@@ -170,37 +170,6 @@ async function loadTrendsTicker() {
 document.addEventListener('DOMContentLoaded', loadTrendsTicker);
 
 // Load article
-// async function loadArticle() {
-//     try {
-//         const res = await fetch(`/api/news/${articleId}`);
-//         const result = await res.json();
-
-//         const container = document.getElementById('articleContainer');
-
-//         if (result.success && result.data && result.data.IsActive && result.data.IsApproved) {
-//             const n = result.data;
-//             container.innerHTML = `
-//   <h1>${n.Title}</h1>
-//   <p class="text-muted">Published on ${formatDateTime(n.PublishedOn)}</p>
-//   ${n.ImageURL ? `<img src="${n.ImageURL}" alt="${n.Title}" class="img-fluid mb-3">` : ''}
-//   <div>${n.Content}</div>
-
-//   <div class="mt-4 d-flex align-items-center gap-3">
-//     <button id="likeBtn" class="btn btn-outline-danger"><i class="fa-solid fa-heart"></i> Like</button>
-//     <span id="likeCount" class="text-muted small">Loading likes...</span>
-//   </div>
-// `;
-//             loadLikes();
-//         } else {
-//             container.innerHTML = '<p class="text-muted">This article is not available.</p>';
-//         }
-//     } catch (err) {
-//         console.error(err);
-//         document.getElementById('articleContainer').innerHTML = '<p class="text-danger">Failed to load article.</p>';
-//     }
-// }
-
-// Load article
 async function loadArticle() {
     try {
         const res = await fetch(`/api/news/${articleId}`);
@@ -211,6 +180,48 @@ async function loadArticle() {
         if (result.success && result.data && result.data.IsActive && result.data.IsApproved) {
 
             const n = result.data;
+
+            // Collect all images: MainSlideImage first, then ImageURL, then Attachments
+            let images = [];
+
+            if (n.MainSlideImage && n.MainSlideImage.trim() !== '') images.push(n.MainSlideImage);
+            if (n.ImageURL && n.ImageURL.trim() !== '') images.push(n.ImageURL);
+
+            if (Array.isArray(n.Attachments)) {
+                n.Attachments.forEach(a => {
+                    // Try both "url" or direct string if attachments are simple
+                    if (typeof a === 'string' && a.trim() !== '') images.push(a);
+                    else if (a.url && a.url.trim() !== '') images.push(a.url);
+                });
+            }
+
+            // Remove duplicate images
+            images = [...new Set(images)];
+
+            const carouselHTML = images.length > 0 ? `
+                <div class="article-carousel">
+                    <div class="carousel-track" id="carouselTrack">
+                        ${images.map(img => `
+                            <div class="carousel-slide">
+                                <img src="${img}" onerror="this.src='/images/default-news.png'">
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <!-- Navigation -->
+                    <button class="carousel-btn prev" onclick="prevSlide()">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <button class="carousel-btn next" onclick="nextSlide()">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+
+                    <!-- Dots -->
+                    <div class="carousel-dots">
+                        ${images.map((_, i) => `<span class="dot" onclick="goToSlide(${i})"></span>`).join('')}
+                    </div>
+                </div>
+            ` : "";
 
             container.innerHTML = `
                 <!-- ARTICLE HEADER -->
@@ -225,16 +236,14 @@ async function loadArticle() {
                     </p>
                 </div>
 
-                <!-- FEATURED IMAGE -->
-                ${n.ImageURL ? `
-                <div class="trend-image-box">
-                    <img src="${n.ImageURL}" alt="${n.Title}" class="article-image">
-                </div>` : ''}
+                <!-- CAROUSEL IMAGES -->
+                ${carouselHTML}
 
-                <!-- MAIN CONTENT -->
                 <div class="trend-section mt-4">
-                <div id="trendDescriptionEn" class="trend-description">
-                    ${n.Content}</div>
+                    <h3><i class="fa-solid fa-align-left"></i> Description</h3>
+                    <div id="trendDescriptionEn" class="trend-description">
+                        ${n.Content}
+                    </div>
                 </div>
 
                 <!-- ACTIONS -->
@@ -246,13 +255,11 @@ async function loadArticle() {
                 </div>
             `;
 
-            // Load Likes
+            initCarousel();
             loadLikes();
 
         } else {
-            container.innerHTML = `
-                <p class="text-muted">This article is not available.</p>
-            `;
+            container.innerHTML = `<p class="text-muted">This article is not available.</p>`;
         }
 
     } catch (err) {
@@ -262,18 +269,74 @@ async function loadArticle() {
     }
 }
 
+let currentIndex = 0;
+let autoScrollInterval = null;
+
+function initCarousel() {
+    const dots = document.querySelectorAll(".dot");
+    if (dots.length) dots[0].classList.add("active");
+
+    const carousel = document.querySelector(".article-carousel");
+
+    // Pause on hover
+    if (carousel) {
+        carousel.addEventListener("mouseenter", stopAutoScroll);
+        carousel.addEventListener("mouseleave", startAutoScroll);
+    }
+
+    startAutoScroll();
+}
+
+function updateCarousel() {
+    const track = document.getElementById("carouselTrack");
+    const slides = document.querySelectorAll(".carousel-slide");
+    const dots = document.querySelectorAll(".dot");
+
+    if (!track || slides.length === 0) return;
+
+    const width = slides[0].clientWidth;
+
+    track.style.transform = `translateX(-${currentIndex * width}px)`;
+
+    dots.forEach(d => d.classList.remove("active"));
+    if (dots[currentIndex]) dots[currentIndex].classList.add("active");
+}
+
+function nextSlide() {
+    const slides = document.querySelectorAll(".carousel-slide");
+    currentIndex = (currentIndex + 1) % slides.length;
+    updateCarousel();
+}
+
+function prevSlide() {
+    const slides = document.querySelectorAll(".carousel-slide");
+    currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+    updateCarousel();
+}
+
+function goToSlide(i) {
+    currentIndex = i;
+    updateCarousel();
+}
+
+function startAutoScroll() {
+    stopAutoScroll();  
+    autoScrollInterval = setInterval(nextSlide, 4000);
+}
+
+function stopAutoScroll() {
+    if (autoScrollInterval) clearInterval(autoScrollInterval);
+}
+
 let otherNewsPage = 0;
 const pageSize = 8;
 let isLoadingNews = false;
 let allNewsLoaded = false;
+const loadedArticleIds = new Set();
+const carouselIntervals = new Map(); // store intervals per carousel
 
 const container = document.querySelector('#otherNewsContainer');
-container.innerHTML = '';   // clear previous content
-otherNewsPage = 0;          // reset page
-allNewsLoaded = false;      // reset flag
-
-// Keep track of already loaded article IDs to prevent duplicates
-const loadedArticleIds = new Set();
+container.innerHTML = '';
 
 async function loadOtherNewsGrid() {
     if (isLoadingNews || allNewsLoaded) return;
@@ -294,18 +357,57 @@ async function loadOtherNewsGrid() {
 
         const fragment = document.createDocumentFragment();
 
-        otherNews.forEach((n, i) => {
-            loadedArticleIds.add(n.ArticleID);  // mark as loaded
+        otherNews.forEach(n => {
+            loadedArticleIds.add(n.ArticleID);
 
-            const img = n.ImageURL || '/images/default-news.jpg';
+            // Collect all images
+            let images = [];
+            if (n.MainSlideImage) images.push(n.MainSlideImage);
+            if (n.ImageURL) images.push(n.ImageURL);
+            if (Array.isArray(n.Attachments)) {
+                n.Attachments.forEach(a => {
+                    if (a?.url) images.push(a.url);
+                    else if (typeof a === 'string') images.push(a);
+                });
+            }
+            if (images.length === 0) images.push('/images/default-news.png');
+
+            // Carousel HTML
+            const carouselHTML = `
+                <div class="other-carousel">
+                    <div class="carousel-track" data-index="0">
+                        ${images.map(img => `
+                            <div class="carousel-slide">
+                                <img src="${img}" alt="${n.Title}" onerror="this.src='/images/default-news.png'">
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button class="carousel-btn prev" onclick="prevSlideOther(this)">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <button class="carousel-btn next" onclick="nextSlideOther(this)">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    <div class="carousel-dots">
+                        ${images.map((_, i) => `<span class="dot" onclick="goToSlideOther(this, ${i})"></span>`).join('')}
+                    </div>
+                </div>
+            `;
+
             const item = document.createElement('div');
             item.className = 'other-news-item';
             item.innerHTML = `
                 <div class="other-news-card">
-                    <img data-src="${img}" alt="${n.Title}" class="lazy-image" onerror="this.src='/images/default-news.jpg'">
-                    <div class="overlay">
+                    ${carouselHTML}
+                    <div class="other-news-info">
                         <div class="title">${n.Title}</div>
-                        <a href="article_en.html?id=${n.ArticleID}" class="btn-read">Read More</a>
+                        <div class="meta">
+                            <span>📅 ${formatDateTime(n.PublishedOn)}</span>
+                            <span><i class="fa-solid fa-eye"></i> ${n.ViewCount || 0}</span>
+                        </div>
+                        <a href="article_en.html?id=${n.ArticleID}" class="btn-read">
+                            Read More <i class="fa-solid fa-arrow-right"></i>
+                        </a>
                     </div>
                 </div>
             `;
@@ -314,14 +416,30 @@ async function loadOtherNewsGrid() {
 
         container.appendChild(fragment);
 
-        // Lazy load images
-        container.querySelectorAll('.lazy-image').forEach(img => {
-            if (img.dataset.src && !img.src) img.src = img.dataset.src;
-        });
-
-        // Animate cards with staggered delay
+        // Animate cards
         container.querySelectorAll('.other-news-item:not(.show)').forEach((el, i) => {
             setTimeout(() => el.classList.add('show'), i * 100);
+        });
+
+        // Initialize auto-slides
+        container.querySelectorAll('.other-carousel').forEach(carousel => {
+            const track = carousel.querySelector('.carousel-track');
+            let index = parseInt(track.dataset.index || 0);
+
+            if (carouselIntervals.has(track)) clearInterval(carouselIntervals.get(track));
+
+            const interval = setInterval(() => {
+                const slides = track.querySelectorAll('.carousel-slide');
+                index = (index + 1) % slides.length;
+                track.dataset.index = index;
+                updateCarouselOther(track, index);
+            }, 4000);
+
+            carouselIntervals.set(track, interval);
+
+            // Dots
+            const dots = carousel.querySelectorAll('.dot');
+            if (dots.length) dots[0].classList.add('active');
         });
 
         otherNewsPage++;
@@ -332,33 +450,90 @@ async function loadOtherNewsGrid() {
         document.getElementById('newsLoader').style.display = 'none';
     }
 }
-
+// Carousel Controls
+function prevSlideOther(btn) {
+    const carousel = btn.closest('.other-carousel');
+    const track = carousel.querySelector('.carousel-track');
+    const slides = carousel.querySelectorAll('.carousel-slide');
+    let index = parseInt(track.dataset.index || 0);
+    index = (index - 1 + slides.length) % slides.length;
+    track.dataset.index = index;
+    updateCarouselOther(track, index);
+}
+function nextSlideOther(btn) {
+    const carousel = btn.closest('.other-carousel');
+    const track = carousel.querySelector('.carousel-track');
+    const slides = carousel.querySelectorAll('.carousel-slide');
+    let index = parseInt(track.dataset.index || 0);
+    index = (index + 1) % slides.length;
+    track.dataset.index = index;
+    updateCarouselOther(track, index);
+}
+function goToSlideOther(dot, i) {
+    const carousel = dot.closest('.other-carousel');
+    const track = carousel.querySelector('.carousel-track');
+    track.dataset.index = i;
+    updateCarouselOther(track, i);
+}
+function updateCarouselOther(track, index) {
+    const slides = track.querySelectorAll('.carousel-slide');
+    const dots = track.parentElement.querySelectorAll('.dot');
+    const width = slides[0].clientWidth;
+    track.style.transform = `translateX(-${index * width}px)`;
+    dots.forEach(d => d.classList.remove('active'));
+    if (dots[index]) dots[index].classList.add('active');
+}
 // Infinite scroll
 window.addEventListener('scroll', () => {
     if ((window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 300)) {
         loadOtherNewsGrid();
     }
 });
-
 // Initial load
 loadOtherNewsGrid();
 
-// ---------------- Breaking News ----------------
-const breakingNews = [
-  "Government announces new economic reforms",
-  "Local football team wins championship",
-  "Heavy rains expected tomorrow across the region",
-  "Stock market hits all-time high",
-  "New technology park to open downtown"
-];
-let newsIndex = 0;
-function updateBreakingNews() {
-  const ticker = document.getElementById('breakingNewsInner');
-  ticker.textContent = breakingNews[newsIndex];
-  newsIndex = (newsIndex + 1) % breakingNews.length;
+const icons = ["🔥", "⚡", "📢", "🚨", "🛑"];
+async function loadBreakingNews() {
+  try {
+    const res = await fetch('/api/news/admin', { cache: 'no-store' });
+    const news = await res.json();
+
+    // Validate and filter
+    const validNews = (Array.isArray(news) ? news : []).filter(
+      n => n.IsActive && n.IsApproved && n.IsBreakingNews
+    );
+
+    const ticker = document.getElementById("breakingNewsInner");
+
+    if (!validNews.length) {
+      ticker.innerHTML = `<span class="text-light">No breaking news right now.</span>`;
+      return;
+    }
+
+    // Sort by latest first
+    const sorted = validNews.sort(
+      (a, b) => new Date(b.PublishedOn) - new Date(a.PublishedOn)
+    );
+
+    // Build scrolling text line
+    let html = "";
+    sorted.forEach((n, i) => {
+      const icon = icons[i % icons.length]; // rotate icons
+      html += `
+    <span class="breaking-item" onclick="openArticle(${n.ArticleID})">
+      ${icon} ${n.Title}
+    </span>
+  `;
+    });
+    ticker.innerHTML = html + html;
+
+  } catch (err) {
+    console.error("loadBreakingNews error:", err);
+    document.getElementById("breakingNewsInner").innerHTML =
+      `<span class="text-light">Error loading breaking news...</span>`;
+  }
 }
-setInterval(updateBreakingNews, 5000);
-updateBreakingNews();
+loadBreakingNews();
 
 async function loadAdvertisements() {
   try {
@@ -706,7 +881,5 @@ async function subscribeNewsletter() {
 // Initial load
 loadComments();
 loadLikes();
-// Initialize
 loadArticle();
-//loadOtherNews();
 loadFooterCategories();

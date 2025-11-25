@@ -12,11 +12,6 @@ const newsSearchInput = document.getElementById('newsSearch');
 const logoutBtn = document.getElementById('logoutBtn');
 const profileForm = document.getElementById('profileForm');
 const profileMsg = document.getElementById('profileMsg');
-const openChangePasswordBtn = document.getElementById('openChangePasswordBtn');
-const changePasswordModal = document.getElementById('changePasswordModal');
-const closePasswordModal = document.getElementById('closePasswordModal');
-const changePasswordForm = document.getElementById('changePasswordForm');
-const changePasswordMsg = document.getElementById('changePasswordMsg');
 // --------------------
 // Trending Cards Management
 // --------------------
@@ -152,9 +147,52 @@ applyTrendFilter.onclick = () => {
   loadTrends(status, month, year);
 };
 
+// async function openTrendModal(trendID = null) {
+//   trendForm.reset();
+//   document.getElementById('TrendID').value = '';
+//   trendModalTitle.textContent = trendID ? 'Edit Trend' : 'Add Trend';
+
+//   if (trendID) {
+//     try {
+//       const res = await fetch(`/api/trends/gettrend/${trendID}`);
+//       const result = await res.json();
+
+//       // Check if your API returns { success: true, data: {...} }
+//       if (!result.success || !result.data) {
+//         alert('Trend not found!');
+//         return;
+//       }
+
+//       const t = result.data; // extract the trend data
+
+//       document.getElementById('TrendID').value = t.TrendID || '';
+//       document.getElementById('TrendTitle_EN').value = t.TrendTitle_EN || '';
+//       document.getElementById('TrendTitle_AR').value = t.TrendTitle_AR || '';
+//       document.getElementById('TrendDescription_EN').value = t.TrendDescription_EN || '';
+//       document.getElementById('TrendDescription_AR').value = t.TrendDescription_AR || '';
+
+//       // Safely handle undefined dates
+//       document.getElementById('FromDate').value = t.FromDate ? t.FromDate.split('T')[0] : '';
+//       document.getElementById('ToDate').value = t.ToDate ? t.ToDate.split('T')[0] : '';
+
+//       document.getElementById('IsActive').checked = !!t.IsActive;
+//     } catch (err) {
+//       alert('Error loading trend: ' + err.message);
+//       return;
+//     }
+//   }
+
+//   trendModal.style.display = 'block';
+// }
+// --------------------
+// Open Trend Modal (Add/Edit)
+// --------------------
 async function openTrendModal(trendID = null) {
+  // Reset form and preview
   trendForm.reset();
   document.getElementById('TrendID').value = '';
+  document.getElementById('trendImagePreview').innerHTML = '';
+  document.getElementById('ExistingImageURL').value = '';
   trendModalTitle.textContent = trendID ? 'Edit Trend' : 'Add Trend';
 
   if (trendID) {
@@ -162,49 +200,87 @@ async function openTrendModal(trendID = null) {
       const res = await fetch(`/api/trends/gettrend/${trendID}`);
       const result = await res.json();
 
-      // Check if your API returns { success: true, data: {...} }
       if (!result.success || !result.data) {
         alert('Trend not found!');
         return;
       }
 
-      const t = result.data; // extract the trend data
+      const t = result.data;
 
+      // Populate form fields
       document.getElementById('TrendID').value = t.TrendID || '';
       document.getElementById('TrendTitle_EN').value = t.TrendTitle_EN || '';
       document.getElementById('TrendTitle_AR').value = t.TrendTitle_AR || '';
       document.getElementById('TrendDescription_EN').value = t.TrendDescription_EN || '';
       document.getElementById('TrendDescription_AR').value = t.TrendDescription_AR || '';
-
-      // Safely handle undefined dates
       document.getElementById('FromDate').value = t.FromDate ? t.FromDate.split('T')[0] : '';
       document.getElementById('ToDate').value = t.ToDate ? t.ToDate.split('T')[0] : '';
-
       document.getElementById('IsActive').checked = !!t.IsActive;
+
+      // Load existing image preview
+      if (t.ImageURL) {
+        document.getElementById('trendImagePreview').innerHTML = `
+          <img src="${t.ImageURL}" alt="${t.TrendTitle_EN}" 
+               style="max-width:150px; max-height:150px; border-radius:8px;"/>
+        `;
+        document.getElementById('ExistingImageURL').value = t.ImageURL; // store existing image
+      }
     } catch (err) {
       alert('Error loading trend: ' + err.message);
       return;
     }
   }
 
+  // Show modal
   trendModal.style.display = 'block';
 }
 
 // --------------------
-// Submit trend form
+// Show image preview when user selects a new file
+// --------------------
+document.getElementById('TrendImage').addEventListener('change', function () {
+  const previewDiv = document.getElementById('trendImagePreview');
+  previewDiv.innerHTML = '';
+  const file = this.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      previewDiv.innerHTML = `<img src="${e.target.result}" 
+                                style="max-width:150px; max-height:150px; border-radius:8px;">`;
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+// --------------------
+// Submit trend form (Add or Update)
+// --------------------
+// --------------------
+// Submit trend form (Add or Update)
 // --------------------
 trendForm.onsubmit = async (e) => {
   e.preventDefault();
+
   const formData = new FormData(trendForm);
 
+  // Only append a new file if selected
+  if (!formData.get('Image')?.size) {
+    formData.delete('Image'); // remove empty file input
+    // ExistingImageURL is already a hidden field, no need to append anything extra
+  }
+
   const url = formData.get('TrendID') ? '/api/trends/update' : '/api/trends/create';
+
   try {
-    const res = await fetch(url, { method: 'POST', body: formData });
+    const res = await fetch(url, {
+      method: 'POST',
+      body: formData
+    });
     const data = await res.json();
 
     alert(data.message);
     trendModal.style.display = 'none';
-    applyTrendFilter.click();
+    applyTrendFilter.click(); // reload trend list
   } catch (err) {
     alert('Error saving trend: ' + err.message);
   }
@@ -399,6 +475,10 @@ menuItems.forEach(item => {
       loadSubscribers();
     }
 
+    if (sectionId === 'publish') {
+      loadCategories();
+    }    
+
     // Optional: handle other sections
     if (sectionId === 'profile') loadProfile();
   });
@@ -454,23 +534,34 @@ profileForm.onsubmit = async (e) => {
   }
 };
 
-// --------------------
 // Change Password Modal
-// --------------------
-// Open/close modal
+// Get elements
+const changePasswordModal = document.getElementById('changePasswordModal');
+const openChangePasswordBtn = document.getElementById('openChangePasswordBtn'); // button to open modal
+const closePasswordModal = document.getElementById('closePasswordModal');
+const changePasswordForm = document.getElementById('changePasswordForm');
+const changePasswordMsg = document.getElementById('changePasswordMsg');
+
+// --- Open modal ---
 openChangePasswordBtn.onclick = () => {
-  changePasswordForm.reset(); // ✅ Clear all textboxes
-  changePasswordMsg.textContent = ''; // ✅ Clear any previous message
+  changePasswordForm.reset();         // Clear all inputs
+  changePasswordMsg.textContent = ''; // Clear any previous message
   changePasswordModal.style.display = 'block';
 };
-// Close modal
-closePasswordModal.onclick = () => changePasswordModal.style.display = 'none';
-// Close when clicking outside
-window.onclick = (e) => {
-  if (e.target === changePasswordModal) changePasswordModal.style.display = 'none';
+
+// --- Close modal ---
+closePasswordModal.onclick = () => {
+  changePasswordModal.style.display = 'none';
 };
 
-// Change Password Form Submit
+// --- Close modal when clicking outside ---
+window.addEventListener('click', (e) => {
+  if (e.target === changePasswordModal) {
+    changePasswordModal.style.display = 'none';
+  }
+});
+
+// --- Submit change password form ---
 changePasswordForm.onsubmit = async (e) => {
   e.preventDefault();
 
@@ -478,12 +569,20 @@ changePasswordForm.onsubmit = async (e) => {
   const newPassword = document.getElementById('NewPassword').value.trim();
   const confirmPassword = document.getElementById('ConfirmPassword').value.trim();
 
+  // --- Validate passwords ---
+  if (!oldPassword || !newPassword || !confirmPassword) {
+    changePasswordMsg.textContent = 'Please fill in all fields.';
+    changePasswordMsg.style.color = 'red';
+    return;
+  }
+
   if (newPassword !== confirmPassword) {
     changePasswordMsg.textContent = 'Passwords do not match!';
     changePasswordMsg.style.color = 'red';
     return;
   }
 
+  // --- Send request to server ---
   try {
     const res = await fetch('/api/auth/changePassword', {
       method: 'POST',
@@ -498,18 +597,21 @@ changePasswordForm.onsubmit = async (e) => {
       changePasswordMsg.textContent = data.message;
       changePasswordMsg.style.color = 'green';
       changePasswordForm.reset();
-      setTimeout(() => changePasswordModal.style.display = 'none', 1500);
+      setTimeout(() => {
+        changePasswordModal.style.display = 'none';
+        changePasswordMsg.textContent = '';
+      }, 1500);
     } else {
       changePasswordMsg.textContent = data.message || 'Error updating password';
       changePasswordMsg.style.color = 'red';
     }
-
   } catch (err) {
     console.error('Change Password Error:', err);
     changePasswordMsg.textContent = 'Server error. Try again.';
     changePasswordMsg.style.color = 'red';
   }
 };
+
 
 // JavaScript Part
 const attachments = []; // Array to hold files
@@ -775,7 +877,7 @@ async function loadAllNewsEngagement(filterMonthValue = null) {
         </span>
 
         <!-- Image -->
-        ${n.ImageURL ? `<img src="${n.ImageURL}" alt="${n.Title}" class="news-img"/>`
+        ${n.MainSlideImage ? `<img src="${n.MainSlideImage}" alt="${n.Title}" class="news-img"/>`
           : `<div class="news-img placeholder"></div>`}
 
         <div class="news-body">
@@ -834,7 +936,7 @@ async function loadInactiveNews() {
               </span>
 
               <!-- Image -->
-              ${n.ImageURL ? `<img src="${n.ImageURL}" alt="${n.Title}" class="news-img"/>`
+              ${n.MainSlideImage ? `<img src="${n.MainSlideImage}" alt="${n.Title}" class="news-img"/>`
           : `<div class="news-img placeholder"></div>`}
 
               <div class="news-body">
@@ -1037,7 +1139,6 @@ function editrenderAttachmentsTable() {
   editExistingAttachmentsInput.value = JSON.stringify(existingAttachments);
 }
 
-
 // Open edit modal and populate data
 window.openEditModal = async (articleID) => {
   const res = await fetch("/api/news/admin");
@@ -1101,7 +1202,6 @@ editForm.onsubmit = async (e) => {
   await loadInactiveNews();
 };
 
-
 document.querySelector("#editModal .close").onclick = () => {
   editModal.style.display = "none";
 };
@@ -1110,13 +1210,14 @@ window.onclick = (e) => {
   if (e.target === editModal) editModal.style.display = "none";
 };
 
-
 let categories = [];
 let currentPage = 1;
 const pageSize = 5;
 let filteredCategories = [];
 
+// --------------------
 // Load categories from API
+// --------------------
 async function loadCategoriesList() {
   try {
     const res = await fetch('/api/news/Allcategories');
@@ -1130,7 +1231,9 @@ async function loadCategoriesList() {
   }
 }
 
-// Render categories in table
+// --------------------
+// Render categories table
+// --------------------
 function renderCategoriesTable() {
   const tbody = document.querySelector('#categoriesTable tbody');
   tbody.innerHTML = '';
@@ -1160,12 +1263,14 @@ function renderCategoriesTable() {
     tbody.appendChild(tr);
   });
 
-  // Bind buttons
+  // Bind edit/delete buttons
   document.querySelectorAll('.edit-cat').forEach(btn => btn.addEventListener('click', openEditCategoryModal));
   document.querySelectorAll('.delete-cat').forEach(btn => btn.addEventListener('click', deleteCategory));
 }
 
+// --------------------
 // Pagination
+// --------------------
 function renderPagination() {
   const pagination = document.getElementById('categoryPagination');
   pagination.innerHTML = '';
@@ -1185,7 +1290,9 @@ function renderPagination() {
   }
 }
 
+// --------------------
 // Search filter
+// --------------------
 document.getElementById('categorySearch').addEventListener('input', e => {
   const query = e.target.value.toLowerCase();
   filteredCategories = categories.filter(cat =>
@@ -1199,43 +1306,68 @@ document.getElementById('categorySearch').addEventListener('input', e => {
   renderPagination();
 });
 
-// Add/Edit Category Modal (Bootstrap 5)
-const categoryModalEl = document.getElementById('categoryModal');
-const categoryModal = new bootstrap.Modal(categoryModalEl);
+// --------------------
+// Custom modal handling
+// --------------------
+const categoryModal = document.getElementById('categoryModal');
+const categoryForm = document.getElementById('categoryForm');
+const categoryModalTitle = document.getElementById('categoryModalTitle');
 
+function openCategoryModal() {
+  categoryModal.style.display = 'block';
+}
+
+function closeCategoryModal() {
+  categoryModal.style.display = 'none';
+}
+
+// Open Add Category
 document.getElementById('addCategoryBtn').addEventListener('click', () => {
-  document.getElementById('categoryModalTitle').textContent = 'Add Category';
-  document.getElementById('categoryForm').reset();
+  categoryForm.reset();
   document.getElementById('CategoryID').value = '';
-  categoryModal.show();
+  document.getElementById('categoryIsActive').checked = true;
+  categoryModalTitle.textContent = 'Add Category';
+  openCategoryModal();
 });
 
-// document.getElementById('closeCategoryModal').addEventListener('click', () => categoryModal.hide());
-document.getElementById('closeCategoryModalFooter').addEventListener('click', () => categoryModal.hide());
-
-// Edit Category
+// Open Edit Category
 async function openEditCategoryModal(e) {
   const id = e.currentTarget.dataset.id;
   try {
     const res = await fetch(`/api/news/category/${id}`);
     const cat = await res.json();
 
-    document.getElementById('categoryModalTitle').textContent = 'Edit Category';
-    document.getElementById('CategoryID').value = cat.CategoryID;
+    categoryForm.reset();
+    categoryModalTitle.textContent = 'Edit Category';
+    document.getElementById('CategoryID').value = cat.CategoryID || '';
     document.getElementById('CategoryName').value = cat.CategoryName || '';
     document.getElementById('CategoryName_Ar').value = cat.CategoryName_Ar || '';
     document.getElementById('Description').value = cat.Description || '';
     document.getElementById('Description_Ar').value = cat.Description_Ar || '';
-    document.getElementById('IsActive').checked = cat.IsActive;
-    categoryModal.show();
+    document.getElementById('categoryIsActive').checked = !!cat.IsActive;
+
+    openCategoryModal();
   } catch (err) {
     console.error('Failed to open edit modal:', err);
+    alert('Failed to load category details.');
   }
 }
 
-// Save (Add or Update)
-document.getElementById('categoryForm').addEventListener('submit', async e => {
+// Close modal events
+document.getElementById('closeCategoryModal').onclick = closeCategoryModal;
+document.getElementById('closeCategoryModalFooter').onclick = closeCategoryModal;
+
+// Close when clicking outside
+window.onclick = (e) => {
+  if (e.target === categoryModal) closeCategoryModal();
+}
+
+// --------------------
+// Save category (Add/Update)
+// --------------------
+categoryForm.addEventListener('submit', async e => {
   e.preventDefault();
+
   const id = document.getElementById('CategoryID').value;
   const payload = {
     CategoryName: document.getElementById('CategoryName').value.trim(),
@@ -1244,16 +1376,22 @@ document.getElementById('categoryForm').addEventListener('submit', async e => {
     Description_Ar: document.getElementById('Description_Ar').value.trim(),
     IsActive: document.getElementById('categoryIsActive').checked
   };
+
   if (!payload.CategoryName) return alert('Please enter a category name.');
 
   const url = id ? `/api/news/category/update/${id}` : '/api/news/category/add';
   const method = id ? 'PUT' : 'POST';
+
   try {
-    const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
     const result = await res.json();
     if (!result.success) return alert(result.message || 'Operation failed.');
     alert(result.message);
-    categoryModal.hide();
+    closeCategoryModal();
     loadCategoriesList();
   } catch (err) {
     console.error('Save Category Error:', err);
@@ -1261,7 +1399,9 @@ document.getElementById('categoryForm').addEventListener('submit', async e => {
   }
 });
 
-// Delete Category
+// --------------------
+// Delete category
+// --------------------
 async function deleteCategory(e) {
   const id = e.currentTarget.dataset.id;
   if (!confirm('Are you sure you want to delete this category?')) return;
@@ -1273,9 +1413,13 @@ async function deleteCategory(e) {
     if (result.success) loadCategoriesList();
   } catch (err) {
     console.error('Delete Category Error:', err);
+    alert('Something went wrong while deleting category.');
   }
 }
+
+// --------------------
 // Initialize
+// --------------------
 document.addEventListener('DOMContentLoaded', loadCategoriesList);
 
 // =============================
@@ -1289,38 +1433,93 @@ let filteredPending = [], filteredApproved = [], filteredRejected = [];
 // ---------------------------------
 // Load articles with comment stats
 // ---------------------------------
+// async function loadArticlesWithComments() {
+//   try {
+//     const res = await fetch('/api/articles/with-comments');
+//     const data = await res.json();
+//     if (!data.success) throw new Error();
+
+//     const container = document.getElementById('articlesWithComments');
+//     container.innerHTML = '';
+
+//     if (!data.data.length) {
+//       container.innerHTML = '<p>No articles with comments found.</p>';
+//       return;
+//     }
+
+//     data.data.forEach(article => {
+//       // Use MainSlideImage if available, otherwise fallback to ImageURL
+//       const mainImage = article.MainSlideImage || article.ImageURL || 'images/default.jpg';
+
+//       const card = document.createElement('div');
+//       card.className = 'article-card';
+//       card.innerHTML = `
+//         <img src="${mainImage}" alt="${article.Title}" class="article-main-image">
+//         <div class="article-info mt-2">
+//           <h5>${article.Title}</h5>
+//           <p class="text-muted mb-1">Published: ${moment(article.PublishedOn).format('LL')}</p>
+//           <p class="text-muted mb-1">Views: ${article.ViewCount || 0}</p>
+//           <div class="comment-stats text-start mt-2">
+//             <p class="mb-0 text-warning"><i class="fa-solid fa-hourglass-half"></i> Pending: ${article.PendingComments || 0}</p>
+//             <p class="mb-0 text-success"><i class="fa-solid fa-check-circle"></i> Approved: ${article.ApprovedComments || 0}</p>
+//           </div>
+//           <button class="btn btn-primary btn-sm mt-3" onclick="viewComments(${article.ArticleID}, '${article.Title.replace(/'/g, "\\'")}')">
+//             <i class="fa-solid fa-comments"></i> View Comments
+//           </button>
+//         </div>
+//       `;
+//       container.appendChild(card);
+//     });
+//   } catch (err) {
+//     console.error('❌ Error loading articles:', err);
+//   }
+// }
+
 async function loadArticlesWithComments() {
-  try {
-    const res = await fetch('/api/articles/with-comments');
-    const data = await res.json();
-    if (!data.success) throw new Error();
+    try {
+        const res = await fetch('/api/articles/with-comments');
+        const data = await res.json();
+        if (!data.success) throw new Error();
 
-    const container = document.getElementById('articlesWithComments');
-    container.innerHTML = '';
+        const container = document.getElementById('articlesWithComments');
+        container.innerHTML = '';
+        container.className = 'artComments-grid'; // responsive grid
 
-    if (!data.data.length) {
-      container.innerHTML = '<p>No articles with comments found.</p>';
-      return;
+        if (!data.data.length) {
+            container.innerHTML = '<p>No articles with comments found.</p>';
+            return;
+        }
+
+        data.data
+            .filter(article => (article.PendingComments > 0 || article.ApprovedComments > 0))
+            .forEach(article => {
+                const mainImage = article.MainSlideImage || article.ImageURL || 'images/default.jpg';
+
+                const card = document.createElement('div');
+                card.className = 'artComments-card';
+                card.innerHTML = `
+                    <img src="${mainImage}" alt="${article.Title}" class="artComments-mainImage">
+                    <div class="artComments-info">
+                        <h5>${article.Title}</h5>
+                        <div class="artComments-meta">
+                            <span><i class="fa-regular fa-calendar"></i> ${moment(article.PublishedOn).format('LL')}</span>
+                            <span><i class="fa-solid fa-eye"></i> ${article.ViewCount || 0}</span>
+                        </div>
+                        <div class="artComments-comments">
+                            <p class="text-warning"><i class="fa-solid fa-hourglass-half"></i> Pending: ${article.PendingComments || 0}</p>
+                            <p class="text-success"><i class="fa-solid fa-check-circle"></i> Approved: ${article.ApprovedComments || 0}</p>
+                        </div>
+                        <button class="artComments-btn" onclick="viewComments(${article.ArticleID}, '${article.Title.replace(/'/g, "\\'")}')">
+                            <i class="fa-solid fa-comments"></i> View Comments
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+    } catch (err) {
+        console.error('❌ Error loading articles:', err);
     }
-
-    data.data.forEach(article => {
-      const card = document.createElement('div');
-      card.className = 'article-card';
-      card.innerHTML = `
-        <img src="${article.ImageURL || 'images/default.jpg'}" alt="${article.Title}">
-        <h5>${article.Title}</h5>
-        <p class="text-muted mb-1">Created: ${moment(article.CreatedOn).format('LL')}</p>
-        <div class="comment-stats text-start mt-2">
-          <p class="mb-0 text-warning"><i class="fa-solid fa-hourglass-half"></i> Pending: ${article.PendingCount}</p>
-          <p class="mb-0 text-success"><i class="fa-solid fa-check-circle"></i> Approved: ${article.ApprovedCount}</p>
-        </div>
-        <button class="btn btn-primary btn-sm mt-3" onclick="viewComments(${article.ArticleID}, '${article.Title.replace(/'/g, "\\'")}')">View Comments</button>
-      `;
-      container.appendChild(card);
-    });
-  } catch (err) {
-    console.error('❌ Error loading articles:', err);
-  }
 }
 
 // ---------------------------------
@@ -1377,9 +1576,9 @@ function renderCommentsTable(list, tableId, type, currentPage, articleTitle, pag
         <td>${c.Content}</td>
         <td>${moment(c.CreatedOn).fromNow()}</td>
         ${type !== 'rejected' ? `<td>
-          ${type === 'pending' ? `<button class="btn btn-success btn-sm me-1" onclick="updateCommentStatus(${c.CommentID},'approve',${c.ArticleID},'${escapedTitle}')">Approve</button>
-          <button class="btn btn-danger btn-sm" onclick="updateCommentStatus(${c.CommentID},'reject',${c.ArticleID},'${escapedTitle}')">Reject</button>` :
-            type === 'approved' ? `<button class="btn btn-danger btn-sm" onclick="updateCommentStatus(${c.CommentID},'reject',${c.ArticleID},'${escapedTitle}')">Reject</button>` : '' }
+          ${type === 'pending' ? `<button class="approve btn-sm" onclick="updateCommentStatus(${c.CommentID},'approve',${c.ArticleID},'${escapedTitle}')">Approve</button>
+          <button class="reject btn-sm" onclick="updateCommentStatus(${c.CommentID},'reject',${c.ArticleID},'${escapedTitle}')">Reject</button>` :
+            type === 'approved' ? `<button class="reject btn-sm" onclick="updateCommentStatus(${c.CommentID},'reject',${c.ArticleID},'${escapedTitle}')">Reject</button>` : '' }
         </td>`: ''}
       `;
       tbody.appendChild(tr);
@@ -1489,7 +1688,6 @@ document.getElementById('commentSearch').addEventListener('input', e => {
 // Init
 // ---------------------------------
 document.addEventListener('DOMContentLoaded', loadArticlesWithComments);
-
 
 // ==============================
 // Trends Comments Management
@@ -1747,10 +1945,6 @@ document.getElementById('trendsCommentSearch').addEventListener('input', e => {
     renderTrendCommentsTable(filteredRejectedTrendComments, 'trendsRejectedCommentsTable', 'rejected', currentRejectedTrendPage, document.getElementById('modalTrendTitle').textContent, 'trendsRejectedPagination');
   }
 });
-
-// ---------------------------------
-// Init
-// ---------------------------------
 document.addEventListener('DOMContentLoaded', loadTrendsWithComments);
 
 async function loadSubscribers() {
@@ -1785,11 +1979,9 @@ async function loadSubscribers() {
     console.error("Error loading subscribers:", err);
   }
 }
-
 document.addEventListener("DOMContentLoaded", () => {
   loadSubscribers(); // then load data
 });
-
 
 async function unsubscribeUser(id) {
   if (!confirm("Are you sure you want to unsubscribe this user?")) return;
