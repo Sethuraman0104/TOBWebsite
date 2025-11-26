@@ -38,9 +38,10 @@ router.post('/login', async (req, res) => {
       .query('UPDATE Users SET LastLogin = GETDATE(); SELECT TOP 1 LastLogin FROM Users WHERE UserID=@UserID');
     const lastLogin = lastLoginResult.recordset[0]?.LastLogin || null;
 
-    // Save login audit
+    // Save audit log (new version)
     await saveAudit({
       userId: user.UserID,
+      userName: user.FullName,  // Store directly!
       actionName: "Login",
       moduleName: "Authentication",
       description: `User ${user.FullName} logged in`,
@@ -65,7 +66,6 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
-
 
 // -------------------------
 // Current User API

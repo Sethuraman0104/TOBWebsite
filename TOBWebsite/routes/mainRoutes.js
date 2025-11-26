@@ -4,7 +4,7 @@ const sql = require('mssql');
 const sqlConfig = require('../sqlconfig');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs'); 
+const fs = require('fs');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
@@ -38,6 +38,123 @@ const isAdmin = (req, res, next) => {
 };
 
 const token = crypto.randomBytes(20).toString('hex');
+
+// ===============================
+// GET FILTERED + PAGINATED AUDIT LOGS
+// ===============================
+router.get('/auditLogs', async (req, res) => {
+  try {
+    let {
+      page = 1,
+      limit = 20,
+      search = "",
+      userId = "all",
+      module = "all",
+      startDate = "",
+      endDate = ""
+    } = req.query;
+
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    await sql.connect(sqlConfig);
+    let conditions = " WHERE 1=1 ";
+
+    // SEARCH (searches multiple columns)
+    if (search.trim() !== "") {
+      conditions += ` AND (
+        ActionName LIKE '%${search}%' OR
+        ModuleName LIKE '%${search}%' OR
+        Description LIKE '%${search}%' OR
+        UserName LIKE '%${search}%'
+      )`;
+    }
+
+    // USER FILTER
+    if (userId !== "all") {
+      conditions += ` AND UserID = ${userId}`;
+    }
+
+    // MODULE FILTER
+    if (module !== "all") {
+      conditions += ` AND ModuleName = '${module}'`;
+    }
+
+    // DATE RANGE
+    if (startDate) {
+      conditions += ` AND CAST(CreatedAt AS DATE) >= '${startDate}'`;
+    }
+
+    if (endDate) {
+      conditions += ` AND CAST(CreatedAt AS DATE) <= '${endDate}'`;
+    }
+
+    // COUNT total rows
+    const countResult = await new sql.Request().query(`
+      SELECT COUNT(*) AS total FROM audit_logs ${conditions}
+    `);
+
+    const total = countResult.recordset[0].total;
+    const offset = (page - 1) * limit;
+
+    // Fetch records
+    const result = await new sql.Request().query(`
+      SELECT LogID, UserID, UserName, ActionName, ModuleName, Description, IPAddress, UserAgent, CreatedAt
+      FROM audit_logs
+      ${conditions}
+      ORDER BY CreatedAt DESC
+      OFFSET ${offset} ROWS
+      FETCH NEXT ${limit} ROWS ONLY
+    `);
+
+    res.json({
+      success: true,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      logs: result.recordset
+    });
+  }
+  catch (err) {
+    console.error("AUDIT LOG FETCH ERROR:", err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// ===============================
+// GET USERS FOR DROPDOWN
+// ===============================
+router.get('/audit/users', async (req, res) => {
+  try {
+    await sql.connect(sqlConfig);
+    const result = await new sql.Request().query(`
+      SELECT UserID, FullName FROM users ORDER BY FullName
+    `);
+    return res.json({ success: true, users: result.recordset });
+  } catch (err) {
+    console.error("USER LIST ERROR:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// ===============================
+// GET MODULE NAMES FOR DROPDOWN
+// ===============================
+router.get('/audit/modules', async (req, res) => {
+  try {
+    await sql.connect(sqlConfig);
+    const result = await new sql.Request().query(`
+      SELECT DISTINCT ModuleName 
+      FROM audit_logs 
+      WHERE ModuleName IS NOT NULL
+      ORDER BY ModuleName
+    `);
+    return res.json({ success: true, modules: result.recordset });
+  } catch (err) {
+    console.error("MODULE LIST ERROR:", err);
+    res.status(500).json({ success: false });
+  }
+});
 
 router.get('/:id', async (req, res) => {
   try {
@@ -158,15 +275,6 @@ router.post(
          @IsBreakingNews, @IsSpotlightNews,
          @CreatedOn, @IsActive, @IsApproved, @Attachments)
       `);
-
-      // 🟦 AUDIT LOG ENTRY
-      await saveAudit({
-        userId: req.session.user?.UserID ?? 0,
-        actionName: "Create News Article",
-        moduleName: "News Management",
-        description: `Created new article: "${Title}" (CategoryID: ${CategoryID}, Attachments: ${Attachments.length}, Featured: ${IsFeatured}, TopStory: ${IsTopStory})`,
-        req
-      });
 
       res.json({
         success: true,
@@ -1610,15 +1718,6 @@ router.post('/user/add', async (req, res) => {
       `);
 
     const newUserId = result.recordset[0].UserID;
-
-    // 🟦 SAVE AUDIT LOG
-    await saveAudit({
-      userId: req.user?.UserID ?? 0,               // who performed the action
-      actionName: "Create User",
-      moduleName: "User Management",
-      description: `Created new user: ${FullName} (Email: ${Email}, Role: ${Role}, ID: ${newUserId})`,
-      req
-    });
 
     // Response
     return res.json({

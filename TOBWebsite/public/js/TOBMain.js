@@ -823,6 +823,61 @@ async function loadNewsArticles() {
 }
 loadNewsArticles();
 
+// ------------------
+// Load Categories
+// ------------------
+async function loadCategoriesMarquee() {
+  const container = document.getElementById('categoriesMenuMarquee');
+  container.innerHTML = '<span class="text-white">Loading categories...</span>';
+
+  try {
+    const res = await fetch('/api/news/categories/admin', { cache: 'no-store' });
+    let categories = await res.json();
+
+    if (!categories.length) {
+      container.innerHTML = '<span class="text-white">No categories available</span>';
+      return;
+    }
+
+    const isMobile = window.innerWidth <= 992;
+    const displayCategories = isMobile ? categories.slice(0, 10) : categories;
+
+    // Duplicate for infinite scroll
+    const fullList = [...displayCategories, ...displayCategories];
+
+    container.innerHTML = '';
+
+    fullList.forEach(cat => {
+      const icon = CATEGORY_ICONS[cat.CategoryName] || CATEGORY_ICONS['Default'];
+      const safeId = encodeURIComponent(cat.CategoryName);
+
+      const item = document.createElement('div');
+      item.classList.add('category-menu-item-row');
+      item.innerHTML = `<i class="fa-solid ${icon}"></i><span>${cat.CategoryName}</span>`;
+
+      item.addEventListener('click', () => {
+        const target = document.getElementById(safeId);
+        if (target) {
+          window.scrollTo({
+            top: target.offsetTop - 120,
+            behavior: 'smooth'
+          });
+        }
+      });
+
+      container.appendChild(item);
+    });
+
+  } catch (err) {
+    container.innerHTML = '<span class="text-white">Error loading categories</span>';
+    console.error(err);
+  }
+}
+
+// Initialize
+loadCategoriesMarquee();
+window.addEventListener('resize', loadCategoriesMarquee);
+
 async function loadFooterCategories() {
   const container = document.getElementById('footerCategories');
   container.innerHTML = '<li>Loading categories...</li>';

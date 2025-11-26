@@ -7,7 +7,6 @@ const cookieParser = require('cookie-parser');
 const mainRoutes = require('./routes/mainRoutes');
 const authRoutes = require('./routes/authRoutes');
 const trendsRoutes = require('./routes/trendsRoutes');
-const auditRoutes = require('./routes/auditRoutes');
 const listEndpoints = require('express-list-endpoints');
 
 dotenv.config();
@@ -32,7 +31,6 @@ app.use(session({
 app.use('/api/auth', authRoutes);
 app.use('/api/trends', trendsRoutes);
 app.use('/api', mainRoutes);
-app.use('/api/audit', auditRoutes);
 
 // -------------------------
 // Debug all endpoints

@@ -682,6 +682,35 @@ if (trendCommentForm) {
   });
 }
 
+async function loadFooterCategories() {
+  const container = document.getElementById('footerCategories');
+  container.innerHTML = '<li>Loading categories...</li>';
+  try {
+    const res = await fetch('/api/news/categories/admin', { cache: 'no-store' });
+    const categories = await res.json();
+    if (!categories.length) {
+      container.innerHTML = '<li>No categories</li>';
+      return;
+    }
+    container.innerHTML = '';
+    categories.forEach(cat => {
+      const safeId = encodeURIComponent(cat.CategoryName);
+      const li = document.createElement('li');
+      li.className = "footer-category-link";
+      li.innerHTML = `
+    <a href="#${safeId}" class="footer-category-link-item">
+      <i class="fa-solid fa-angle-right me-1"></i>${cat.CategoryName}
+    </a>`;
+      container.appendChild(li);
+    });
+
+  } catch {
+    container.innerHTML = '<li>Error loading</li>';
+  }
+}
+document.getElementById('year').textContent = new Date().getFullYear();
+loadFooterCategories();
+
 // -----------------------------------------
 // Kickoff
 // -----------------------------------------

@@ -32,22 +32,26 @@
     </div>
     <hr class="logo-divider">
     <nav class="menu">
-  <ul>
-    <li class="active" data-section="publish" data-role="Admin,User"><i class="fa-solid fa-pen-to-square"></i> Create News</li>
-    <li data-section="pending" data-role="Admin"><i class="fa-solid fa-hourglass-half"></i> Unpublished News</li>
-    <li data-section="allnews" data-role="Admin"><i class="fa-solid fa-newspaper"></i> Published News</li>
-    <li data-section="inactive" data-role="Admin"><i class="fa-solid fa-ban"></i> Deactivated News</li>
-    <li data-section="trending" data-role="Admin,User"><i class="fa-solid fa-fire"></i> Manage Trending</li>
-    <li data-section="comments" data-role="Admin,User"><i class="fa-solid fa-comments"></i> Article Comments</li>
-    <li data-section="trendcomments" data-role="Admin,User"><i class="fa-solid fa-comments"></i> Trending Article Comments</li>
-    <li data-section="manageUsers" data-role="Admin"><i class="fa-solid fa-user-plus"></i> Manage Users</li>
-    <li data-section="manageAdvertisements" data-role="Admin,User"><i class="fa-solid fa-bullhorn"></i> Manage Advertisement</li>
-    <li data-section="managecategories" data-role="Admin"><i class="fa-solid fa-screwdriver-wrench"></i> Manage Categories</li>
-    <li data-section="profile" data-role="Admin,User"><i class="fa-solid fa-user"></i> Profile</li>
-    <li data-section="managesubscribers" data-role="Admin"><i class="fa-solid fa-users"></i> Subscribers</li>
-    <li data-section="manageAuditLogs" data-role="Admin"><i class="fa-solid fa-users"></i> Audit Logs</li>
-  </ul>
-</nav>
+      <ul>
+        <li class="active" data-section="publish" data-role="Admin,User"><i class="fa-solid fa-pen-to-square"></i>
+          Create News</li>
+        <li data-section="pending" data-role="Admin"><i class="fa-solid fa-hourglass-half"></i> Unpublished News</li>
+        <li data-section="allnews" data-role="Admin"><i class="fa-solid fa-newspaper"></i> Published News</li>
+        <li data-section="inactive" data-role="Admin"><i class="fa-solid fa-ban"></i> Deactivated News</li>
+        <li data-section="trending" data-role="Admin,User"><i class="fa-solid fa-fire"></i> Manage Trending</li>
+        <li data-section="comments" data-role="Admin,User"><i class="fa-solid fa-comments"></i> Article Comments</li>
+        <li data-section="trendcomments" data-role="Admin,User"><i class="fa-solid fa-comments"></i> Trending Article
+          Comments</li>
+        <li data-section="manageUsers" data-role="Admin"><i class="fa-solid fa-user-plus"></i> Manage Users</li>
+        <li data-section="manageAdvertisements" data-role="Admin,User"><i class="fa-solid fa-bullhorn"></i> Manage
+          Advertisement</li>
+        <li data-section="managecategories" data-role="Admin"><i class="fa-solid fa-screwdriver-wrench"></i> Manage
+          Categories</li>
+        <li data-section="profile" data-role="Admin,User"><i class="fa-solid fa-user"></i> Profile</li>
+        <li data-section="managesubscribers" data-role="Admin"><i class="fa-solid fa-users"></i> Subscribers</li>
+        <li data-section="auditLogsSection" data-role="Admin"><i class="fa-solid fa-users"></i> Audit Logs</li>
+      </ul>
+    </nav>
 
     <div class="sidebar-footer">
       <div id="lastLoginDisplay"></div>
@@ -545,7 +549,7 @@
 
       </div>
     </div>
-   
+    <!-- Manage Users Section -->
     <section id="manageUsers" class="section container py-4">
       <div class="floating-title">
         👤 Manage Users
@@ -599,7 +603,6 @@
         </table>
       </div>
     </section>
-
     <!-- Manage Users Modal Window -->
     <div id="userModal" class="mdlManageUsers">
       <div class="mdlManageUsersContent">
@@ -665,57 +668,68 @@
 
       </div>
     </div>
+    <!-- Audit Logs Section -->
+    <section id="auditLogsSection" class="section container py-4">
+      <div class="floating-title">📜 Audit Logs</div>
 
-    <section id="manageAuditLogs" class="section container py-4">
-  <div class="floating-title">📜 Audit Logs</div>
+      <!-- 🔎 Search Bar -->
+      <div class="mb-3">
+        <input type="text" id="auditSearch" class="form-control" placeholder="Search logs...">
+      </div>
 
-  <!-- Filters -->
-  <div class="row mb-3">
-    <div class="col-md-4">
-      <input type="text" id="auditSearch" class="form-control" placeholder="Search description, user or module...">
-    </div>
-    <div class="col-md-3">
-      <select id="auditModuleFilter" class="form-select">
-        <option value="">All Modules</option>
-        <option value="Authentication">Authentication</option>
-        <option value="Users">Users</option>
-        <option value="News">News</option>
-        <option value="Trends">Trends</option>
-      </select>
-    </div>
-    <div class="col-md-3">
-      <select id="auditActionFilter" class="form-select">
-        <option value="">All Actions</option>
-        <!-- Will dynamically populate from server -->
-      </select>
-    </div>
-  </div>
+      <!-- 🔽 Filters -->
+      <div class="row g-2 mb-3">
+        <div class="col-md-3">
+          <select id="auditUserFilter" class="form-select">
+            <option value="all">All Users</option>
+          </select>
+        </div>
 
-  <!-- Table -->
-  <div class="table-responsive">
-    <table class="table table-striped table-hover align-middle" id="auditLogsTable">
-      <thead class="table-dark">
-        <tr>
-          <th>ID</th>
-          <th>User</th>
-          <th>Action</th>
-          <th>Module</th>
-          <th>Description</th>
-          <th>IP Address</th>
-          <th>User Agent</th>
-          <th>Date</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+        <div class="col-md-3">
+          <select id="auditModuleFilter" class="form-select">
+            <option value="all">All Modules</option>
+          </select>
+        </div>
 
-  <!-- Pagination -->
-  <nav>
-    <ul class="pagination justify-content-center" id="auditPagination"></ul>
-  </nav>
-</section>
+        <div class="col-md-2">
+          <input type="date" id="auditDateFrom" class="form-control">
+        </div>
 
+        <div class="col-md-2">
+          <input type="date" id="auditDateTo" class="form-control">
+        </div>
+
+        <div class="col-md-2">
+          <button class="btn btn-dark w-100" onclick="loadAuditLogs(1)">
+            Apply
+          </button>
+        </div>
+      </div>
+
+      <!-- 🧾 Table -->
+      <div class="table-responsive">
+        <table class="table table-striped table-hover" id="auditLogsTable">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>User</th>
+              <th>Action</th>
+              <th>Module</th>
+              <th>Description</th>
+              <th>IP</th>
+              <th>User Agent</th>
+              <th>Created At</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- 📄 Pagination -->
+      <nav>
+        <ul class="pagination justify-content-center" id="auditPagination"></ul>
+      </nav>
+    </section>
     <!-- News Comments Modal Window -->
     <div id="commentsModalCustom" class="mdlArticleModal-container">
       <div class="mdlArticleModal-content">

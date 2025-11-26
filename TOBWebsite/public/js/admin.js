@@ -471,8 +471,8 @@ async function initSidebar() {
         case 'manageUsers':
           loadUsers();
           break;
-        case 'manageAuditLogs':
-          loadAuditActions().then(() => loadAuditLogs());
+        case 'auditLogsSection':
+          loadAuditLogs();
           break;
       }
     });
@@ -2395,132 +2395,92 @@ async function deleteUser(id) {
 // Initial Load
 window.addEventListener('load', loadUsers);
 
-const auditLogsTable = document.querySelector("#auditLogsTable tbody");
-const auditSearch = document.querySelector("#auditSearch");
-const auditModuleFilter = document.querySelector("#auditModuleFilter");
-const auditActionFilter = document.querySelector("#auditActionFilter");
-const auditPagination = document.querySelector("#auditPagination");
+let auditPage = 1;
+let auditLimit = 20;
 
-let currentAuditLogPage = 1;
-const pageAuditLogSize = 20;
+// ===============================
+// LOAD USERS & MODULES
+// ===============================
+async function loadAuditDropdowns() {
+  // Users
+  const u = await fetch('/api/audit/users');
+  const users = await u.json();
 
-// -------------------------
-// Load audit actions for dropdown
-// -------------------------
-async function loadAuditActions() {
-  try {
-    const res = await fetch('/api/audit/actions');
-    const data = await res.json();
-    if (!data.success) return;
+  const userSelect = document.getElementById('auditUserFilter');
+  users.users.forEach(u => {
+    userSelect.innerHTML += `<option value="${u.UserID}">${u.FullName}</option>`;
+  });
 
-    auditActionFilter.innerHTML = '';
+  // Modules
+  const m = await fetch('/api/audit/modules');
+  const modules = await m.json();
 
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = 'All Actions';
-    auditActionFilter.appendChild(defaultOption);
-
-    data.actions.forEach(a => {
-      const option = document.createElement('option');
-      option.value = a.ActionID;
-      option.textContent = a.ActionName;
-      auditActionFilter.appendChild(option);
-    });
-
-    auditActionFilter.value = '';
-  } catch (err) {
-    console.error('Error loading audit actions:', err);
-  }
+  const moduleSelect = document.getElementById('auditModuleFilter');
+  modules.modules.forEach(m => {
+    moduleSelect.innerHTML += `<option value="${m.ModuleName}">${m.ModuleName}</option>`;
+  });
 }
 
-// -------------------------
-// Load audit logs with filters & pagination
-// -------------------------
-async function loadAuditLogs() {
-  try {
-    const params = new URLSearchParams({
-      search: auditSearch.value || '',
-      module: auditModuleFilter.value || '',
-      page: currentAuditLogPage,
-      pageSize: pageAuditLogSize
-    });
+// ===============================
+// LOAD AUDIT LOGS
+// ===============================
+async function loadAuditLogs(page = 1) {
+  auditPage = page;
 
-    // Only include valid actionId
-    const actionIdValue = auditActionFilter.value;
-    if (actionIdValue && !isNaN(Number(actionIdValue))) {
-      params.append('actionId', Number(actionIdValue));
-    }
+  const search = document.getElementById("auditSearch").value;
+  const userId = document.getElementById("auditUserFilter").value;
+  const module = document.getElementById("auditModuleFilter").value;
+  const startDate = document.getElementById("auditDateFrom").value;
+  const endDate = document.getElementById("auditDateTo").value;
 
-    const res = await fetch(`/api/audit?${params.toString()}`);
-    const data = await res.json();
-    if (!data.success) return;
+  const res = await fetch(`/api/auditLogs?page=${page}&limit=${auditLimit}&search=${search}&userId=${userId}&module=${module}&startDate=${startDate}&endDate=${endDate}`);
 
-    // Render table
-    auditLogsTable.innerHTML = '';
-    data.logs.forEach(log => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${log.LogID}</td>
-        <td>${log.UserName}</td>
-        <td>${log.ActionName}</td>
-        <td>${log.ModuleName || ''}</td>
-        <td>${log.Description || ''}</td>
-        <td>${log.IPAddress || ''}</td>
-        <td>${log.UserAgent || ''}</td>
-        <td>${new Date(log.CreatedAt).toLocaleString()}</td>
-      `;
-      auditLogsTable.appendChild(tr);
-    });
+  const data = await res.json();
 
-    renderPagination(data.total, data.page, data.pageSize);
+  const table = document.querySelector("#auditLogsTable tbody");
+  table.innerHTML = "";
 
-  } catch (err) {
-    console.error('Error loading audit logs:', err);
-  }
+  data.logs.forEach(log => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${log.LogID}</td>
+      <td>${log.UserName || '—'}</td>
+      <td>${log.ActionName}</td>
+      <td>${log.ModuleName || ''}</td>
+      <td>${log.Description || ''}</td>
+      <td>${log.IPAddress || ''}</td>
+      <td>${log.UserAgent || ''}</td>
+      <td>${new Date(log.CreatedAt).toLocaleString()}</td>
+    `;
+    table.appendChild(tr);
+  });
+
+  buildAuditPagination(data.pages, data.page);
 }
 
-// -------------------------
-// Render pagination
-// -------------------------
-function renderPagination(total, page, pageSize) {
-  const totalPages = Math.ceil(total / pageSize);
-  auditPagination.innerHTML = '';
+// ===============================
+// PAGINATION
+// ===============================
+function buildAuditPagination(totalPages, currentPage) {
+  const pag = document.getElementById("auditPagination");
+  pag.innerHTML = "";
+
   for (let i = 1; i <= totalPages; i++) {
-    const li = document.createElement('li');
-    li.className = `page-item ${i === page ? 'active' : ''}`;
-    li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
-    li.addEventListener('click', e => {
-      e.preventDefault();
-      currentAuditLogPage = i;
-      loadAuditLogs();
-    });
-    auditPagination.appendChild(li);
+    pag.innerHTML += `
+      <li class="page-item ${i === currentPage ? 'active' : ''}">
+        <button class="page-link" onclick="loadAuditLogs(${i})">${i}</button>
+      </li>`;
   }
 }
 
-// -------------------------
-// Event listeners
-// -------------------------
-auditSearch.addEventListener('input', () => { 
-  currentAuditLogPage = 1; 
-  loadAuditLogs(); 
-});
+// ===============================
+// Search Live
+// ===============================
+document.getElementById("auditSearch").addEventListener("keyup", () => loadAuditLogs(1));
 
-auditModuleFilter.addEventListener('change', () => { 
-  currentAuditLogPage = 1; 
-  loadAuditLogs(); 
-});
-
-auditActionFilter.addEventListener('change', () => { 
-  currentAuditLogPage = 1; 
-  loadAuditLogs(); 
-});
-
-// -------------------------
-// Init
-// -------------------------
-loadAuditActions().then(() => loadAuditLogs());
-
+// INITIAL LOAD
+loadAuditDropdowns();
+loadAuditLogs();
 
 
 // --------------------
