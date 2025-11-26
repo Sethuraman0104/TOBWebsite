@@ -224,36 +224,42 @@ async function loadArticle() {
             ` : "";
 
             container.innerHTML = `
-                <!-- ARTICLE HEADER -->
-                <div class="article-header">
-                    <div class="article-title-wrapper">
-                        <i class="fa-solid fa-newspaper article-icon"></i>
-                        <h1 class="article-title">${n.Title}</h1>
-                    </div>
-                    <p class="trend-date-badge">
-                        <i class="fa-regular fa-calendar"></i>
-                        ${formatDateTime(n.PublishedOn)}
-                    </p>
-                </div>
+  <div class="article-detail-wrapper container my-5" style="animation: fadeIn 0.6s ease;">
+    <!-- ARTICLE HEADER -->
+    <div class="article-header">
+      <div class="article-title-wrapper">
+        <i class="fa-solid fa-newspaper article-icon"></i>
+        <h1 class="article-title mb-0">
+          ${n.Title}
+        </h1>
+      </div>
+      <p class="trend-date-badge">
+        <i class="fa-regular fa-calendar"></i>
+        ${formatDateTime(n.PublishedOn)}
+      </p>
+    </div>
 
-                <!-- CAROUSEL IMAGES -->
-                ${carouselHTML}
+    <!-- CAROUSEL IMAGES -->
+    ${carouselHTML}
 
-                <div class="trend-section mt-4">
-                    <h3><i class="fa-solid fa-align-left"></i> Description</h3>
-                    <div id="trendDescriptionEn" class="trend-description">
-                        ${n.Content}
-                    </div>
-                </div>
+    <!-- DESCRIPTION -->
+    <div class="trend-section mt-4">
+      <h3><i class="fa-solid fa-align-left"></i> Description</h3>
+      <div id="articleContent" class="trend-description">
+        ${n.Content}
+      </div>
+    </div>
 
-                <!-- ACTIONS -->
-                <div class="mt-4 d-flex align-items-center gap-3">
-                    <button id="likeBtn" class="like-btn">
-                        <i class="fa-solid fa-heart"></i> Like
-                    </button>
-                    <span id="likeCount" class="like-count">Loading likes...</span>
-                </div>
-            `;
+    <!-- ACTIONS -->
+    <div class="mt-4 d-flex align-items-center gap-3">
+      <button id="likeBtn" class="like-btn">
+        <i class="fa-solid fa-heart"></i> Like
+      </button>
+      <span id="likeCount" class="like-count">Loading likes...</span>
+    </div>
+  </div>
+`;
+
 
             initCarousel();
             loadLikes();

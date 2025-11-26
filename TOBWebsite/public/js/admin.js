@@ -147,46 +147,7 @@ applyTrendFilter.onclick = () => {
   loadTrends(status, month, year);
 };
 
-// async function openTrendModal(trendID = null) {
-//   trendForm.reset();
-//   document.getElementById('TrendID').value = '';
-//   trendModalTitle.textContent = trendID ? 'Edit Trend' : 'Add Trend';
-
-//   if (trendID) {
-//     try {
-//       const res = await fetch(`/api/trends/gettrend/${trendID}`);
-//       const result = await res.json();
-
-//       // Check if your API returns { success: true, data: {...} }
-//       if (!result.success || !result.data) {
-//         alert('Trend not found!');
-//         return;
-//       }
-
-//       const t = result.data; // extract the trend data
-
-//       document.getElementById('TrendID').value = t.TrendID || '';
-//       document.getElementById('TrendTitle_EN').value = t.TrendTitle_EN || '';
-//       document.getElementById('TrendTitle_AR').value = t.TrendTitle_AR || '';
-//       document.getElementById('TrendDescription_EN').value = t.TrendDescription_EN || '';
-//       document.getElementById('TrendDescription_AR').value = t.TrendDescription_AR || '';
-
-//       // Safely handle undefined dates
-//       document.getElementById('FromDate').value = t.FromDate ? t.FromDate.split('T')[0] : '';
-//       document.getElementById('ToDate').value = t.ToDate ? t.ToDate.split('T')[0] : '';
-
-//       document.getElementById('IsActive').checked = !!t.IsActive;
-//     } catch (err) {
-//       alert('Error loading trend: ' + err.message);
-//       return;
-//     }
-//   }
-
-//   trendModal.style.display = 'block';
-// }
-// --------------------
 // Open Trend Modal (Add/Edit)
-// --------------------
 async function openTrendModal(trendID = null) {
   // Reset form and preview
   trendForm.reset();
@@ -252,12 +213,7 @@ document.getElementById('TrendImage').addEventListener('change', function () {
   }
 });
 
-// --------------------
 // Submit trend form (Add or Update)
-// --------------------
-// --------------------
-// Submit trend form (Add or Update)
-// --------------------
 trendForm.onsubmit = async (e) => {
   e.preventDefault();
 
@@ -286,9 +242,7 @@ trendForm.onsubmit = async (e) => {
   }
 };
 
-// --------------------
 // Activate/Deactivate trend
-// --------------------
 async function toggleTrendStatus(id, activate) {
   try {
     const res = await fetch(`/api/trends/${activate ? 'activate' : 'deactivate'}/${id}`, { method: 'POST' });
@@ -443,46 +397,88 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // --------------------
-// Sidebar Navigation
+// Sidebar Navigation with Role-Based Menus
 // --------------------
-const menuItems = document.querySelectorAll('.sidebar .menu li');
-const sections = document.querySelectorAll('.section');
-
-// Hide all sections initially
-sections.forEach(s => s.style.display = 'none');
-
-// Show the first section by default
-const firstMenuItem = menuItems[0];
-const firstSectionId = firstMenuItem.dataset.section;
-document.getElementById(firstSectionId).style.display = 'block';
-firstMenuItem.classList.add('active');
-
-// Add click listeners to menu items
-menuItems.forEach(item => {
-  item.addEventListener('click', () => {
-    const sectionId = item.dataset.section;
-
-    // Remove active from all menu items & hide all sections
-    menuItems.forEach(i => i.classList.remove('active'));
-    sections.forEach(s => s.style.display = 'none');
-
-    // Add active to clicked menu item & show relevant section
-    item.classList.add('active');
-    document.getElementById(sectionId).style.display = 'block';
-
-    // Only load subscribers when Subscribers tab is clicked
-    if (sectionId === 'managesubscribers') {
-      loadSubscribers();
-    }
-
-    if (sectionId === 'publish') {
-      loadCategories();
-    }    
-
-    // Optional: handle other sections
-    if (sectionId === 'profile') loadProfile();
-  });
+document.addEventListener('DOMContentLoaded', () => {
+  initSidebar();
 });
+
+async function initSidebar() {
+  const menuItems = document.querySelectorAll('.sidebar .menu li');
+  const sections = document.querySelectorAll('.section');
+
+  // Hide all sections initially
+  sections.forEach(s => (s.style.display = 'none'));
+  menuItems.forEach(item => (item.style.display = 'none'));
+
+  // 1️⃣ Fetch current user role
+  let userRole = 'User'; // default
+  try {
+    const res = await fetch('/api/auth/currentUser', { cache: 'no-store' });
+    const json = await res.json();
+    if (json.success) userRole = json.Role;
+  } catch (err) {
+    console.error('Error fetching current user:', err);
+  }
+
+  // 2️⃣ Show/hide menus based on role
+  menuItems.forEach(item => {
+    const allowedRoles = item.dataset.role.split(',').map(r => r.trim().toLowerCase());
+    if (allowedRoles.includes(userRole.toLowerCase())) {
+      item.style.display = 'block';
+    }
+  });
+
+  // 3️⃣ Show first visible menu and its section
+  const firstVisibleMenu = Array.from(menuItems).find(i => i.style.display === 'block');
+  if (firstVisibleMenu) {
+    const firstSectionId = firstVisibleMenu.dataset.section;
+    const firstSection = document.getElementById(firstSectionId);
+    if (firstSection) firstSection.style.display = 'block';
+    firstVisibleMenu.classList.add('active');
+  }
+
+  // 4️⃣ Add click listeners only to visible menus
+  menuItems.forEach(item => {
+    if (item.style.display !== 'block') return; // skip hidden
+
+    item.addEventListener('click', () => {
+      const sectionId = item.dataset.section;
+
+      // Remove active from all menu items & hide all sections
+      menuItems.forEach(i => i.classList.remove('active'));
+      sections.forEach(s => (s.style.display = 'none'));
+
+      // Activate clicked menu & show section
+      item.classList.add('active');
+      const section = document.getElementById(sectionId);
+      if (section) section.style.display = 'block';
+
+      // Optional: load data only when section opens
+      switch (sectionId) {
+        case 'managesubscribers':
+          loadSubscribers();
+          break;
+        case 'publish':
+          loadCategories();
+          break;
+        case 'profile':
+          loadProfile();
+          break;
+        case 'manageAdvertisements':
+          loadAdvertisements('all');
+          break;
+        case 'manageUsers':
+          loadUsers();
+          break;
+        case 'manageAuditLogs':
+          loadAuditActions().then(() => loadAuditLogs());
+          break;
+      }
+    });
+  });
+}
+
 
 // --------------------
 // Load Profile
@@ -831,10 +827,10 @@ function startCarousel() {
 
 // Close modal
 document.getElementById("closeNewsPreview").onclick =
-document.getElementById("closeNewsPreviewFooter").onclick = () => {
-  document.getElementById("newsPreviewModal").style.display = "none";
-  clearInterval(carouselTimer);
-};
+  document.getElementById("closeNewsPreviewFooter").onclick = () => {
+    document.getElementById("newsPreviewModal").style.display = "none";
+    clearInterval(carouselTimer);
+  };
 
 window.onclick = (e) => {
   if (e.target.id === "newsPreviewModal") {
@@ -1476,28 +1472,28 @@ let filteredPending = [], filteredApproved = [], filteredRejected = [];
 // }
 
 async function loadArticlesWithComments() {
-    try {
-        const res = await fetch('/api/articles/with-comments');
-        const data = await res.json();
-        if (!data.success) throw new Error();
+  try {
+    const res = await fetch('/api/articles/with-comments');
+    const data = await res.json();
+    if (!data.success) throw new Error();
 
-        const container = document.getElementById('articlesWithComments');
-        container.innerHTML = '';
-        container.className = 'artComments-grid'; // responsive grid
+    const container = document.getElementById('articlesWithComments');
+    container.innerHTML = '';
+    container.className = 'artComments-grid'; // responsive grid
 
-        if (!data.data.length) {
-            container.innerHTML = '<p>No articles with comments found.</p>';
-            return;
-        }
+    if (!data.data.length) {
+      container.innerHTML = '<p>No articles with comments found.</p>';
+      return;
+    }
 
-        data.data
-            .filter(article => (article.PendingComments > 0 || article.ApprovedComments > 0))
-            .forEach(article => {
-                const mainImage = article.MainSlideImage || article.ImageURL || 'images/default.jpg';
+    data.data
+      .filter(article => (article.PendingComments > 0 || article.ApprovedComments > 0))
+      .forEach(article => {
+        const mainImage = article.MainSlideImage || article.ImageURL || 'images/default.jpg';
 
-                const card = document.createElement('div');
-                card.className = 'artComments-card';
-                card.innerHTML = `
+        const card = document.createElement('div');
+        card.className = 'artComments-card';
+        card.innerHTML = `
                     <img src="${mainImage}" alt="${article.Title}" class="artComments-mainImage">
                     <div class="artComments-info">
                         <h5>${article.Title}</h5>
@@ -1514,12 +1510,12 @@ async function loadArticlesWithComments() {
                         </button>
                     </div>
                 `;
-                container.appendChild(card);
-            });
+        container.appendChild(card);
+      });
 
-    } catch (err) {
-        console.error('❌ Error loading articles:', err);
-    }
+  } catch (err) {
+    console.error('❌ Error loading articles:', err);
+  }
 }
 
 // ---------------------------------
@@ -1578,7 +1574,7 @@ function renderCommentsTable(list, tableId, type, currentPage, articleTitle, pag
         ${type !== 'rejected' ? `<td>
           ${type === 'pending' ? `<button class="approve btn-sm" onclick="updateCommentStatus(${c.CommentID},'approve',${c.ArticleID},'${escapedTitle}')">Approve</button>
           <button class="reject btn-sm" onclick="updateCommentStatus(${c.CommentID},'reject',${c.ArticleID},'${escapedTitle}')">Reject</button>` :
-            type === 'approved' ? `<button class="reject btn-sm" onclick="updateCommentStatus(${c.CommentID},'reject',${c.ArticleID},'${escapedTitle}')">Reject</button>` : '' }
+            type === 'approved' ? `<button class="reject btn-sm" onclick="updateCommentStatus(${c.CommentID},'reject',${c.ArticleID},'${escapedTitle}')">Reject</button>` : ''}
         </td>`: ''}
       `;
       tbody.appendChild(tr);
@@ -1893,12 +1889,12 @@ async function refreshTrendComments(trendId, trendTitle) {
   const data = await res.json();
 
   // Replace ALL global arrays with fresh DB data
-  pendingTrendComments  = data.pending || [];
+  pendingTrendComments = data.pending || [];
   approvedTrendComments = data.approved || [];
   rejectedTrendComments = data.rejected || [];
 
   // Reset filters
-  filteredPendingTrendComments  = [...pendingTrendComments];
+  filteredPendingTrendComments = [...pendingTrendComments];
   filteredApprovedTrendComments = [...approvedTrendComments];
   filteredRejectedTrendComments = [...rejectedTrendComments];
 
@@ -1982,11 +1978,10 @@ async function loadSubscribers() {
           <td>${sub.IsActive ? "🟢 Active" : "🔴 Inactive"}</td>
           <td>${sub.UnsubscribedOn ? new Date(sub.UnsubscribedOn).toLocaleString() : '-'}</td>
           <td>
-            ${
-              sub.IsActive
-              ? `<button class="btn btn-danger btn-sm" onclick="unsubscribeUser(${sub.SubscriberID})">Unsubscribe</button>`
-              : `<button class="btn btn-success btn-sm" onclick="reactivateUser(${sub.SubscriberID})">Activate</button>`
-            }
+            ${sub.IsActive
+          ? `<button class="btn btn-danger btn-sm" onclick="unsubscribeUser(${sub.SubscriberID})">Unsubscribe</button>`
+          : `<button class="btn btn-success btn-sm" onclick="reactivateUser(${sub.SubscriberID})">Activate</button>`
+        }
           </td>
         </tr>
       `;
@@ -2031,6 +2026,502 @@ document.querySelector("#subscriberSearch").addEventListener("input", function (
     row.style.display = row.innerText.toLowerCase().includes(search) ? "" : "none";
   });
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  let currentAdId = null;          // Null = Add, Not Null = Edit
+  let selectedImageFile = null;    // Selected image
+
+  // Elements
+  const modal = document.getElementById("advertisementModal");
+  const form = document.getElementById("advertisementForm");
+  const adTitle = document.getElementById("AdTitle");
+  const adLinkURL = document.getElementById("AdLinkURL");
+  const adPosition = document.getElementById("AdPosition");
+  const adSize = document.getElementById("AdSize");
+  const adStartDate = document.getElementById("AdStartDate");
+  const adEndDate = document.getElementById("AdEndDate");
+  const adIsActive = document.getElementById("AdIsActive");
+  const adImageInput = document.getElementById("AdImageFile");
+  const adImagePreview = document.getElementById("AdPreviewImage");
+  const tbody = document.querySelector("#advertisementsTable tbody");
+
+  // ---------------------------
+  // Modal Open / Close
+  // ---------------------------
+  window.openAdvertisementModal = function (ad = null) {
+    modal.style.display = "flex";
+
+    if (ad) {
+      // EDIT MODE
+      currentAdId = ad.AdvertisementID;
+
+      adTitle.value = ad.Title;
+      adLinkURL.value = ad.LinkURL;
+      adPosition.value = (ad.Position || "").toLowerCase();
+      adSize.value = ad.Size;
+
+      // Date/Time fix for datetime-local
+      adStartDate.value = ad.StartDate ? ad.StartDate.substring(0, 16) : "";
+      adEndDate.value = ad.EndDate ? ad.EndDate.substring(0, 16) : "";
+
+      adIsActive.checked = ad.IsActive;
+
+      // Existing image
+      adImagePreview.src = ad.ImageURL;
+      adImagePreview.style.display = "block";
+      selectedImageFile = null; // reset file input
+    } else {
+      // ADD MODE
+      document.getElementById("advertisementModalTitle").innerHTML =
+        `<i class="fa-solid fa-plus"></i> Add Advertisement`;
+
+      currentAdId = null;
+      resetAdvertisementForm();
+    }
+  };
+
+  window.closeAdvertisementModal = function () {
+    modal.style.display = "none";
+  };
+
+  // Close modal on clicking background
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeAdvertisementModal();
+  });
+
+  // Close modal buttons
+  document.getElementById("closeAdvertisementModal").addEventListener("click", closeAdvertisementModal);
+  document.getElementById("closeAdvertisementModalFooter").addEventListener("click", closeAdvertisementModal);
+
+  function resetAdvertisementForm() {
+    adTitle.value = "";
+    adLinkURL.value = "";
+    adPosition.value = "";
+    adSize.value = "medium";
+    adStartDate.value = "";
+    adEndDate.value = "";
+    adIsActive.checked = true;
+
+    selectedImageFile = null;
+    adImageInput.value = "";
+
+    adImagePreview.src = "";
+    adImagePreview.style.display = "none";
+  }
+
+  // ---------------------------
+  // Image Preview & Auto Resize
+  // ---------------------------
+  adImageInput.addEventListener("change", function (e) {
+    selectedImageFile = e.target.files[0];
+    if (selectedImageFile) {
+      adImagePreview.src = URL.createObjectURL(selectedImageFile);
+      adImagePreview.style.display = "block";
+      autoResizePreview();
+    }
+  });
+
+  adSize.addEventListener("change", autoResizePreview);
+
+  function autoResizePreview() {
+    const size = adSize.value;
+    if (size === "small") {
+      adImagePreview.style.width = "150px";
+      adImagePreview.style.height = "150px";
+    } else if (size === "medium") {
+      adImagePreview.style.width = "250px";
+      adImagePreview.style.height = "250px";
+    } else if (size === "large") {
+      adImagePreview.style.width = "350px";
+      adImagePreview.style.height = "350px";
+    }
+  }
+
+  // Form Submit (Add / Edit)
+  form.onsubmit = async function (e) {
+    e.preventDefault();
+
+    const formData = new FormData();
+    formData.append("Title", adTitle.value);
+    formData.append("LinkURL", adLinkURL.value);
+    formData.append("Position", adPosition.value);
+    formData.append("Size", adSize.value);
+    formData.append("StartDate", adStartDate.value || null);
+    formData.append("EndDate", adEndDate.value || null);
+    formData.append("IsActive", adIsActive.checked ? 1 : 0);
+
+    // ✅ Handle image: either new file or existing URL
+    if (selectedImageFile) {
+      formData.append("Image", selectedImageFile);
+    } else if (adImagePreview.src) {
+      formData.append("ImageURL", adImagePreview.src);
+    }
+
+    if (currentAdId) {
+      formData.append("AdvertisementID", currentAdId);
+    }
+
+    try {
+      const url = currentAdId ? "/api/advertisements/update" : "/api/advertisements/add";
+      const method = currentAdId ? "PUT" : "POST";
+
+      const res = await fetch(url, { method, body: formData });
+      const data = await res.json();
+
+      if (!data.success) return alert("Save failed!");
+
+      alert(currentAdId ? "Advertisement updated!" : "Advertisement added!");
+      closeAdvertisementModal();
+      loadAdvertisements(document.getElementById('advertisementStatusFilter').value);
+
+    } catch (err) {
+      console.error("Save error:", err);
+      alert("Error saving advertisement. Check console.");
+    }
+  };
+
+
+  // ---------------------------
+  // Load Advertisements
+  // ---------------------------
+  window.loadAdvertisements = async function (status = "all") {
+    try {
+
+      let url = `/api/advertisements/admin/list`;
+
+      // Add filter
+      if (status !== "all") {
+        url += `?active=${status}`;
+      }
+
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!data.success) return;
+
+      const tbody = document.querySelector("#advertisementsTable tbody");
+      tbody.innerHTML = "";
+
+      data.data.forEach(ad => {
+        tbody.innerHTML += `
+        <tr>
+          <td>${ad.AdvertisementID}</td>
+          <td>${ad.Title}</td>
+          <td><img src="${ad.ImageURL}" style="height:50px;border-radius:6px"></td>
+          <td>${ad.LinkURL}</td>
+          <td>${ad.Position}</td>
+          <td>${ad.Size}</td>
+          <td>${ad.IsActive ? "🟢" : "🔴"}</td>
+          <td>${ad.StartDate?.split("T")[0] ?? "-"}</td>
+          <td>${ad.EndDate?.split("T")[0] ?? "-"}</td>
+          <td>
+            <button class="btn btn-warning btn-sm" onclick="editAdvertisement(${ad.AdvertisementID})">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteAdvertisement(${ad.AdvertisementID})">Delete</button>
+          </td>
+        </tr>
+      `;
+      });
+
+    } catch (err) {
+      console.error("Loading ads error:", err);
+    }
+  };
+
+  // ---------------------------
+  // Edit & Delete
+  // ---------------------------
+  window.editAdvertisement = async function (id) {
+    try {
+      const res = await fetch(`/api/advertisements/${id}`);
+      const data = await res.json();
+      if (!data.success) return alert("Failed to load advertisement.");
+      openAdvertisementModal(data.data);
+    } catch (err) {
+      console.error("Edit error:", err);
+    }
+  };
+
+  window.deleteAdvertisement = async function (id) {
+    if (!confirm("Are you sure you want to delete this advertisement?")) return;
+    try {
+      const res = await fetch(`/api/advertisements/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!data.success) return alert("Delete failed!");
+      alert("Advertisement deleted successfully!");
+      loadAdvertisements(document.getElementById('advertisementStatusFilter').value);
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
+  };
+
+  window.applyAdvertisementFilter = function () {
+    const status = document.getElementById('advertisementStatusFilter').value;
+    loadAdvertisements(status);
+  };
+  // ---------------------------
+  // Initial load
+  // ---------------------------
+  loadAdvertisements(document.getElementById('advertisementStatusFilter').value);
+});
+
+let users = []; // Holds all user data
+let filteredUsers = [];
+
+// Load Users from API
+async function loadUsers() {
+  try {
+    const res = await fetch('/api/getusers/all', { cache: 'no-store' });
+    const json = await res.json();
+    if (!json.success || !Array.isArray(json.data)) return;
+
+    users = json.data;
+    applyUserFilter();
+  } catch (err) {
+    console.error('Error loading users:', err);
+  }
+}
+
+// Apply Search + Status Filter
+function applyUserFilter() {
+  const search = document.getElementById('userSearch').value.toLowerCase();
+  const status = document.getElementById('userStatusFilter').value;
+
+  filteredUsers = users.filter(u => {
+    const matchesSearch = u.FullName.toLowerCase().includes(search) || u.Email.toLowerCase().includes(search);
+    const matchesStatus = status === 'all' || (status === '1' && u.IsActive) || (status === '0' && !u.IsActive);
+    return matchesSearch && matchesStatus;
+  });
+
+  renderUsersTable();
+}
+
+// Render Table
+function renderUsersTable() {
+  const tbody = document.querySelector('#usersTable tbody');
+  tbody.innerHTML = '';
+  filteredUsers.forEach(user => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${user.UserID}</td>
+      <td>${user.FullName}</td>
+      <td>${user.Email}</td>
+      <td>${user.Role}</td>
+      <td>${user.IsActive ? 'Yes' : 'No'}</td>
+      <td>${new Date(user.CreatedOn).toLocaleString()}</td>
+      <td>${user.LastLogin ? new Date(user.LastLogin).toLocaleString() : '-'}</td>
+      <td>
+        <button class="btn btn-sm btn-primary" onclick="editUser(${user.UserID})"><i class="fa fa-edit"></i></button>
+        <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.UserID})"><i class="fa fa-trash"></i></button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// Modal Controls
+const modal = document.getElementById('userModal');
+const closeModalBtns = [document.getElementById('closeUserModal'), document.getElementById('closeUserModalFooter')];
+closeModalBtns.forEach(btn => btn.addEventListener('click', () => modal.style.display = 'none'));
+
+function openUserModal() {
+  document.getElementById('userModalTitle').innerText = 'Add User';
+  document.getElementById('UserID').value = '';
+  document.getElementById('UserFullName').value = '';
+  document.getElementById('UserEmail').value = '';
+  document.getElementById('UserPassword').value = '';
+  document.getElementById('UserRole').value = '';
+  document.getElementById('UserIsActive').checked = true;
+  modal.style.display = 'block';
+}
+
+function editUser(id) {
+  const user = users.find(u => u.UserID === id);
+  if (!user) return;
+  document.getElementById('userModalTitle').innerText = 'Edit User';
+  document.getElementById('UserID').value = user.UserID;
+  document.getElementById('UserFullName').value = user.FullName;
+  document.getElementById('UserEmail').value = user.Email;
+  document.getElementById('UserPassword').value = ''; // leave blank for unchanged
+  document.getElementById('UserRole').value = user.Role;
+  document.getElementById('UserIsActive').checked = user.IsActive;
+  modal.style.display = 'block';
+}
+
+// Submit Form
+document.getElementById('userForm').onsubmit = async function (e) {
+  e.preventDefault();
+  const id = document.getElementById('UserID').value;
+  const payload = {
+    FullName: document.getElementById('UserFullName').value,
+    Email: document.getElementById('UserEmail').value,
+    Password: document.getElementById('UserPassword').value,
+    Role: document.getElementById('UserRole').value,
+    IsActive: document.getElementById('UserIsActive').checked
+  };
+
+  const url = id ? `/api/user/update/${id}` : '/api/user/add';
+  const method = id ? 'PUT' : 'POST';
+
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    if (json.success) {
+      modal.style.display = 'none';
+      loadUsers();
+    } else {
+      alert(json.message || 'Error saving user');
+    }
+  } catch (err) {
+    console.error('Error saving user:', err);
+  }
+};
+
+// Delete
+async function deleteUser(id) {
+  if (!confirm('Are you sure you want to delete this user?')) return;
+  try {
+    const res = await fetch(`/api/user/delete/${id}`, { method: 'DELETE' });
+    const json = await res.json();
+    if (json.success) loadUsers();
+    else alert(json.message || 'Error deleting user');
+  } catch (err) {
+    console.error('Error deleting user:', err);
+  }
+}
+// Initial Load
+window.addEventListener('load', loadUsers);
+
+const auditLogsTable = document.querySelector("#auditLogsTable tbody");
+const auditSearch = document.querySelector("#auditSearch");
+const auditModuleFilter = document.querySelector("#auditModuleFilter");
+const auditActionFilter = document.querySelector("#auditActionFilter");
+const auditPagination = document.querySelector("#auditPagination");
+
+let currentAuditLogPage = 1;
+const pageAuditLogSize = 20;
+
+// -------------------------
+// Load audit actions for dropdown
+// -------------------------
+async function loadAuditActions() {
+  try {
+    const res = await fetch('/api/audit/actions');
+    const data = await res.json();
+    if (!data.success) return;
+
+    auditActionFilter.innerHTML = '';
+
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'All Actions';
+    auditActionFilter.appendChild(defaultOption);
+
+    data.actions.forEach(a => {
+      const option = document.createElement('option');
+      option.value = a.ActionID;
+      option.textContent = a.ActionName;
+      auditActionFilter.appendChild(option);
+    });
+
+    auditActionFilter.value = '';
+  } catch (err) {
+    console.error('Error loading audit actions:', err);
+  }
+}
+
+// -------------------------
+// Load audit logs with filters & pagination
+// -------------------------
+async function loadAuditLogs() {
+  try {
+    const params = new URLSearchParams({
+      search: auditSearch.value || '',
+      module: auditModuleFilter.value || '',
+      page: currentAuditLogPage,
+      pageSize: pageAuditLogSize
+    });
+
+    // Only include valid actionId
+    const actionIdValue = auditActionFilter.value;
+    if (actionIdValue && !isNaN(Number(actionIdValue))) {
+      params.append('actionId', Number(actionIdValue));
+    }
+
+    const res = await fetch(`/api/audit?${params.toString()}`);
+    const data = await res.json();
+    if (!data.success) return;
+
+    // Render table
+    auditLogsTable.innerHTML = '';
+    data.logs.forEach(log => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${log.LogID}</td>
+        <td>${log.UserName}</td>
+        <td>${log.ActionName}</td>
+        <td>${log.ModuleName || ''}</td>
+        <td>${log.Description || ''}</td>
+        <td>${log.IPAddress || ''}</td>
+        <td>${log.UserAgent || ''}</td>
+        <td>${new Date(log.CreatedAt).toLocaleString()}</td>
+      `;
+      auditLogsTable.appendChild(tr);
+    });
+
+    renderPagination(data.total, data.page, data.pageSize);
+
+  } catch (err) {
+    console.error('Error loading audit logs:', err);
+  }
+}
+
+// -------------------------
+// Render pagination
+// -------------------------
+function renderPagination(total, page, pageSize) {
+  const totalPages = Math.ceil(total / pageSize);
+  auditPagination.innerHTML = '';
+  for (let i = 1; i <= totalPages; i++) {
+    const li = document.createElement('li');
+    li.className = `page-item ${i === page ? 'active' : ''}`;
+    li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+    li.addEventListener('click', e => {
+      e.preventDefault();
+      currentAuditLogPage = i;
+      loadAuditLogs();
+    });
+    auditPagination.appendChild(li);
+  }
+}
+
+// -------------------------
+// Event listeners
+// -------------------------
+auditSearch.addEventListener('input', () => { 
+  currentAuditLogPage = 1; 
+  loadAuditLogs(); 
+});
+
+auditModuleFilter.addEventListener('change', () => { 
+  currentAuditLogPage = 1; 
+  loadAuditLogs(); 
+});
+
+auditActionFilter.addEventListener('change', () => { 
+  currentAuditLogPage = 1; 
+  loadAuditLogs(); 
+});
+
+// -------------------------
+// Init
+// -------------------------
+loadAuditActions().then(() => loadAuditLogs());
+
+
 
 // --------------------
 // Initial Load

@@ -296,7 +296,6 @@ async function loadTrendsTicker() {
 }
 // Initialize
 document.addEventListener('DOMContentLoaded', loadTrendsTicker);
-
 async function loadAdvertisements() {
   try {
     const res = await fetch('/api/advertisements/list?active=1', { cache: 'no-store' });
@@ -317,6 +316,7 @@ async function loadAdvertisements() {
       footer: ['adFooter']
     };
 
+    // Reset all containers
     Object.values(positions).flat().forEach(id => {
       const el = document.getElementById(id);
       if (el) {
@@ -326,6 +326,7 @@ async function loadAdvertisements() {
       }
     });
 
+    // Populate ads
     Object.entries(positions).forEach(([posKey, containerIds]) => {
       containerIds.forEach(containerId => {
         const container = document.getElementById(containerId);
@@ -339,47 +340,59 @@ async function loadAdvertisements() {
         container.style.overflow = 'hidden';
         container.style.padding = '10px 0';
 
-        // Determine wrapper height: largest ad in this set
+        // Determine wrapper height based on largest ad
         const maxHeight = filteredAds.reduce((max, ad) => {
           switch ((ad.Size || '').toLowerCase()) {
             case 'small': return Math.max(max, 150);
             case 'medium': return Math.max(max, 250);
-            case 'large': return Math.max(max, 350);
+            case 'large': return Math.max(max, 400);
             default: return Math.max(max, 250);
           }
         }, 0);
 
+        // Create carousel wrapper
         const wrapper = document.createElement('div');
         wrapper.className = 'ad-carousel-wrapper';
         wrapper.style.position = 'relative';
         wrapper.style.width = '100%';
         wrapper.style.height = `${maxHeight}px`;
 
+        // Add Advertisement Label
+        const adLabel = document.createElement('div');
+        adLabel.className = 'ad-label';
+        adLabel.innerText = 'ADVERTISEMENT';
+        wrapper.appendChild(adLabel);
+
+        // Add each ad
         filteredAds.forEach((ad, index) => {
           const sizeClass = ad.Size ? `ad-${ad.Size.toLowerCase()}` : 'ad-medium';
 
           const adDiv = document.createElement('div');
           adDiv.className = `ad-card ${sizeClass}`;
-          adDiv.style.position = 'absolute';
-          adDiv.style.top = '0';
-          adDiv.style.left = '0';
-          adDiv.style.width = '100%';
-          adDiv.style.height = '100%';  // now fills the wrapper fully
           adDiv.style.opacity = index === 0 ? '1' : '0';
-          adDiv.style.transition = 'opacity 1s ease-in-out';
 
-          const adLink = document.createElement('a');
-          adLink.href = ad.LinkURL || '#';
-          adLink.target = '_blank';
-          adLink.rel = 'noopener noreferrer';
+          // Click overlay (optional)
+          const clickOverlay = document.createElement('div');
+          clickOverlay.style.position = 'absolute';
+          clickOverlay.style.top = '0';
+          clickOverlay.style.left = '0';
+          clickOverlay.style.width = '100%';
+          clickOverlay.style.height = '100%';
+          clickOverlay.style.cursor = 'pointer';
+          clickOverlay.style.zIndex = '5';
+          clickOverlay.title = 'Click to view';
+
+          clickOverlay.addEventListener('click', () => {
+            window.open(ad.LinkURL || '#', '_blank');
+          });
 
           const adImg = document.createElement('img');
           adImg.src = ad.ImageURL;
           adImg.alt = ad.Title;
           adImg.onerror = () => { adImg.src = '/images/default-ad.jpg'; };
 
-          adLink.appendChild(adImg);
-          adDiv.appendChild(adLink);
+          adDiv.appendChild(adImg);
+          adDiv.appendChild(clickOverlay);
           wrapper.appendChild(adDiv);
         });
 
@@ -404,6 +417,7 @@ async function loadAdvertisements() {
 }
 
 window.addEventListener('load', loadAdvertisements);
+
 
 async function loadTopStories() {
   try {

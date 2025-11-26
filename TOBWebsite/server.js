@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser');
 const mainRoutes = require('./routes/mainRoutes');
 const authRoutes = require('./routes/authRoutes');
 const trendsRoutes = require('./routes/trendsRoutes');
+const auditRoutes = require('./routes/auditRoutes');
 const listEndpoints = require('express-list-endpoints');
 
 dotenv.config();
@@ -31,7 +32,11 @@ app.use(session({
 app.use('/api/auth', authRoutes);
 app.use('/api/trends', trendsRoutes);
 app.use('/api', mainRoutes);
+app.use('/api/audit', auditRoutes);
 
+// -------------------------
+// Debug all endpoints
+// -------------------------
 console.log(listEndpoints(app));
 
 // -------------------------
@@ -46,28 +51,26 @@ app.get('/', (req, res) => {
 // -------------------------
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
+
+// -------------------------
+// Other public pages
+// -------------------------
 app.get('/TOBHome.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'TOBHome.html'));
 });
 
-// -------------------------
-// Login Page
-// -------------------------
 app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 // -------------------------
-// Protect Admin Page
+// Protected pages
 // -------------------------
 app.get('/admin.html', (req, res) => {
   if (!req.session.user) return res.redirect('/login');
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// -------------------------
-// Protect Profile Page
-// -------------------------
 app.get('/profile.html', (req, res) => {
   if (!req.session.user) return res.redirect('/login');
   res.sendFile(path.join(__dirname, 'public', 'profile.html'));
@@ -81,7 +84,7 @@ app.use((req, res) => {
 });
 
 // -------------------------
-// Debug logger
+// Request Logger
 // -------------------------
 app.use((req, res, next) => {
   console.log(`[${req.method}] ${req.originalUrl}`);

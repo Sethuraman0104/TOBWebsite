@@ -288,50 +288,49 @@ async function loadTrend() {
         ? formatDateTime(t.CreatedOn)
         : "—";
 
-    // --------------------------
-    // Improved UI & Layout
-    // --------------------------
     container.innerHTML = `
-      <div class="trend-detail-wrapper" style="animation: fadeIn 0.6s ease;">        
-        <!-- Title -->
-        <i class="fa-solid fa-bolt ms-2 text-warning"></i> 
-        <h1 class="trend-title">
-          ${escapeHtml(t.TrendTitle_EN)}
-        </h1>
+  <div class="trend-detail-wrapper container my-5"">        
+    <!-- Title Row -->
+    <div class="trend-title-wrapper">
+      <i class="fa-solid fa-bolt"></i>
+      <h1 class="trend-title mb-0">
+        ${escapeHtml(t.TrendTitle_EN)}
+      </h1>
+    </div>
 
-        <!-- Date -->
-        <div class="trend-date-badge">
-          <i class="fa-solid fa-calendar-day"></i> Updated ${displayDate}
-        </div>
+    <!-- Date -->
+    <div class="trend-date-badge">
+      <i class="fa-solid fa-calendar-day"></i> Updated ${displayDate}
+    </div>
 
-        <!-- Image -->
-        <div class="trend-image-box">
-          <img 
-            src="${t.ImageURL || "/images/default-trend.jpg"}"
-            alt="${escapeAttr(t.TrendTitle_EN)}"
-            class="trend-main-image"
-            onerror="this.src='/images/default-trend.jpg';"
-          />
-        </div>
+    <!-- Image -->
+    <div class="trend-image-box">
+      <img 
+        src="${t.ImageURL || "/images/default-trend.jpg"}"
+        alt="${escapeAttr(t.TrendTitle_EN)}"
+        class="trend-main-image"
+        onerror="this.src='/images/default-trend.jpg';"
+      />
+    </div>
 
-        <!-- Description Section -->
-        <div class="trend-section mt-4">
-          <h3><i class="fa-solid fa-align-left"></i> Description</h3>
-          <div id="trendDescriptionEn" class="trend-description">
-            ${t.TrendDescription_EN || ""}
-          </div>
-        </div>
-
-        <!-- Like Section -->
-        <div class="mt-4 d-flex align-items-center gap-3">
-          <button id="likeTrendBtn" class="btn like-btn">
-            <i class="fa-solid fa-heart"></i> Like
-          </button>
-          <span id="trendLikeCount" class="like-count-text">Loading likes...</span>
-        </div>
-
+    <!-- Description Section -->
+    <div class="trend-section mt-4">
+      <h3><i class="fa-solid fa-align-left"></i> Description</h3>
+      <div id="trendDescriptionEn" class="trend-description">
+        ${t.TrendDescription_EN || ""}
       </div>
-    `;
+    </div>
+
+    <!-- Like Section -->
+    <div class="mt-4 d-flex align-items-center gap-3">
+      <button id="likeTrendBtn" class="btn like-btn">
+        <i class="fa-solid fa-heart"></i> Like
+      </button>
+      <span id="trendLikeCount" class="like-count-text">Loading likes...</span>
+    </div>
+  </div>
+`;
+
 
     // Attach Like Event
     const likeBtn = document.getElementById("likeTrendBtn");

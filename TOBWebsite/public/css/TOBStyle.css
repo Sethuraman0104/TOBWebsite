@@ -1803,27 +1803,45 @@ img:hover {
 }
 
 /* ARTICLE HEADER */
+/* Wrapper for entire article detail */
+.article-detail-wrapper {
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  width: 100%;
+  animation: fadeIn 0.6s ease;
+}
+
 .article-header {
   margin-bottom: 20px;
 }
 
+/* Icon + Title */
 .article-title-wrapper {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 12px;         /* spacing between icon & title */
+  flex-wrap: nowrap;  /* keep icon + title in one line */
+  margin-bottom: 10px;
 }
 
 .article-icon {
-  font-size: 32px;
-  color: #c41124;
+  flex-shrink: 0;
+  font-size: 2.2rem;
+  color: #ffcc00;    /* optional: gradient color override */
 }
 
 .article-title {
-  font-size: 30px;
+  font-size: 2.2rem;
   font-weight: 800;
+  background: linear-gradient(90deg, #c41124, #ff5864);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   margin: 0;
+  line-height: 1.2;
+  word-break: break-word; /* prevent overflow for long titles */
 }
-
 /* DATE LINE */
 .article-date {
   margin-top: 6px;
@@ -1926,14 +1944,40 @@ img:hover {
     transform: translateY(0);
   }
 }
+/* Wrapper for entire trend detail */
+.trend-detail-wrapper {
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  width: 100%;              /* full width of container */
+  animation: fadeIn 0.6s ease;
+}
 
-/* Title Styling */
+/* Title + Icon wrapper */
+.trend-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;             /* spacing between icon & title */
+  flex-wrap: nowrap;     /* prevent wrapping, keeps icon + title in one line */
+  margin-bottom: 10px;
+}
+
+.trend-title-wrapper i {
+  flex-shrink: 0;        /* prevent icon from shrinking */
+  font-size: 2.2rem;
+  color: #ffcc00;
+}
+
 .trend-title {
   font-size: 2.2rem;
   font-weight: 800;
   background: linear-gradient(90deg, #c41124, #ff5864);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  margin: 0;             /* remove default h1 margin */
+  line-height: 1.2;      /* tighter line for title */
+  word-break: break-word; /* wrap long title instead of breaking layout */
 }
 
 /* Date Badge */
@@ -1941,12 +1985,11 @@ img:hover {
   display: inline-block;
   background: #f3f3f3;
   border-left: 4px solid #c41124;
-  margin-top: 5px;
+  margin: 10px 0 20px 0;
   padding: 8px 14px;
   border-radius: 6px;
   font-size: 0.9rem;
   color: #555;
-  margin-bottom: 15px;
 }
 
 /* Image Box */
@@ -1960,6 +2003,7 @@ img:hover {
   width: 100%;
   border-radius: 10px;
   display: block;
+  transition: transform 0.3s;
 }
 
 .trend-main-image:hover {
@@ -1979,6 +2023,12 @@ img:hover {
   border-radius: 10px;
   line-height: 1.7;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ------------------ Main Bar ------------------ */
@@ -2177,6 +2227,64 @@ img:hover {
   transition: 0.2s;
 }
 
+/* ===================== Bright Hotline ===================== */
+.TOBTopheader .brand-text .hotline-short {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;          /* more padding for space */
+  border-radius: 12px;
+  background: linear-gradient(90deg, #ff4d4d, #ff9966); /* brighter gradient */
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  max-width: 250px;           /* fixed width for alignment */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 0 10px rgba(255, 77, 77, 0.7); /* soft glow */
+  animation: glowPulse 1.8s infinite alternate;
+}
+
+/* Glow pulse animation */
+@keyframes glowPulse {
+  0% {
+    box-shadow: 0 0 5px rgba(255,77,77,0.5), 0 0 15px rgba(255,153,102,0.5);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(255,77,77,0.7), 0 0 25px rgba(255,153,102,0.7);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(255,77,77,0.5), 0 0 15px rgba(255,153,102,0.5);
+  }
+}
+
+/* Label styling */
+.hotline-label {
+  font-weight: bold;
+  color: #fff8b0; /* brighter yellow */
+}
+
+/* Phone icon */
+.hotline-short i {
+  color: #fff;
+  margin-left: 2px;
+  animation: iconGlow 1.5s infinite alternate;
+}
+
+/* Icon glow animation */
+@keyframes iconGlow {
+  0% { text-shadow: 0 0 5px #fff, 0 0 10px #ff6666; }
+  50% { text-shadow: 0 0 8px #fff, 0 0 16px #ff9966; }
+  100% { text-shadow: 0 0 5px #fff, 0 0 10px #ff6666; }
+}
+
+/* Phone number styling */
+.hotline-number {
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
 
 /* Trends Ticker */
 .TOBNavbar .trends-strip-container {
@@ -2704,7 +2812,7 @@ Responsive
   }
 }
 
-.ad-card {
+/* .ad-card {
   position: relative;
   overflow: hidden;
   border-radius: 12px;
@@ -2722,12 +2830,10 @@ Responsive
   width: 100%;
   height: 100%;
   object-fit: fill;
-  /* Stretch image to fill entire container */
   display: block;
   border-radius: inherit;
 }
 
-/* Advertisement Sizes */
 .ad-small {
   height: 150px;
 }
@@ -2745,14 +2851,104 @@ Responsive
   position: relative;
 }
 
-/* Responsive */
 @media (max-width: 992px) {
   .ad-small,
   .ad-medium,
   .ad-large {
     height: auto;
   }
+} */
+
+/* Wrapper for advertisement carousel */
+/* Wrapper for advertisement carousel */
+.ad-carousel-wrapper {
+  width: 100%;
+  position: relative;
+  border: 2px dashed #c41124; /* highlights advertisement panel */
+  border-radius: 12px;
+  padding: 10px;
+  background-color: #fffbe6; /* subtle yellow background */
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  overflow: hidden;
+  margin-bottom: 20px;
 }
+
+/* Advertisement Label */
+.ad-label {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: #c41124;
+  color: #fff;
+  padding: 4px 10px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  z-index: 10;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  animation: pulse 2s infinite;
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+/* Individual ad cards */
+.ad-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1s ease, transform 0.3s ease;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  cursor: pointer;
+  background-color: #f5f5f5;
+}
+
+.ad-card:hover {
+  transform: scale(1.02);
+}
+
+/* Stretch images to fit while showing full image */
+.ad-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* show full image */
+  display: block;
+  border-radius: inherit;
+  background-color: #fffbe6;
+}
+
+/* Advertisement Sizes */
+.ad-small { height: 150px; }
+.ad-medium { height: 250px; }
+.ad-large { height: 400px; }
+
+/* Responsive: shrink wrapper height on smaller screens */
+@media (max-width: 1200px) {
+  .ad-small { height: 120px; }
+  .ad-medium { height: 200px; }
+  .ad-large { height: 320px; }
+}
+
+@media (max-width: 768px) {
+  .ad-small { height: 100px; }
+  .ad-medium { height: 160px; }
+  .ad-large { height: 240px; }
+}
+
+@media (max-width: 480px) {
+  .ad-small { height: 80px; }
+  .ad-medium { height: 120px; }
+  .ad-large { height: 180px; }
+}
+
 
 /* ------------------------------------------------------
    GRID LAYOUT

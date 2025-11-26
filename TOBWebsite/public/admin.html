@@ -32,19 +32,23 @@
     </div>
     <hr class="logo-divider">
     <nav class="menu">
-      <ul>
-        <li class="active" data-section="publish"><i class="fa-solid fa-pen-to-square"></i> Create News</li>
-        <li data-section="pending"><i class="fa-solid fa-hourglass-half"></i> Unpublished News</li>
-        <li data-section="allnews"><i class="fa-solid fa-newspaper"></i> Published News</li>
-        <li data-section="inactive"><i class="fa-solid fa-ban"></i> Deactivated News</li>
-        <li data-section="trending"><i class="fa-solid fa-fire"></i> Manage Trending</li>
-        <li data-section="comments"><i class="fa-solid fa-comments"></i>Article Comments</li>
-        <li data-section="trendcomments"><i class="fa-solid fa-comments"></i>Trending Article Comments</li>
-        <li data-section="managecategories"><i class="fa-solid fa-screwdriver-wrench"></i> Manage Categories</li>
-        <li data-section="profile"><i class="fa-solid fa-user"></i> Profile</li>
-        <li data-section="managesubscribers"><i class="fa-solid fa-users"></i> Subscribers</li>
-      </ul>
-    </nav>
+  <ul>
+    <li class="active" data-section="publish" data-role="Admin,User"><i class="fa-solid fa-pen-to-square"></i> Create News</li>
+    <li data-section="pending" data-role="Admin"><i class="fa-solid fa-hourglass-half"></i> Unpublished News</li>
+    <li data-section="allnews" data-role="Admin"><i class="fa-solid fa-newspaper"></i> Published News</li>
+    <li data-section="inactive" data-role="Admin"><i class="fa-solid fa-ban"></i> Deactivated News</li>
+    <li data-section="trending" data-role="Admin,User"><i class="fa-solid fa-fire"></i> Manage Trending</li>
+    <li data-section="comments" data-role="Admin,User"><i class="fa-solid fa-comments"></i> Article Comments</li>
+    <li data-section="trendcomments" data-role="Admin,User"><i class="fa-solid fa-comments"></i> Trending Article Comments</li>
+    <li data-section="manageUsers" data-role="Admin"><i class="fa-solid fa-user-plus"></i> Manage Users</li>
+    <li data-section="manageAdvertisements" data-role="Admin,User"><i class="fa-solid fa-bullhorn"></i> Manage Advertisement</li>
+    <li data-section="managecategories" data-role="Admin"><i class="fa-solid fa-screwdriver-wrench"></i> Manage Categories</li>
+    <li data-section="profile" data-role="Admin,User"><i class="fa-solid fa-user"></i> Profile</li>
+    <li data-section="managesubscribers" data-role="Admin"><i class="fa-solid fa-users"></i> Subscribers</li>
+    <li data-section="manageAuditLogs" data-role="Admin"><i class="fa-solid fa-users"></i> Audit Logs</li>
+  </ul>
+</nav>
+
     <div class="sidebar-footer">
       <div id="lastLoginDisplay"></div>
       <div id="currentDateTime"></div>
@@ -242,11 +246,11 @@
       </div>
       <div id="articlesWithComments" class="articles-grid"></div>
     </section>
-   <!-- Trends Comments Management Section -->
-<section id="trendcomments" class="section">
-  <div class="floating-title">💬 Trends Comments Management</div>
-  <div id="trendsWithComments" class="trdComments-grid"></div>
-</section>
+    <!-- Trends Comments Management Section -->
+    <section id="trendcomments" class="section">
+      <div class="floating-title">💬 Trends Comments Management</div>
+      <div id="trendsWithComments" class="trdComments-grid"></div>
+    </section>
     <!-- Manage Categories -->
     <section id="managecategories" class="section container py-4">
       <div class="floating-title">🗂️ Manage Categories
@@ -393,178 +397,481 @@
         <ul class="pagination justify-content-center" id="subscriberPagination"></ul>
       </nav>
     </section>
-    <!-- News Comments Modal Window -->    
-<div id="commentsModalCustom" class="mdlArticleModal-container">
-  <div class="mdlArticleModal-content">
-    <div class="mdlArticleModal-header">
-      <h4 id="modalArticleTitle">Comments</h4>
-      <span id="closeCommentsModal" class="mdlArticleModal-close">&times;</span>
+    <!-- Manage Advertisements -->
+    <section id="manageAdvertisements" class="section container py-4">
+      <div class="floating-title">
+        🖼️ Manage Advertisements
+      </div>
+
+      <!-- Add New Button -->
+      <div class="mb-3 text-end">
+        <button class="btn btn-primary" onclick="openAdvertisementModal()">
+          <i class="fa-solid fa-plus"></i> Add New Advertisement
+        </button>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="mb-3">
+        <input type="text" id="advertisementSearch" class="form-control" placeholder="Search advertisements...">
+      </div>
+      <!-- Filters -->
+      <div class="row g-2 mb-3">
+        <!-- Status Filter -->
+        <div class="col-md-3">
+          <select id="advertisementStatusFilter" class="form-select">
+            <option value="all">All</option>
+            <option value="1">Active</option>
+            <option value="0">Inactive</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <button class="btn btn-dark w-100" onclick="applyAdvertisementFilter()">
+            Apply
+          </button>
+        </div>
+      </div>
+      <!-- Table -->
+      <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle" id="advertisementsTable">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Image</th>
+              <th>Link</th>
+              <th>Position</th>
+              <th>Size</th>
+              <th>Active</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Pagination (Optional) -->
+      <nav>
+        <ul class="pagination justify-content-center" id="advertisementPagination"></ul>
+      </nav>
+    </section>
+    <!-- Manage Advertisement Modal Window -->
+    <div id="advertisementModal" class="mdlAdvertisementModal">
+      <div class="mdlAdvertisementContent">
+
+        <!-- Modal Header -->
+        <div class="mdlAdvertisementHeader">
+          <h2 id="advertisementModalTitle">
+            <i class="fa-solid fa-rectangle-ad"></i> Add Advertisement
+          </h2>
+          <span class="mdlAdvertisementClose" id="closeAdvertisementModal">&times;</span>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="mdlAdvertisementBody">
+          <form id="advertisementForm">
+            <input type="hidden" id="AdvertisementID">
+
+            <div class="mdlAdvertisementRow">
+              <div class="mdlAdvertisementCol">
+                <label>Title *</label>
+                <input type="text" id="AdTitle" required>
+              </div>
+
+              <div class="mdlAdvertisementCol">
+                <label>Position *</label>
+                <select id="AdPosition" required>
+                  <option value="">-- Select Position --</option>
+                  <option value="top">Top</option>
+                  <option value="middle">Middle</option>
+                  <option value="footer">Footer</option>
+                </select>
+              </div>
+
+            </div>
+
+            <div class="mdlAdvertisementRow">
+              <div class="mdlAdvertisementCol">
+                <label>Size *</label>
+                <select id="AdSize" required>
+                  <option value="">-- Select Size --</option>
+                  <option value="small">Small</option>
+                  <option value="medium">Medium</option>
+                  <option value="large">Large</option>
+                </select>
+              </div>
+
+              <div class="mdlAdvertisementCol">
+                <label>Link URL</label>
+                <input type="text" id="AdLinkURL">
+              </div>
+            </div>
+
+            <div class="mdlAdvertisementRow">
+              <div class="mdlAdvertisementCol">
+                <label>Start Date</label>
+                <input type="datetime-local" id="AdStartDate">
+              </div>
+              <div class="mdlAdvertisementCol">
+                <label>End Date</label>
+                <input type="datetime-local" id="AdEndDate">
+              </div>
+            </div>
+
+            <div class="mdlAdvertisementRow">
+              <label>Advertisement Image *</label>
+              <input type="file" id="AdImageFile" accept="image/*">
+              <img id="AdPreviewImage" style="max-width:120px; margin-top:10px; display:none;">
+            </div>
+
+            <div class="mdlAdvertisementCheckbox">
+              <label>
+                <input type="checkbox" id="AdIsActive" checked> Active
+              </label>
+            </div>
+
+            <div class="mdlAdvertisementFooter">
+              <button type="submit" class="mdlAdvertisementBtnSave">
+                <i class="fa fa-save"></i> Save
+              </button>
+              <button type="button" class="mdlAdvertisementBtnCancel" id="closeAdvertisementModalFooter">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+   
+    <section id="manageUsers" class="section container py-4">
+      <div class="floating-title">
+        👤 Manage Users
+      </div>
+
+      <!-- Add New User Button -->
+      <div class="mb-3 text-end">
+        <button class="btn btn-primary" onclick="openUserModal()">
+          <i class="fa-solid fa-plus"></i> Add New User
+        </button>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="mb-3">
+        <input type="text" id="userSearch" class="form-control" placeholder="Search users...">
+      </div>
+
+      <!-- Filters -->
+      <div class="row g-2 mb-3">
+        <div class="col-md-3">
+          <select id="userStatusFilter" class="form-select">
+            <option value="all">All</option>
+            <option value="1">Active</option>
+            <option value="0">Inactive</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <button class="btn btn-dark w-100" onclick="applyUserFilter()">
+            Apply
+          </button>
+        </div>
+      </div>
+
+      <!-- Users Table -->
+      <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle" id="usersTable">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Full Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Active</th>
+              <th>Created On</th>
+              <th>Last Login</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Manage Users Modal Window -->
+    <div id="userModal" class="mdlManageUsers">
+      <div class="mdlManageUsersContent">
+
+        <!-- Modal Header -->
+        <div class="mdlManageUsersHeader">
+          <h2 id="userModalTitle">
+            <i class="fa-solid fa-user-plus"></i> Add User
+          </h2>
+          <span class="mdlManageUsersClose" id="closeUserModal">&times;</span>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="mdlManageUsersBody">
+          <form id="userForm">
+            <input type="hidden" id="UserID">
+
+            <div class="mdlManageUsersRow">
+              <div class="mdlManageUsersCol">
+                <label>Full Name *</label>
+                <input type="text" id="UserFullName" required>
+              </div>
+
+              <div class="mdlManageUsersCol">
+                <label>Email *</label>
+                <input type="email" id="UserEmail" required>
+              </div>
+            </div>
+
+            <div class="mdlManageUsersRow">
+              <div class="mdlManageUsersCol">
+                <label>Password *</label>
+                <input type="password" id="UserPassword">
+                <small id="passwordHelp" class="text-muted">Leave blank to keep existing password when editing</small>
+              </div>
+
+              <div class="mdlManageUsersCol">
+                <label>Role *</label>
+                <select id="UserRole" required>
+                  <option value="">-- Select Role --</option>
+                  <option value="Admin">Admin</option>
+                  <option value="User">User</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mdlManageUsersCheckbox">
+              <label>
+                <input type="checkbox" id="UserIsActive" checked> Active
+              </label>
+            </div>
+
+            <div class="mdlManageUsersFooter">
+              <button type="submit" class="mdlManageUsersBtnSave">
+                <i class="fa fa-save"></i> Save
+              </button>
+              <button type="button" class="mdlManageUsersBtnCancel" id="closeUserModalFooter">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
     </div>
 
-    <!-- Tabs + Search -->
-    <div class="mdlArticleModal-tabs">
-      <button class="tablink active" data-tab="pendingTab">🕓 Pending</button>
-      <button class="tablink" data-tab="approvedTab">✅ Approved</button>
-      <button class="tablink" data-tab="rejectedTab">🚫 Rejected</button>
-      <input type="text" id="commentSearch" class="mdlArticleModal-search" placeholder="Search comments...">
+    <section id="manageAuditLogs" class="section container py-4">
+  <div class="floating-title">📜 Audit Logs</div>
+
+  <!-- Filters -->
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <input type="text" id="auditSearch" class="form-control" placeholder="Search description, user or module...">
     </div>
-
-    <!-- Tab Content -->
-    <div class="mdlArticleModal-tabcontent">
-      <div id="pendingTab" class="tab-pane active">
-        <div class="mdlArticleModal-table-wrapper">
-          <table class="mdlArticleModal-table" id="pendingCommentsTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Comment</th>
-                <th>Commented On</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <ul class="mdlArticleModal-pagination" id="pendingPagination"></ul>
-      </div>
-
-      <div id="approvedTab" class="tab-pane">
-        <div class="mdlArticleModal-table-wrapper">
-          <table class="mdlArticleModal-table" id="approvedCommentsTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Comment</th>
-                <th>Commented On</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <ul class="mdlArticleModal-pagination" id="approvedPagination"></ul>
-      </div>
-
-      <div id="rejectedTab" class="tab-pane">
-        <div class="mdlArticleModal-table-wrapper">
-          <table class="mdlArticleModal-table" id="rejectedCommentsTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Comment</th>
-                <th>Commented On</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <ul class="mdlArticleModal-pagination" id="rejectedPagination"></ul>
-      </div>
+    <div class="col-md-3">
+      <select id="auditModuleFilter" class="form-select">
+        <option value="">All Modules</option>
+        <option value="Authentication">Authentication</option>
+        <option value="Users">Users</option>
+        <option value="News">News</option>
+        <option value="Trends">Trends</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <select id="auditActionFilter" class="form-select">
+        <option value="">All Actions</option>
+        <!-- Will dynamically populate from server -->
+      </select>
     </div>
   </div>
-</div>
 
+  <!-- Table -->
+  <div class="table-responsive">
+    <table class="table table-striped table-hover align-middle" id="auditLogsTable">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>User</th>
+          <th>Action</th>
+          <th>Module</th>
+          <th>Description</th>
+          <th>IP Address</th>
+          <th>User Agent</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <nav>
+    <ul class="pagination justify-content-center" id="auditPagination"></ul>
+  </nav>
+</section>
+
+    <!-- News Comments Modal Window -->
+    <div id="commentsModalCustom" class="mdlArticleModal-container">
+      <div class="mdlArticleModal-content">
+        <div class="mdlArticleModal-header">
+          <h4 id="modalArticleTitle">Comments</h4>
+          <span id="closeCommentsModal" class="mdlArticleModal-close">&times;</span>
+        </div>
+        <!-- Tabs + Search -->
+        <div class="mdlArticleModal-tabs">
+          <button class="tablink active" data-tab="pendingTab">🕓 Pending</button>
+          <button class="tablink" data-tab="approvedTab">✅ Approved</button>
+          <button class="tablink" data-tab="rejectedTab">🚫 Rejected</button>
+          <input type="text" id="commentSearch" class="mdlArticleModal-search" placeholder="Search comments...">
+        </div>
+        <!-- Tab Content -->
+        <div class="mdlArticleModal-tabcontent">
+          <div id="pendingTab" class="tab-pane active">
+            <div class="mdlArticleModal-table-wrapper">
+              <table class="mdlArticleModal-table" id="pendingCommentsTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Comment</th>
+                    <th>Commented On</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <ul class="mdlArticleModal-pagination" id="pendingPagination"></ul>
+          </div>
+          <div id="approvedTab" class="tab-pane">
+            <div class="mdlArticleModal-table-wrapper">
+              <table class="mdlArticleModal-table" id="approvedCommentsTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Comment</th>
+                    <th>Commented On</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <ul class="mdlArticleModal-pagination" id="approvedPagination"></ul>
+          </div>
+          <div id="rejectedTab" class="tab-pane">
+            <div class="mdlArticleModal-table-wrapper">
+              <table class="mdlArticleModal-table" id="rejectedCommentsTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Comment</th>
+                    <th>Commented On</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <ul class="mdlArticleModal-pagination" id="rejectedPagination"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
     <!-- Trends Comments Modal Window -->
     <div id="trendsCommentsModalCustom" class="mdlArticleModal-container">
-  <div class="mdlArticleModal-content">
-
-    <!-- Header -->
-    <div class="mdlArticleModal-header">
-      <h4 id="modalTrendTitle">Comments</h4>
-      <span id="closeTrendsCommentsModal" class="mdlArticleModal-close">&times;</span>
-    </div>
-
-    <!-- Tabs + Search -->
-    <div class="mdlArticleModal-tabs">
-      <button class="tablink active" data-tab="trendsPendingTab">🕓 Pending</button>
-      <button class="tablink" data-tab="trendsApprovedTab">✅ Approved</button>
-      <button class="tablink" data-tab="trendsRejectedTab">🚫 Rejected</button>
-
-      <input type="text" id="trendsCommentSearch" class="mdlArticleModal-search" placeholder="Search comments...">
-    </div>
-
-    <!-- Tab Content -->
-    <div class="mdlArticleModal-tabcontent">
-
-      <!-- Pending -->
-      <div id="trendsPendingTab" class="tab-pane active">
-        <div class="mdlArticleModal-table-wrapper">
-          <table class="mdlArticleModal-table" id="trendsPendingCommentsTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Comment</th>
-                <th>Commented On</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+      <div class="mdlArticleModal-content">
+        <!-- Header -->
+        <div class="mdlArticleModal-header">
+          <h4 id="modalTrendTitle">Comments</h4>
+          <span id="closeTrendsCommentsModal" class="mdlArticleModal-close">&times;</span>
         </div>
-        <ul class="mdlArticleModal-pagination" id="trendsPendingPagination"></ul>
-      </div>
-
-      <!-- Approved -->
-      <div id="trendsApprovedTab" class="tab-pane">
-        <div class="mdlArticleModal-table-wrapper">
-          <table class="mdlArticleModal-table" id="trendsApprovedCommentsTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Comment</th>
-                <th>Commented On</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+        <!-- Tabs + Search -->
+        <div class="mdlArticleModal-tabs">
+          <button class="tablink active" data-tab="trendsPendingTab">🕓 Pending</button>
+          <button class="tablink" data-tab="trendsApprovedTab">✅ Approved</button>
+          <button class="tablink" data-tab="trendsRejectedTab">🚫 Rejected</button>
+          <input type="text" id="trendsCommentSearch" class="mdlArticleModal-search" placeholder="Search comments...">
         </div>
-        <ul class="mdlArticleModal-pagination" id="trendsApprovedPagination"></ul>
-      </div>
-
-      <!-- Rejected -->
-      <div id="trendsRejectedTab" class="tab-pane">
-        <div class="mdlArticleModal-table-wrapper">
-          <table class="mdlArticleModal-table" id="trendsRejectedCommentsTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Comment</th>
-                <th>Commented On</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+        <!-- Tab Content -->
+        <div class="mdlArticleModal-tabcontent">
+          <!-- Pending -->
+          <div id="trendsPendingTab" class="tab-pane active">
+            <div class="mdlArticleModal-table-wrapper">
+              <table class="mdlArticleModal-table" id="trendsPendingCommentsTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Comment</th>
+                    <th>Commented On</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <ul class="mdlArticleModal-pagination" id="trendsPendingPagination"></ul>
+          </div>
+          <!-- Approved -->
+          <div id="trendsApprovedTab" class="tab-pane">
+            <div class="mdlArticleModal-table-wrapper">
+              <table class="mdlArticleModal-table" id="trendsApprovedCommentsTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Comment</th>
+                    <th>Commented On</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <ul class="mdlArticleModal-pagination" id="trendsApprovedPagination"></ul>
+          </div>
+          <!-- Rejected -->
+          <div id="trendsRejectedTab" class="tab-pane">
+            <div class="mdlArticleModal-table-wrapper">
+              <table class="mdlArticleModal-table" id="trendsRejectedCommentsTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Comment</th>
+                    <th>Commented On</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <ul class="mdlArticleModal-pagination" id="trendsRejectedPagination"></ul>
+          </div>
         </div>
-        <ul class="mdlArticleModal-pagination" id="trendsRejectedPagination"></ul>
       </div>
-
     </div>
-  </div>
-</div>
-
     <!-- Add/Edit Trend Modal Window -->
     <div id="trendModal" class="modal">
       <div class="modal-content">
-
         <!-- Modal Header -->
         <div class="modal-header">
           <h2 id="trendModalTitle"><i class="fa-solid fa-fire"></i> Add Trend</h2>
           <span id="closeTrendModal" class="close">&times;</span>
         </div>
-
         <!-- Modal Body -->
         <div class="modal-body">
           <form id="trendForm" enctype="multipart/form-data">
@@ -596,7 +903,8 @@
             <label>To Date</label>
             <input type="date" name="ToDate" id="ToDate">
 
-            <label style="margin-top: 10px;"><input type="checkbox" name="IsActive" id="IsActive" checked> Active</label>
+            <label style="margin-top: 10px;"><input type="checkbox" name="IsActive" id="IsActive" checked>
+              Active</label>
 
             <div class="modal-footer">
               <button type="submit" class="btn-primary">Save</button>
@@ -621,17 +929,14 @@
               <label for="CurrentPassword">Current Password</label>
               <input type="password" id="CurrentPassword" name="CurrentPassword" required>
             </div>
-
             <div class="mdlChangePasswordRow">
               <label for="NewPassword">New Password</label>
               <input type="password" id="NewPassword" name="NewPassword" required>
             </div>
-
             <div class="mdlChangePasswordRow">
               <label for="ConfirmPassword">Confirm New Password</label>
               <input type="password" id="ConfirmPassword" name="ConfirmPassword" required>
             </div>
-
             <div class="mdlChangePasswordFooter">
               <button type="submit" class="mdlChangePasswordBtn">Change Password</button>
               <p id="changePasswordMsg" class="mdlChangePasswordMsg"></p>
@@ -643,15 +948,12 @@
     <!-- Edit News Articles Modal Window -->
     <div id="editModal" class="modal">
       <div class="modal-content">
-
         <div class="modal-header">
           <h2><i class="fa-solid fa-pen-to-square"></i> Edit News Article</h2>
           <span class="close">&times;</span>
         </div>
-
         <div class="modal-body">
           <form id="editNewsForm" enctype="multipart/form-data">
-
             <input type="hidden" name="ArticleID" id="editArticleID">
 
             <label>Title (English)</label>
@@ -701,7 +1003,8 @@
               <tbody></tbody>
             </table>
 
-            <label><input type="checkbox" style="margin-top: 10px;" name="IsTopStory" id="editIsTopStory"> Mark as Top Story</label>
+            <label><input type="checkbox" style="margin-top: 10px;" name="IsTopStory" id="editIsTopStory"> Mark as Top
+              Story</label>
             <label><input type="checkbox" name="IsFeatured" id="editIsFeatured"> Mark as Featured</label>
             <label><input type="checkbox" name="IsBreakingNews" id="editIsBreakingNews"> Mark as Breaking News</label>
             <label><input type="checkbox" name="IsSpotlightNews" id="editIsSpotlightNews"> Mark as Spotlight</label>
@@ -723,4 +1026,5 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.0/moment.min.js"></script>
     <script src="js/admin.js"></script>
 </body>
+
 </html>

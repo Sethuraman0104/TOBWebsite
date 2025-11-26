@@ -8,6 +8,7 @@ const fs = require('fs');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const { saveAudit } = require("../services/auditService.js");
 
 // -------------------------
 // Ensure correct uploads folder exists
@@ -104,13 +105,18 @@ router.post(
     try {
       const {
         Title, Content, Title_Ar, Content_Ar,
-        CategoryID, IsTopStory, IsFeatured, IsBreakingNews, IsSpotlightNews
+        CategoryID, IsTopStory, IsFeatured,
+        IsBreakingNews, IsSpotlightNews
       } = req.body;
 
       if (!Title || !Content || !CategoryID) {
-        return res.status(400).json({ success: false, message: "Title, Content and Category are required" });
+        return res.status(400).json({
+          success: false,
+          message: "Title, Content and Category are required"
+        });
       }
 
+      // Handle files
       const MainSlideImage = req.files?.MainImage
         ? `/uploads/${req.files.MainImage[0].filename}`
         : null;
@@ -119,6 +125,7 @@ router.post(
         ? req.files.Attachments.map(f => `/uploads/${f.filename}`)
         : [];
 
+      // Save into DB
       const pool = await sql.connect(sqlConfig);
       const request = pool.request();
 
@@ -128,7 +135,7 @@ router.post(
         .input("Title_Ar", sql.NVarChar(255), Title_Ar || null)
         .input("Content_Ar", sql.NText, Content_Ar || null)
         .input("CategoryID", sql.Int, parseInt(CategoryID))
-        .input("AuthorID", sql.Int, req.session.user.UserID) // Use session.user
+        .input("AuthorID", sql.Int, req.session.user.UserID)
         .input("MainSlideImage", sql.NVarChar(255), MainSlideImage)
         .input("IsTopStory", sql.Bit, IsTopStory === "true")
         .input("IsFeatured", sql.Bit, IsFeatured === "true")
@@ -142,17 +149,33 @@ router.post(
       await request.query(`
         INSERT INTO NewsArticles
         (Title, Content, Title_Ar, Content_Ar, CategoryID, AuthorID,
-         MainSlideImage, IsTopStory, IsFeatured, IsBreakingNews, IsSpotlightNews,
+         MainSlideImage, IsTopStory, IsFeatured,
+         IsBreakingNews, IsSpotlightNews,
          CreatedOn, IsActive, IsApproved, Attachments)
         VALUES
         (@Title, @Content, @Title_Ar, @Content_Ar, @CategoryID, @AuthorID,
-         @MainSlideImage, @IsTopStory, @IsFeatured, @IsBreakingNews, @IsSpotlightNews,
+         @MainSlideImage, @IsTopStory, @IsFeatured,
+         @IsBreakingNews, @IsSpotlightNews,
          @CreatedOn, @IsActive, @IsApproved, @Attachments)
       `);
 
-      res.json({ success: true, message: "News article is saved successfully and waiting for Super Admin to review and publish it to the TOB News site from UnPublished Menu." });
+      // 🟦 AUDIT LOG ENTRY
+      await saveAudit({
+        userId: req.session.user?.UserID ?? 0,
+        actionName: "Create News Article",
+        moduleName: "News Management",
+        description: `Created new article: "${Title}" (CategoryID: ${CategoryID}, Attachments: ${Attachments.length}, Featured: ${IsFeatured}, TopStory: ${IsTopStory})`,
+        req
+      });
+
+      res.json({
+        success: true,
+        message:
+          "News article is saved successfully and waiting for Super Admin to review and publish it."
+      });
+
     } catch (err) {
-      console.error("CREATE NEWS ERROR:", err);
+      console.error("❌ CREATE NEWS ERROR:", err);
       res.status(500).json({ success: false, message: err.message });
     }
   }
@@ -411,7 +434,6 @@ router.get('/news/categories/admin', isAdmin, async (req, res) => {
   }
 });
 
-
 // Deactivate News
 router.post('/news/deactivate/:id', isAdmin, async (req, res) => {
   const ArticleID = parseInt(req.params.id);
@@ -551,7 +573,6 @@ router.get('/news/:id', async (req, res) => {
     res.status(500).json({ success: false, message: 'Error fetching article' });
   }
 });
-
 
 // Add new category
 router.post('/news/category/add', isAdmin, async (req, res) => {
@@ -813,7 +834,6 @@ router.get('/likes/:articleId', async (req, res) => {
   }
 });
 
-// GET articles with comment stats
 // GET articles with comments and full details
 router.get('/articles/with-comments', async (req, res) => {
   try {
@@ -1373,43 +1393,300 @@ router.get('/advertisements/list', async (req, res) => {
   }
 });
 
-// Login
-router.post('/login', async (req, res) => {
-  const { Email, Password } = req.body;
-  if (!Email || !Password) return res.status(400).json({ success: false, message: 'Email & password required' });
-
+router.get('/advertisements/admin/list', async (req, res) => {
   try {
-    await sql.connect(sqlConfig);
-    const result = await new sql.Request()
-      .input('Email', sql.NVarChar, Email)
-      .query('SELECT * FROM Users WHERE Email=@Email AND IsActive=1');
+    const pool = await sql.connect(sqlConfig);
 
-    const user = result.recordset[0];
-    if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    let query = `
+      SELECT
+        AdvertisementID,
+        Title,
+        ImageURL,
+        LinkURL,
+        Position,
+        Size,
+        IsActive,
+        StartDate,
+        EndDate,
+        CreatedOn
+      FROM Advertisements
+      WHERE 1=1
+    `;
 
-    const match = await bcrypt.compare(Password, user.PasswordHash);
-    if (!match) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    // add status condition
+    if (req.query.active === "1") {
+      query += " AND IsActive = 1";
+    } else if (req.query.active === "0") {
+      query += " AND IsActive = 0";
+    }
 
-    // Save user info in session
-    req.session.user = {
-      UserID: user.UserID,
-      Email: user.Email,
-      Role: user.Role,
-      FullName: user.FullName
-    };
-    res.json({ success: true, message: 'Login successful', user: req.session.user });
+    query += `
+      ORDER BY CreatedOn DESC
+    `;
+
+    const result = await pool.request().query(query);
+
+    return res.json({ success: true, data: result.recordset });
+
   } catch (err) {
-    console.error('LOGIN ERROR:', err);
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.error("❌ /advertisements ERROR:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: err.message
+    });
   }
 });
 
-// Logout
-router.post('/logout', (req, res) => {
-  req.session.destroy(err => {
-    if (err) return res.status(500).json({ success: false, message: 'Logout failed' });
-    res.json({ success: true, message: 'Logged out successfully' });
-  });
+// GET single advertisement by ID
+router.get('/advertisements/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const pool = await sql.connect(sqlConfig);
+
+    const result = await pool.request()
+      .input("AdvertisementID", sql.Int, id)
+      .query(`
+        SELECT *
+        FROM Advertisements
+        WHERE AdvertisementID = @AdvertisementID
+      `);
+
+    return res.json({
+      success: true,
+      data: result.recordset[0]
+    });
+
+  } catch (err) {
+    console.error("❌ GET /advertisements/:id ERROR:", err);
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+});
+
+router.delete('/advertisements/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const pool = await sql.connect(sqlConfig);
+
+    await pool.request()
+      .input("AdvertisementID", sql.Int, id)
+      .query(`
+        DELETE FROM Advertisements
+        WHERE AdvertisementID = @AdvertisementID
+      `);
+
+    return res.json({ success: true, message: "Advertisement deleted successfully" });
+
+  } catch (err) {
+    console.error("❌ DELETE /advertisements/:id ERROR:", err);
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+});
+
+// Update Advertisement
+router.put('/advertisements/update', upload.single('Image'), async (req, res) => {
+  try {
+    const { AdvertisementID, Title, LinkURL, Position, Size, IsActive, StartDate, EndDate } = req.body;
+    // Use new image if uploaded, else keep existing
+    const ImageURL = req.file ? `/uploads/${req.file.filename}` : req.body.ImageURL;
+
+    const pool = await sql.connect(sqlConfig);
+    await pool.request()
+      .input("AdvertisementID", sql.Int, AdvertisementID)
+      .input("Title", sql.NVarChar, Title)
+      .input("ImageURL", sql.NVarChar, ImageURL)
+      .input("LinkURL", sql.NVarChar, LinkURL)
+      .input("Position", sql.NVarChar, Position)
+      .input("Size", sql.NVarChar, Size)
+      .input("IsActive", sql.Bit, IsActive)
+      .input("StartDate", sql.DateTime, StartDate || null)
+      .input("EndDate", sql.DateTime, EndDate || null)
+      .query(`
+        UPDATE Advertisements SET
+          Title=@Title, ImageURL=@ImageURL, LinkURL=@LinkURL,
+          Position=@Position, Size=@Size, IsActive=@IsActive,
+          StartDate=@StartDate, EndDate=@EndDate
+        WHERE AdvertisementID=@AdvertisementID
+      `);
+
+    return res.json({ success: true, message: "Advertisement updated successfully" });
+
+  } catch (err) {
+    console.error("❌ PUT /advertisements/update ERROR:", err);
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+});
+
+// Add Advertisement
+router.post('/advertisements/add', upload.single('Image'), async (req, res) => {
+  try {
+    const { Title, LinkURL, Position, Size, IsActive, StartDate, EndDate } = req.body;
+    const ImageURL = req.file ? `/uploads/${req.file.filename}` : null;
+
+    const pool = await sql.connect(sqlConfig);
+    await pool.request()
+      .input("Title", sql.NVarChar, Title)
+      .input("ImageURL", sql.NVarChar, ImageURL)
+      .input("LinkURL", sql.NVarChar, LinkURL)
+      .input("Position", sql.NVarChar, Position)
+      .input("Size", sql.NVarChar, Size)
+      .input("IsActive", sql.Bit, IsActive)
+      .input("StartDate", sql.DateTime, StartDate || null)
+      .input("EndDate", sql.DateTime, EndDate || null)
+      .query(`
+        INSERT INTO Advertisements
+          (Title, ImageURL, LinkURL, Position, Size, IsActive, StartDate, EndDate, CreatedOn)
+        VALUES
+          (@Title, @ImageURL, @LinkURL, @Position, @Size, @IsActive, @StartDate, @EndDate, GETDATE())
+      `);
+
+    return res.json({ success: true, message: "Advertisement added successfully" });
+
+  } catch (err) {
+    console.error("❌ POST /advertisements/add ERROR:", err);
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+});
+
+// GET all users
+router.get('/getusers/all', async (req, res) => {
+  try {
+    await sql.connect(sqlConfig);
+    const result = await new sql.Request()
+      .query('SELECT * FROM Users ORDER BY CreatedOn DESC');
+    return res.json({ success: true, data: result.recordset });
+  } catch (err) {
+    console.error('❌ GET /users/getusers/all ERROR:', err);
+    return res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
+
+// GET single user by ID
+router.get('/getuser/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ success: false, message: 'Invalid UserID' });
+
+    await sql.connect(sqlConfig);
+    const result = await new sql.Request()
+      .input('UserID', sql.Int, id)
+      .query('SELECT * FROM Users WHERE UserID=@UserID');
+
+    return res.json({ success: true, data: result.recordset[0] });
+  } catch (err) {
+    console.error('❌ GET /users/getuser/:id ERROR:', err);
+    return res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
+
+// POST create user
+router.post('/user/add', async (req, res) => {
+  try {
+    const { FullName, Email, Password, Role, IsActive } = req.body;
+
+    // Validation
+    if (!FullName || !Email || !Password || !Role) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields'
+      });
+    }
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(Password, 10);
+
+    // Insert user
+    await sql.connect(sqlConfig);
+    const result = await new sql.Request()
+      .input('FullName', sql.NVarChar, FullName)
+      .input('Email', sql.NVarChar, Email)
+      .input('PasswordHash', sql.NVarChar, passwordHash)
+      .input('Role', sql.NVarChar, Role)
+      .input('IsActive', sql.Bit, IsActive ? 1 : 0)
+      .query(`
+        INSERT INTO Users (FullName, Email, PasswordHash, Role, IsActive, CreatedOn)
+        OUTPUT INSERTED.UserID
+        VALUES (@FullName, @Email, @PasswordHash, @Role, @IsActive, GETDATE())
+      `);
+
+    const newUserId = result.recordset[0].UserID;
+
+    // 🟦 SAVE AUDIT LOG
+    await saveAudit({
+      userId: req.user?.UserID ?? 0,               // who performed the action
+      actionName: "Create User",
+      moduleName: "User Management",
+      description: `Created new user: ${FullName} (Email: ${Email}, Role: ${Role}, ID: ${newUserId})`,
+      req
+    });
+
+    // Response
+    return res.json({
+      success: true,
+      message: 'User created successfully'
+    });
+
+  } catch (err) {
+    console.error('❌ POST /users/user/add ERROR:', err);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    });
+  }
+});
+
+// PUT update user
+router.put('/user/update/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ success: false, message: 'Invalid UserID' });
+
+    const { FullName, Email, Password, Role, IsActive } = req.body;
+
+    await sql.connect(sqlConfig);
+    const reqSql = new sql.Request()
+      .input('UserID', sql.Int, id)
+      .input('FullName', sql.NVarChar, FullName)
+      .input('Email', sql.NVarChar, Email)
+      .input('Role', sql.NVarChar, Role)
+      .input('IsActive', sql.Bit, IsActive ? 1 : 0);
+
+    if (Password) {
+      const passwordHash = await bcrypt.hash(Password, 10);
+      await reqSql.input('PasswordHash', sql.NVarChar, passwordHash)
+        .query(`UPDATE Users
+                SET FullName=@FullName, Email=@Email, Role=@Role, IsActive=@IsActive, PasswordHash=@PasswordHash
+                WHERE UserID=@UserID`);
+    } else {
+      await reqSql.query(`UPDATE Users
+                          SET FullName=@FullName, Email=@Email, Role=@Role, IsActive=@IsActive
+                          WHERE UserID=@UserID`);
+    }
+
+    return res.json({ success: true, message: 'User updated successfully' });
+  } catch (err) {
+    console.error('❌ PUT /users/user/update/:id ERROR:', err);
+    return res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
+
+// DELETE user
+router.delete('/user/delete/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ success: false, message: 'Invalid UserID' });
+
+    await sql.connect(sqlConfig);
+    await new sql.Request()
+      .input('UserID', sql.Int, id)
+      .query('DELETE FROM Users WHERE UserID=@UserID');
+
+    return res.json({ success: true, message: 'User deleted successfully' });
+  } catch (err) {
+    console.error('❌ DELETE /users/user/delete/:id ERROR:', err);
+    return res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
 });
 
 // Middleware to protect routes

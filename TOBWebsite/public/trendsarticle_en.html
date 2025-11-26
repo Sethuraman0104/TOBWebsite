@@ -39,57 +39,64 @@
 
   </div>
 </div>
-
-
-    <!-- 🌤️ TOB Top Header -->
-    <div class="TOBTopheader py-2 shadow-sm">
-        <div class="container d-flex align-items-center justify-content-between flex-wrap gap-3">
-
-            <!-- 🔹 Logo -->
-            <div class="brand-box d-flex align-items-center gap-3">
-                <div class="logo-card spark-wrapper">
-                    <a href="TOBHome.html#home"><img src="images/TOBDownTransparent.png" class="logo" alt="TOB Logo"
+  <!-- 🌤️ TOB Top Header -->
+<div class="TOBTopheader py-2 shadow-sm">
+  <div class="container d-flex align-items-center justify-content-between flex-wrap gap-3">
+    <div class="brand-box d-flex align-items-center gap-3 flex-column">
+      <div class="d-flex align-items-center gap-3">
+        <div class="logo-card spark-wrapper">
+         <a href="TOBHome.html#home"><img src="images/TOBDownTransparent.png" class="logo" alt="TOB Logo"
                             id="siteLogo"></a>
-                            <div class="spark-line"></div>
-                </div>
-                <div class="brand-text">
-                    <div id="brandTitle">TOB News</div>
-                    <div class="muted-small text-light fs-6">Reliable local & global news</div>
-                </div>
-            </div>
-
-            <!-- 🔹 Live Info Card -->
-            <div class="live-info-card d-flex align-items-center gap-4 flex-wrap">
-                <!-- Location -->
-                <div class="info-item d-flex align-items-center gap-2">
-                    <i class="fa-solid fa-location-dot text-danger fs-5"></i>
-                    <span id="userLocation" class="fw-semibold small text-light">Detecting...</span>
-                </div>
-                <!-- Weather -->
-                <div class="info-item d-flex align-items-center gap-2">
-                    <div id="weatherIcon"><i class="fa-solid fa-sun text-warning fs-5"></i></div>
-                    <div class="small text-light">
-                        <div id="weatherText">Loading...</div>
-                        <div id="weatherTemp" class="fw-bold">--°C</div>
-                    </div>
-                </div>
-                <!-- Date/Time -->
-                <div class="info-item d-flex align-items-center gap-2">
-                    <i class="fa-regular fa-calendar-days text-light fs-5"></i>
-                    <span id="currentDateTime" class="fw-bold text-light"></span>
-                    <i class="fa-regular fa-clock text-light fs-5 ms-3"></i>
-                    <span id="currentTimeSmall" class="fw-semibold text-light"></span>
-                </div>
-                <!-- Language -->
-                <div class="info-item">
-                    <button id="langToggle" class="btn btn-sm lang-btn px-3 py-1">
-                        <i class="fa-solid fa-globe"></i> <span id="langLabel">العربية</span>
-                    </button>
-                </div>
-            </div>
+          <div class="spark-line"></div>
         </div>
-        <div id="adTopBanner" class="container my-6"></div>
+        <div class="brand-text">
+  <div id="brandTitle">TOB News</div>
+  <div class="muted-small text-light fs-6">Reliable local & global news</div>
+
+  <!-- 🔹 Hotline below news text -->
+  <div class="hotline-short mt-1">
+    <span class="hotline-label">Hotline:</span>
+    <i class="fa-solid fa-phone-volume"></i>
+    <span class="hotline-number">+973 3337 5769</span>
+  </div>
+</div>
+
+      </div>
     </div>
+
+    <!-- 🔹 Live Info Card -->
+    <div class="live-info-card d-flex align-items-center gap-4 flex-wrap">
+      <!-- Location -->
+      <div class="info-item d-flex align-items-center gap-2">
+        <i class="fa-solid fa-location-dot text-danger fs-5"></i>
+        <span id="userLocation" class="fw-semibold small text-light">Detecting...</span>
+      </div>
+      <!-- Weather -->
+      <div class="info-item d-flex align-items-center gap-2">
+        <div id="weatherIcon"><i class="fa-solid fa-sun text-warning fs-5"></i></div>
+        <div class="small text-light">
+          <div id="weatherText">Loading...</div>
+          <div id="weatherTemp" class="fw-bold">--°C</div>
+        </div>
+      </div>
+      <!-- Date/Time -->
+      <div class="info-item d-flex align-items-center gap-2">
+        <i class="fa-regular fa-calendar-days text-light fs-5"></i>
+        <span id="currentDateTime" class="fw-bold text-light"></span>
+        <i class="fa-regular fa-clock text-light fs-5 ms-3"></i>
+        <span id="currentTimeSmall" class="fw-semibold text-light"></span>
+      </div>
+      <!-- Language -->
+      <div class="info-item">
+        <button id="langToggle" class="btn btn-sm lang-btn px-3 py-1">
+          <i class="fa-solid fa-globe"></i> <span id="langLabel">العربية</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="adTopBanner" class="container my-6"></div>
+</div>
 
     <!-- 🌐 TOB Navbar -->
     <nav class="TOBNavbar shadow-sm py-2">
